@@ -88,13 +88,32 @@ export function AuthPage() {
         <ThemeToggle />
       </div>
 
+      {/* Mobile Logo - Only visible on mobile */}
+      <div className="absolute top-6 left-4 lg:hidden">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+          className="flex items-center space-x-2"
+        >
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center shadow-lg">
+            <Wallet className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              {t('auth.title')}
+            </h1>
+          </div>
+        </motion.div>
+      </div>
+
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left Side - Branding & Features */}
+        {/* Left Side - Branding & Features - Hidden on mobile */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="space-y-8 text-center lg:text-left"
+          className="hidden lg:block space-y-8 text-center lg:text-left"
         >
           {/* Logo & Title */}
           <div className="space-y-4">
@@ -153,14 +172,14 @@ export function AuthPage() {
           </motion.div>
         </motion.div>
 
-        {/* Right Side - Auth Form */}
+        {/* Right Side - Auth Form - Full width on mobile */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full max-w-md mx-auto"
+          className="w-full max-w-md mx-auto lg:max-w-none"
         >
-          <Card className="bg-white/80 dark:bg-black/40 backdrop-blur-xl border-white/20 dark:border-white/10 shadow-2xl">
+          <Card className="bg-white/80 dark:bg-black/40 backdrop-blur-xl border-white/20 dark:border-white/10 shadow-2xl mt-16 lg:mt-0">
             <CardHeader className="text-center space-y-2">
               <CardTitle className="text-2xl font-bold">{t('auth.getStarted')}</CardTitle>
               <CardDescription className="text-muted-foreground">
@@ -408,12 +427,12 @@ export function AuthPage() {
             </CardContent>
           </Card>
 
-          {/* Additional Info */}
+          {/* Mobile Features Info - Only visible on mobile */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
-            className="mt-6 text-center"
+            className="mt-6 text-center lg:hidden"
           >
             <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground">
               <Mic className="h-4 w-4" />
