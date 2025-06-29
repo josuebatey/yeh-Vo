@@ -18,12 +18,19 @@ export const paymentService = {
       throw new Error(validation.error)
     }
 
-    // Get sender's profile for from_address
-    const { data: senderProfile } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', userId)
-      .single()
+    // Get sender's wallet address for from_address
+    const { data: senderWallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('algorand_address')
+      .eq('user_id', userId)
+      .limit(1)
+
+    if (walletError) throw walletError
+    if (!senderWallet || senderWallet.length === 0) {
+      throw new Error('Sender wallet not found')
+    }
+
+    const senderAddress = senderWallet[0].algorand_address
 
     // Create transaction record
     const { data: transaction, error } = await supabase
@@ -35,7 +42,7 @@ export const paymentService = {
         currency: request.currency || 'ALGO',
         channel: request.channel,
         to_address: request.recipient,
-        from_address: senderProfile?.email || 'unknown', // Add from_address
+        from_address: senderAddress, // Use sender's wallet address
         status: 'pending',
         metadata: request.metadata,
       })
@@ -52,10 +59,10 @@ export const paymentService = {
           txId = await this.sendAlgorandPayment(userId, request)
           break
         case 'mobile_money':
-          txId = await this.sendMobileMoneyPayment(request, senderProfile?.email || 'unknown')
+          txId = await this.sendMobileMoneyPayment(request, senderAddress)
           break
         case 'bank':
-          txId = await this.sendBankTransfer(request, senderProfile?.email || 'unknown')
+          txId = await this.sendBankTransfer(request, senderAddress)
           break
         default:
           throw new Error('Unsupported payment channel')
@@ -126,7 +133,7 @@ export const paymentService = {
     return txId
   },
 
-  async sendMobileMoneyPayment(request: PaymentRequest, fromEmail: string): Promise<string> {
+  async sendMobileMoneyPayment(request: PaymentRequest, fromAddress: string): Promise<string> {
     // Find recipient by email or phone
     const { data: recipientProfile } = await supabase
       .from('profiles')
@@ -162,14 +169,14 @@ export const paymentService = {
     await this.simulateReceivePayment(
       recipientProfile.id, 
       request.amount, 
-      fromEmail, // Use sender's email as from_address
+      fromAddress, // Use sender's wallet address as from_address
       'mobile_money'
     )
 
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
-  async sendBankTransfer(request: PaymentRequest, fromEmail: string): Promise<string> {
+  async sendBankTransfer(request: PaymentRequest, fromAddress: string): Promise<string> {
     // Find recipient by email
     const { data: recipientProfile } = await supabase
       .from('profiles')
@@ -205,7 +212,7 @@ export const paymentService = {
     await this.simulateReceivePayment(
       recipientProfile.id, 
       request.amount, 
-      fromEmail, // Use sender's email as from_address
+      fromAddress, // Use sender's wallet address as from_address
       'bank'
     )
 
@@ -214,7 +221,18 @@ export const paymentService = {
 
   async simulateReceivePayment(userId: string, amount: number, fromAddress: string, channel: 'algorand' | 'mobile_money' | 'bank' = 'algorand'): Promise<void> {
     try {
-      // Create receive transaction record with proper from_address
+      // Get recipient's wallet address for to_address
+      const { data: recipientWallet } = await supabase
+        .from('wallets')
+        .select('algorand_address')
+        .eq('user_id', userId)
+        .limit(1)
+
+      const recipientAddress = recipientWallet && recipientWallet.length > 0 
+        ? recipientWallet[0].algorand_address 
+        : null
+
+      // Create receive transaction record with proper addresses
       const { error } = await supabase
         .from('transactions')
         .insert({
@@ -223,8 +241,8 @@ export const paymentService = {
           amount: amount,
           currency: 'ALGO',
           channel: channel,
-          from_address: fromAddress, // Properly set from_address
-          to_address: null, // Receiver doesn't need to_address
+          from_address: fromAddress, // Sender's wallet address
+          to_address: recipientAddress, // Recipient's wallet address
           status: 'completed',
           algorand_tx_id: `received_${channel}_${Date.now()}`,
         })
