@@ -7,7 +7,8 @@ import {
   TrendingUp, 
   DollarSign,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  RefreshCw
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useWalletStore } from '@/stores/walletStore'
@@ -21,7 +22,7 @@ import { BackButton } from '@/components/ui/back-button'
 
 export function Dashboard() {
   const { user } = useAuthStore()
-  const { wallet, loadWallet, refreshBalance, fundWallet } = useWalletStore()
+  const { wallet, loadWallet, refreshBalance, fundWallet, isFunding } = useWalletStore()
   const navigate = useNavigate()
   const [stats, setStats] = useState({
     totalSent: 0,
@@ -29,6 +30,7 @@ export function Dashboard() {
     monthlyTotal: 0,
     transactionCount: 0
   })
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -101,11 +103,25 @@ export function Dashboard() {
       toast.success('Wallet funding requested. Please wait for confirmation.')
       // Refresh stats after funding
       setTimeout(() => {
-        refreshBalance()
+        handleRefreshBalance()
         loadStats()
       }, 3000)
+    } catch (error: any) {
+      console.error('Fund wallet error:', error)
+      toast.error(error.message || 'Failed to fund wallet')
+    }
+  }
+
+  const handleRefreshBalance = async () => {
+    setIsRefreshing(true)
+    try {
+      await refreshBalance()
+      await loadStats()
+      toast.success('Balance refreshed!')
     } catch (error) {
-      toast.error('Failed to fund wallet')
+      toast.error('Failed to refresh balance')
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -231,19 +247,29 @@ export function Dashboard() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => {
-                    refreshBalance()
-                    loadStats()
-                  }}
+                  onClick={handleRefreshBalance}
+                  disabled={isRefreshing}
                 >
-                  Refresh Balance
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh Balance'}
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
                   onClick={handleFundWallet}
+                  disabled={isFunding}
                 >
-                  Fund from Testnet
+                  {isFunding ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Funding...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet className="mr-2 h-4 w-4" />
+                      Fund from TestNet
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>

@@ -13,6 +13,7 @@ interface Wallet {
 interface WalletState {
   wallet: Wallet | null
   isLoading: boolean
+  isFunding: boolean
   createWallet: (userId: string) => Promise<void>
   loadWallet: (userId: string) => Promise<void>
   refreshBalance: () => Promise<void>
@@ -24,6 +25,7 @@ export const useWalletStore = create<WalletState>()(
     (set, get) => ({
       wallet: null,
       isLoading: false,
+      isFunding: false,
 
       createWallet: async (userId: string) => {
         set({ isLoading: true })
@@ -143,8 +145,10 @@ export const useWalletStore = create<WalletState>()(
         const { wallet } = get()
         if (!wallet) return
 
+        set({ isFunding: true })
         try {
           await algorandService.fundFromDispenser(wallet.address)
+          
           // Wait a bit for transaction to process, then refresh multiple times
           setTimeout(() => {
             get().refreshBalance()
@@ -155,8 +159,13 @@ export const useWalletStore = create<WalletState>()(
           setTimeout(() => {
             get().refreshBalance()
           }, 10000)
+          setTimeout(() => {
+            get().refreshBalance()
+          }, 15000)
         } catch (error) {
           throw error
+        } finally {
+          set({ isFunding: false })
         }
       },
     }),
