@@ -19,6 +19,7 @@ export function ReceivePayment() {
   const [isMobile, setIsMobile] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
   const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Detect mobile device
   useEffect(() => {
@@ -34,9 +35,49 @@ export function ReceivePayment() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Safe DOM cleanup function
+  const safeCleanupQRCode = useCallback(() => {
+    if (cleanupTimeoutRef.current) {
+      clearTimeout(cleanupTimeoutRef.current)
+      cleanupTimeoutRef.current = null
+    }
+
+    // Use a timeout to ensure React has finished its reconciliation
+    cleanupTimeoutRef.current = setTimeout(() => {
+      try {
+        if (qrCodeRef.current) {
+          // Create a new container to replace the old one
+          const parent = qrCodeRef.current.parentNode
+          if (parent) {
+            const newContainer = document.createElement('div')
+            newContainer.className = qrCodeRef.current.className
+            newContainer.style.cssText = qrCodeRef.current.style.cssText
+            
+            // Replace the old container with the new one
+            parent.replaceChild(newContainer, qrCodeRef.current)
+            
+            // Update the ref to point to the new container
+            if (qrCodeRef.current) {
+              Object.defineProperty(qrCodeRef, 'current', {
+                value: newContainer,
+                writable: true
+              })
+            }
+          }
+        }
+        
+        // Reset state
+        qrCodeInstanceRef.current = null
+        setQrGenerated(false)
+      } catch (error) {
+        console.warn('QR cleanup warning (non-critical):', error)
+      }
+    }, 100)
+  }, [])
+
   // Initialize QR code instance once
   useEffect(() => {
-    if (!qrCodeInstanceRef.current && qrCodeRef.current) {
+    if (!qrCodeInstanceRef.current && qrCodeRef.current && wallet?.address) {
       const qrSize = isMobile ? 240 : 280
 
       const qrOptions = {
@@ -75,24 +116,21 @@ export function ReceivePayment() {
       try {
         const qrCode = new QRCodeStyling(qrOptions)
         qrCodeInstanceRef.current = qrCode
-        qrCode.append(qrCodeRef.current)
+        
+        // Only append if the container is still valid and empty
+        if (qrCodeRef.current && qrCodeRef.current.children.length === 0) {
+          qrCode.append(qrCodeRef.current)
+        }
       } catch (error) {
         console.error('Failed to initialize QR code:', error)
       }
     }
 
-    // Cleanup function to properly remove QR code DOM elements
+    // Cleanup function with safe DOM manipulation
     return () => {
-      if (qrCodeRef.current) {
-        // Clear all child nodes to prevent DOM conflicts
-        while (qrCodeRef.current.firstChild) {
-          qrCodeRef.current.removeChild(qrCodeRef.current.firstChild)
-        }
-      }
-      qrCodeInstanceRef.current = null
-      setQrGenerated(false)
+      safeCleanupQRCode()
     }
-  }, [isMobile])
+  }, [isMobile, wallet?.address, safeCleanupQRCode])
 
   // Update QR code data when dependencies change
   const updateQRCode = useCallback(() => {
