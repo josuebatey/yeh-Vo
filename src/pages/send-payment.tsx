@@ -88,10 +88,8 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
       // Simulate QR detection every 2 seconds
       setTimeout(() => {
         if (isScanning) {
-          // For demo, we'll simulate finding a QR code
-          const demoQR = 'https://voicepay.app/send?action=send&to=DEMO7RJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJK&amount=5'
-          // onScan(demoQR)
-          scanForQR() // Continue scanning
+          // Continue scanning
+          scanForQR()
         }
       }, 2000)
     }
@@ -218,7 +216,6 @@ export function SendPayment() {
     const action = searchParams.get('action')
     const to = searchParams.get('to')
     const amount = searchParams.get('amount')
-    const note = searchParams.get('note')
 
     if (action === 'send' && to) {
       setFormData(prev => ({
@@ -265,7 +262,6 @@ export function SendPayment() {
       if (url.pathname === '/send') {
         const to = url.searchParams.get('to')
         const amount = url.searchParams.get('amount')
-        const note = url.searchParams.get('note')
         
         if (to) {
           setFormData(prev => ({
