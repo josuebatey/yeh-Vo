@@ -22,6 +22,8 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
   const [isLoading, setIsLoading] = useState(false)
   const [sentCode, setSentCode] = useState('')
 
+  console.info(sentCode);
+
   const handleSendCode = async () => {
     if (!phoneNumber.trim()) {
       toast.error('Please enter a phone number')
