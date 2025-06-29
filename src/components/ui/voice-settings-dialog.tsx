@@ -3,49 +3,32 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Settings, Volume2, VolumeX } from 'lucide-react'
-import { toast } from 'sonner'
-import { voiceService } from '@/services/voiceService'
+import { Slider } from '@/components/ui/slider'
+import { Settings, Volume2, Mic } from 'lucide-react'
 
 interface VoiceSettingsDialogProps {
   children: React.ReactNode
 }
 
 export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
-  const [open, setOpen] = useState(false)
   const [settings, setSettings] = useState({
-    language: 'en-US',
-    voiceSpeed: [1],
-    voicePitch: [1],
+    voice: 'default',
+    speed: [1],
+    pitch: [1],
+    volume: [0.8],
     autoSpeak: true,
     continuousListening: false,
   })
 
-  const handleTestVoice = async () => {
-    try {
-      const utterance = new SpeechSynthesisUtterance('This is a test of your voice settings.')
-      utterance.rate = settings.voiceSpeed[0]
-      utterance.pitch = settings.voicePitch[0]
-      utterance.lang = settings.language
-      
-      speechSynthesis.speak(utterance)
-      toast.success('Voice test completed!')
-    } catch (error) {
-      toast.error('Voice test failed')
-    }
-  }
-
   const handleSaveSettings = () => {
-    // In a real app, you'd save these to localStorage or user preferences
+    // Save settings to localStorage or user preferences
     localStorage.setItem('voiceSettings', JSON.stringify(settings))
-    toast.success('Voice settings saved!')
-    setOpen(false)
+    console.log('Voice settings saved:', settings)
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -56,91 +39,112 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
             <span>Voice Settings</span>
           </DialogTitle>
           <DialogDescription>
-            Customize your voice recognition and text-to-speech preferences
+            Customize your voice command and speech settings
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Voice Selection */}
           <div className="space-y-2">
-            <Label htmlFor="language">Recognition Language</Label>
+            <Label>Voice</Label>
             <Select 
-              value={settings.language} 
-              onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
+              value={settings.voice} 
+              onValueChange={(value) => setSettings(prev => ({ ...prev, voice: value }))}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="en-US">English (US)</SelectItem>
-                <SelectItem value="en-GB">English (UK)</SelectItem>
-                <SelectItem value="es-ES">Spanish</SelectItem>
-                <SelectItem value="fr-FR">French</SelectItem>
-                <SelectItem value="de-DE">German</SelectItem>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="male">Male</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* Speech Speed */}
           <div className="space-y-2">
-            <Label>Voice Speed: {settings.voiceSpeed[0].toFixed(1)}x</Label>
-            <Slider
-              value={settings.voiceSpeed}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, voiceSpeed: value }))}
-              min={0.5}
-              max={2}
-              step={0.1}
-              className="w-full"
-            />
+            <Label>Speech Speed</Label>
+            <div className="px-2">
+              <Slider
+                value={settings.speed}
+                onValueChange={(value) => setSettings(prev => ({ ...prev, speed: value }))}
+                max={2}
+                min={0.5}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Slow</span>
+                <span>Normal</span>
+                <span>Fast</span>
+              </div>
+            </div>
           </div>
 
+          {/* Volume */}
           <div className="space-y-2">
-            <Label>Voice Pitch: {settings.voicePitch[0].toFixed(1)}</Label>
-            <Slider
-              value={settings.voicePitch}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, voicePitch: value }))}
-              min={0.5}
-              max={2}
-              step={0.1}
-              className="w-full"
-            />
+            <Label>Volume</Label>
+            <div className="px-2">
+              <Slider
+                value={settings.volume}
+                onValueChange={(value) => setSettings(prev => ({ ...prev, volume: value }))}
+                max={1}
+                min={0}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Quiet</span>
+                <span>Loud</span>
+              </div>
+            </div>
           </div>
 
+          {/* Auto Speak */}
           <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="auto-speak">Auto-speak responses</Label>
-              <p className="text-sm text-muted-foreground">
-                Automatically speak AI responses and confirmations
-              </p>
+            <div className="space-y-0.5">
+              <Label>Auto Speak Responses</Label>
+              <div className="text-sm text-muted-foreground">
+                Automatically speak AI responses
+              </div>
             </div>
             <Switch
-              id="auto-speak"
               checked={settings.autoSpeak}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoSpeak: checked }))}
             />
           </div>
 
+          {/* Continuous Listening */}
           <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="continuous">Continuous listening</Label>
-              <p className="text-sm text-muted-foreground">
-                Keep microphone active for multiple commands
-              </p>
+            <div className="space-y-0.5">
+              <Label>Continuous Listening</Label>
+              <div className="text-sm text-muted-foreground">
+                Keep microphone active for commands
+              </div>
             </div>
             <Switch
-              id="continuous"
               checked={settings.continuousListening}
               onCheckedChange={(checked) => setSettings(prev => ({ ...prev, continuousListening: checked }))}
             />
           </div>
 
+          {/* Test Buttons */}
           <div className="flex space-x-2">
-            <Button onClick={handleTestVoice} variant="outline" className="flex-1">
-              {settings.autoSpeak ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
+            <Button variant="outline" size="sm" className="flex-1">
+              <Volume2 className="mr-2 h-4 w-4" />
               Test Voice
             </Button>
-            <Button onClick={handleSaveSettings} className="flex-1">
-              Save Settings
+            <Button variant="outline" size="sm" className="flex-1">
+              <Mic className="mr-2 h-4 w-4" />
+              Test Microphone
             </Button>
           </div>
+
+          {/* Save Button */}
+          <Button onClick={handleSaveSettings} className="w-full">
+            Save Settings
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

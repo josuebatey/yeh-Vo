@@ -1,89 +1,67 @@
-import { toast } from 'sonner'
-
-class NotificationService {
-  private permission: NotificationPermission = 'default'
-
-  constructor() {
-    if (this.isSupported()) {
-      this.permission = Notification.permission
-    }
-  }
-
+// Notification service for browser notifications and in-app alerts
+export const notificationService = {
   isSupported(): boolean {
     return 'Notification' in window
-  }
+  },
 
   async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
       return false
     }
 
-    if (this.permission === 'granted') {
+    if (Notification.permission === 'granted') {
       return true
     }
 
-    const permission = await Notification.requestPermission()
-    this.permission = permission
-    return permission === 'granted'
-  }
+    if (Notification.permission === 'denied') {
+      return false
+    }
 
-  private showBrowserNotification(title: string, options?: NotificationOptions) {
-    if (this.permission === 'granted') {
+    const permission = await Notification.requestPermission()
+    return permission === 'granted'
+  },
+
+  async showNotification(title: string, options?: NotificationOptions): Promise<void> {
+    if (!this.isSupported() || Notification.permission !== 'granted') {
+      return
+    }
+
+    try {
       new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
         ...options,
       })
+    } catch (error) {
+      console.error('Failed to show notification:', error)
     }
-  }
+  },
 
-  showPaymentSent(amount: number, currency: string, recipient: string) {
-    const message = `Sent ${amount} ${currency} to ${recipient.slice(0, 20)}...`
-    toast.success(message)
-    
-    this.showBrowserNotification('Payment Sent', {
-      body: message,
-      tag: 'payment-sent',
+  async showPaymentSent(amount: number, currency: string, recipient: string): Promise<void> {
+    await this.showNotification('Payment Sent', {
+      body: `Successfully sent ${amount} ${currency} to ${recipient.slice(0, 20)}...`,
+      icon: '/favicon.ico',
     })
-  }
+  },
 
-  showPaymentReceived(amount: number, currency: string, sender: string) {
-    const message = `Received ${amount} ${currency} from ${sender.slice(0, 20)}...`
-    toast.success(message)
-    
-    this.showBrowserNotification('Payment Received', {
-      body: message,
-      tag: 'payment-received',
+  async showPaymentReceived(amount: number, currency: string, sender: string): Promise<void> {
+    await this.showNotification('Payment Received', {
+      body: `Received ${amount} ${currency} from ${sender.slice(0, 20)}...`,
+      icon: '/favicon.ico',
     })
-  }
+  },
 
-  showBalanceUpdate(balance: number, currency: string) {
-    const message = `Balance updated: ${balance.toFixed(4)} ${currency}`
-    toast.info(message)
-    
-    this.showBrowserNotification('Balance Updated', {
-      body: message,
-      tag: 'balance-update',
+  async showBalanceUpdate(balance: number, currency: string): Promise<void> {
+    await this.showNotification('Balance Updated', {
+      body: `Your balance is now ${balance.toFixed(4)} ${currency}`,
+      icon: '/favicon.ico',
     })
-  }
+  },
 
-  showInvestmentUpdate(message: string) {
-    toast.success(message)
-    
-    this.showBrowserNotification('Investment Update', {
+  async showInvestmentUpdate(message: string): Promise<void> {
+    await this.showNotification('Investment Update', {
       body: message,
-      tag: 'investment-update',
+      icon: '/favicon.ico',
     })
-  }
-
-  showTransactionUpdate(message: string) {
-    toast.info(message)
-    
-    this.showBrowserNotification('Transaction Update', {
-      body: message,
-      tag: 'transaction-update',
-    })
-  }
+  },
 }
-
-export const notificationService = new NotificationService()
