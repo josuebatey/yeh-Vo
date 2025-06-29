@@ -1,12 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, Upload, X, Scan, AlertCircle } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Camera, X, Flashlight, FlashlightOff } from 'lucide-react'
 import { toast } from 'sonner'
-import jsQR from 'jsqr'
 
 interface QRScannerProps {
   onScan: (result: string) => void
@@ -14,144 +10,74 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ onScan, onClose }: QRScannerProps) {
-  const [isScanning, setIsScanning] = useState(false)
-  const [error, setError] = useState<string>('')
-  const [manualInput, setManualInput] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const animationRef = useRef<number>()
+  const [isScanning, setIsScanning] = useState(false)
+  const [hasFlashlight, setHasFlashlight] = useState(false)
+  const [flashlightOn, setFlashlightOn] = useState(false)
+  const [manualInput, setManualInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    startCamera()
     return () => {
-      stopScanning()
+      stopCamera()
     }
   }, [])
 
-  const startScanning = async () => {
+  const startCamera = async () => {
     try {
-      setError('')
-      setIsScanning(true)
-
+      setError(null)
+      
       // Request camera permission
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
+        video: {
+          facingMode: 'environment', // Use back camera
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       })
 
       streamRef.current = stream
-
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         videoRef.current.play()
+        setIsScanning(true)
         
-        // Start scanning when video is ready
-        videoRef.current.onloadedmetadata = () => {
-          scanQRCode()
-        }
+        // Check if device has flashlight
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track.getCapabilities()
+        setHasFlashlight('torch' in capabilities)
       }
-    } catch (err: any) {
-      console.error('Camera access error:', err)
-      let errorMessage = 'Failed to access camera'
-      
-      if (err.name === 'NotAllowedError') {
-        errorMessage = 'Camera permission denied. Please allow camera access and try again.'
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = 'No camera found. Please ensure your device has a camera.'
-      } else if (err.name === 'NotSupportedError') {
-        errorMessage = 'Camera not supported in this browser.'
-      }
-      
-      setError(errorMessage)
-      setIsScanning(false)
+    } catch (error) {
+      console.error('Camera access failed:', error)
+      setError('Camera access denied. Please allow camera permission and try again.')
+      toast.error('Camera access denied. You can paste the address manually below.')
     }
   }
 
-  const stopScanning = () => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-    }
-    
+  const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-    
     setIsScanning(false)
   }
 
-  const scanQRCode = () => {
-    if (!videoRef.current || !canvasRef.current || !isScanning) {
-      return
-    }
-
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')
-
-    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      animationRef.current = requestAnimationFrame(scanQRCode)
-      return
-    }
-
-    // Set canvas size to match video
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-
-    // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-    // Get image data and scan for QR code
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-    const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
-
-    if (qrCode) {
-      // QR code found!
-      stopScanning()
-      onScan(qrCode.data)
-      toast.success('QR code scanned successfully!')
-    } else {
-      // Continue scanning
-      animationRef.current = requestAnimationFrame(scanQRCode)
-    }
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const toggleFlashlight = async () => {
+    if (!streamRef.current) return
 
     try {
-      const canvas = canvasRef.current
-      const context = canvas?.getContext('2d')
-      if (!canvas || !context) return
-
-      const img = new Image()
-      img.onload = () => {
-        canvas.width = img.width
-        canvas.height = img.height
-        context.drawImage(img, 0, 0)
-
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
-
-        if (qrCode) {
-          onScan(qrCode.data)
-          toast.success('QR code detected in image!')
-        } else {
-          toast.error('No QR code found in image')
-        }
-      }
-
-      img.src = URL.createObjectURL(file)
+      const track = streamRef.current.getVideoTracks()[0]
+      await track.applyConstraints({
+        advanced: [{ torch: !flashlightOn }]
+      })
+      setFlashlightOn(!flashlightOn)
     } catch (error) {
-      toast.error('Failed to process image')
+      console.error('Flashlight toggle failed:', error)
+      toast.error('Failed to toggle flashlight')
     }
   }
 
@@ -161,120 +87,105 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
     }
   }
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (text) {
+        setManualInput(text)
+        onScan(text)
+      }
+    } catch (error) {
+      toast.error('Failed to read clipboard')
+    }
+  }
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Scan className="h-5 w-5" />
-            QR Code Scanner
-          </span>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-          >
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
-          </motion.div>
-        )}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">QR Code Scanner</h3>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-        {/* Camera Scanner */}
-        <div className="space-y-3">
-          <div className="relative">
-            {isScanning ? (
-              <div className="relative">
-                <video
-                  ref={videoRef}
-                  className="w-full h-64 bg-black rounded-lg object-cover"
-                  playsInline
-                  muted
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="hidden"
-                />
-                {/* Scanning overlay */}
-                <div className="absolute inset-0 border-2 border-blue-500 rounded-lg">
-                  <div className="absolute inset-4 border border-blue-300 rounded">
-                    <motion.div
-                      className="absolute inset-x-0 h-0.5 bg-blue-500"
-                      animate={{ y: [0, 200, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    />
-                  </div>
-                </div>
-                <div className="absolute bottom-2 left-2 right-2">
-                  <Button onClick={stopScanning} variant="destructive" size="sm" className="w-full">
-                    Stop Scanning
-                  </Button>
-                </div>
+      {error ? (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+        </div>
+      ) : (
+        <div className="relative bg-black rounded-lg overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-64 object-cover"
+            playsInline
+            muted
+          />
+          <canvas
+            ref={canvasRef}
+            className="hidden"
+          />
+          
+          {isScanning && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-48 h-48 border-2 border-white rounded-lg">
+                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
               </div>
-            ) : (
-              <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center space-y-3">
-                  <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Camera preview will appear here</p>
-                  <Button onClick={startScanning} className="w-full">
-                    <Camera className="mr-2 h-4 w-4" />
-                    Start Camera
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {hasFlashlight && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="absolute top-4 right-4"
+              onClick={toggleFlashlight}
+            >
+              {flashlightOn ? (
+                <FlashlightOff className="h-4 w-4" />
+              ) : (
+                <Flashlight className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Position the QR code within the frame above
+          </p>
         </div>
 
-        {/* File Upload */}
-        <div className="space-y-2">
-          <Label htmlFor="qr-upload">Or upload QR code image</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="qr-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="flex-1"
-            />
-            <Upload className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
-
-        {/* Manual Input */}
-        <div className="space-y-2">
-          <Label htmlFor="manual-input">Or enter address manually</Label>
+        <div className="border-t pt-4">
+          <h4 className="font-medium mb-2">Manual Entry</h4>
           <div className="flex gap-2">
             <Input
-              id="manual-input"
+              placeholder="Paste or enter address here..."
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder="Paste or type address here..."
               className="flex-1"
             />
-            <Button 
-              onClick={handleManualSubmit} 
-              disabled={!manualInput.trim()}
-              size="sm"
-            >
-              Use
+            <Button onClick={handlePaste} variant="outline" size="sm">
+              Paste
             </Button>
           </div>
+          <Button 
+            onClick={handleManualSubmit} 
+            className="w-full mt-2"
+            disabled={!manualInput.trim()}
+          >
+            Use Address
+          </Button>
         </div>
 
-        {/* Instructions */}
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>• Point camera at QR code to scan automatically</p>
-          <p>• Upload an image containing a QR code</p>
-          <p>• Or manually enter the address</p>
-        </div>
-      </CardContent>
-    </Card>
+        <Button variant="outline" onClick={onClose} className="w-full">
+          Cancel Scanner
+        </Button>
+      </div>
+    </div>
   )
 }
