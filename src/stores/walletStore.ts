@@ -145,10 +145,16 @@ export const useWalletStore = create<WalletState>()(
 
         try {
           await algorandService.fundFromDispenser(wallet.address)
-          // Wait a bit for transaction to process
+          // Wait a bit for transaction to process, then refresh multiple times
           setTimeout(() => {
             get().refreshBalance()
           }, 3000)
+          setTimeout(() => {
+            get().refreshBalance()
+          }, 6000)
+          setTimeout(() => {
+            get().refreshBalance()
+          }, 10000)
         } catch (error) {
           throw error
         }

@@ -13,8 +13,9 @@ export interface PaymentRequest {
 export const paymentService = {
   async sendPayment(userId: string, request: PaymentRequest): Promise<string> {
     // Validate recipient based on channel
-    if (!this.validateRecipient(request.recipient, request.channel)) {
-      throw new Error(this.getValidationError(request.channel))
+    const validation = await this.validateRecipient(request.recipient, request.channel)
+    if (!validation.isValid) {
+      throw new Error(validation.error)
     }
 
     // Create transaction record
@@ -24,7 +25,7 @@ export const paymentService = {
         user_id: userId,
         type: 'send',
         amount: request.amount,
-        currency: request.currency || 'USD',
+        currency: request.currency || 'ALGO',
         channel: request.channel,
         to_address: request.recipient,
         status: 'pending',
@@ -118,55 +119,64 @@ export const paymentService = {
   },
 
   async sendMobileMoneyPayment(userId: string, request: PaymentRequest): Promise<string> {
-    // Get user's profile to check if they have a registered mobile number
+    // Get user's profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
 
-    // For demo purposes, simulate that the recipient must be a registered user
+    // Find recipient by email or phone
     const { data: recipientProfile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', request.recipient)
+      .or(`email.eq.${request.recipient},phone_number.eq.${request.recipient}`)
       .single()
 
     if (!recipientProfile) {
-      throw new Error('Recipient not found. Mobile money transfers require the recipient to have a VoicePay account.')
+      throw new Error('Recipient not found. Please ensure they have a VoicePay account with verified phone number.')
+    }
+
+    if (!recipientProfile.phone_verified) {
+      throw new Error('Recipient must have a verified phone number for mobile money transfers.')
     }
 
     if (request.amount < 0.1) {
-      throw new Error('Minimum mobile money transfer amount is 0.1')
+      throw new Error('Minimum mobile money transfer amount is 0.1 ALGO')
     }
 
     if (request.amount > 1000) {
-      throw new Error('Maximum mobile money transfer amount is 1000')
+      throw new Error('Maximum mobile money transfer amount is 1000 ALGO')
     }
 
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000))
     
     // Simulate occasional failures for realism
-    if (Math.random() < 0.1) {
-      throw new Error('Mobile money service temporarily unavailable')
+    if (Math.random() < 0.05) {
+      throw new Error('Mobile money service temporarily unavailable. Please try again.')
     }
 
     // Create a receive transaction for the recipient
-    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown', 'mobile_money')
+    await this.simulateReceivePayment(
+      recipientProfile.id, 
+      request.amount, 
+      profile?.email || 'unknown', 
+      'mobile_money'
+    )
 
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
   async sendBankTransfer(userId: string, request: PaymentRequest): Promise<string> {
-    // Get user's profile to check if they have bank details
+    // Get user's profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
 
-    // For demo purposes, simulate that the recipient must be a registered user
+    // Find recipient by email
     const { data: recipientProfile } = await supabase
       .from('profiles')
       .select('*')
@@ -174,27 +184,36 @@ export const paymentService = {
       .single()
 
     if (!recipientProfile) {
-      throw new Error('Recipient not found. Bank transfers require the recipient to have a VoicePay account.')
+      throw new Error('Recipient not found. Please ensure they have a VoicePay account with linked bank account.')
+    }
+
+    if (!recipientProfile.bank_account_info) {
+      throw new Error('Recipient must have a linked bank account for bank transfers.')
     }
 
     if (request.amount < 1) {
-      throw new Error('Minimum bank transfer amount is 1')
+      throw new Error('Minimum bank transfer amount is 1 ALGO')
     }
 
     if (request.amount > 10000) {
-      throw new Error('Maximum bank transfer amount is 10,000')
+      throw new Error('Maximum bank transfer amount is 10,000 ALGO')
     }
 
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 3000))
     
     // Simulate occasional failures for realism
-    if (Math.random() < 0.05) {
-      throw new Error('Bank transfer service temporarily unavailable')
+    if (Math.random() < 0.03) {
+      throw new Error('Bank transfer service temporarily unavailable. Please try again.')
     }
 
     // Create a receive transaction for the recipient
-    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown', 'bank')
+    await this.simulateReceivePayment(
+      recipientProfile.id, 
+      request.amount, 
+      profile?.email || 'unknown', 
+      'bank'
+    )
 
     return `bank_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
@@ -300,7 +319,7 @@ export const paymentService = {
     if (newTotal > limits.daily_send_limit) {
       return {
         canSend: false,
-        reason: `Daily limit exceeded. You can send $${(limits.daily_send_limit - limits.daily_sent_amount).toFixed(2)} more today.`
+        reason: `Daily limit exceeded. You can send ${(limits.daily_send_limit - limits.daily_sent_amount).toFixed(2)} ALGO more today.`
       }
     }
 
@@ -309,35 +328,106 @@ export const paymentService = {
 
   async updateDailySpent(userId: string, amount: number): Promise<void> {
     await supabase.rpc('increment_daily_spent', {
-      user_id: userId,
+      p_user_id: userId,
       amount: amount,
     })
   },
 
   // Validation helpers
-  validateRecipient(recipient: string, channel: string): boolean {
+  async validateRecipient(recipient: string, channel: string): Promise<{ isValid: boolean; error?: string }> {
     switch (channel) {
       case 'algorand':
-        return this.isValidAlgorandAddress(recipient)
-      case 'mobile_money':
-        return this.isValidEmail(recipient) // Using email as identifier for demo
-      case 'bank':
-        return this.isValidEmail(recipient) // Using email as identifier for demo
-      default:
-        return false
-    }
-  },
+        if (!this.isValidAlgorandAddress(recipient)) {
+          return {
+            isValid: false,
+            error: 'Invalid Algorand address. Must be 58 characters long and contain only uppercase letters and numbers 2-7.'
+          }
+        }
+        return { isValid: true }
 
-  getValidationError(channel: string): string {
-    switch (channel) {
-      case 'algorand':
-        return 'Invalid Algorand address. Must be 58 characters long and contain only uppercase letters and numbers 2-7.'
       case 'mobile_money':
-        return 'Invalid recipient. Please enter the email address of a registered VoicePay user.'
+        if (this.isValidEmail(recipient)) {
+          // Check if user exists with this email
+          const { data } = await supabase
+            .from('profiles')
+            .select('phone_verified')
+            .eq('email', recipient)
+            .single()
+          
+          if (!data) {
+            return {
+              isValid: false,
+              error: 'Recipient not found. Please ensure they have a VoicePay account.'
+            }
+          }
+          
+          if (!data.phone_verified) {
+            return {
+              isValid: false,
+              error: 'Recipient must have a verified phone number for mobile money transfers.'
+            }
+          }
+          
+          return { isValid: true }
+        } else if (this.isValidPhoneNumber(recipient)) {
+          // Check if user exists with this phone
+          const { data } = await supabase
+            .from('profiles')
+            .select('phone_verified')
+            .eq('phone_number', recipient)
+            .single()
+          
+          if (!data) {
+            return {
+              isValid: false,
+              error: 'Recipient not found. Please ensure they have a VoicePay account with this phone number.'
+            }
+          }
+          
+          return { isValid: true }
+        } else {
+          return {
+            isValid: false,
+            error: 'Invalid recipient. Please enter a valid email address or phone number.'
+          }
+        }
+
       case 'bank':
-        return 'Invalid recipient. Please enter the email address of a registered VoicePay user.'
+        if (!this.isValidEmail(recipient)) {
+          return {
+            isValid: false,
+            error: 'Invalid recipient. Please enter a valid email address.'
+          }
+        }
+        
+        // Check if user exists with linked bank account
+        const { data } = await supabase
+          .from('profiles')
+          .select('bank_account_info')
+          .eq('email', recipient)
+          .single()
+        
+        if (!data) {
+          return {
+            isValid: false,
+            error: 'Recipient not found. Please ensure they have a VoicePay account.'
+          }
+        }
+        
+        if (!data.bank_account_info) {
+          return {
+            isValid: false,
+            error: 'Recipient must have a linked bank account for bank transfers.'
+          }
+        }
+        
+        return { isValid: true }
+
       default:
-        return 'Invalid recipient format'
+        return {
+          isValid: false,
+          error: 'Unsupported payment channel'
+        }
     }
   },
 
@@ -355,5 +445,48 @@ export const paymentService = {
 
   isValidAccountNumber(account: string): boolean {
     return /^\d{8,20}$/.test(account)
+  },
+
+  // Phone verification simulation
+  async sendVerificationCode(phoneNumber: string): Promise<{ success: boolean; code?: string }> {
+    // In a real app, this would send SMS via Twilio, AWS SNS, etc.
+    // For demo, we'll return a fixed code
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    console.log(`SMS sent to ${phoneNumber}: Your VoicePay verification code is ${code}`)
+    
+    return { success: true, code }
+  },
+
+  async verifyPhoneNumber(userId: string, phoneNumber: string, code: string): Promise<boolean> {
+    // In a real app, this would verify the code
+    // For demo, we'll accept any 6-digit code
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error('Invalid verification code format')
+    }
+
+    const { error } = await supabase.rpc('verify_phone_number', {
+      p_user_id: userId,
+      p_phone_number: phoneNumber
+    })
+
+    if (error) throw error
+    return true
+  },
+
+  // Bank account linking simulation
+  async linkBankAccount(userId: string, accountInfo: any): Promise<boolean> {
+    // In a real app, this would integrate with Plaid, Yodlee, etc.
+    // For demo, we'll just store the info
+    const { error } = await supabase.rpc('link_bank_account', {
+      p_user_id: userId,
+      p_account_info: accountInfo
+    })
+
+    if (error) throw error
+    return true
   },
 }

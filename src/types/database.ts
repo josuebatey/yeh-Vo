@@ -7,6 +7,9 @@ export interface Database {
           email: string
           full_name: string | null
           avatar_url: string | null
+          phone_number: string | null
+          phone_verified: boolean
+          bank_account_info: any | null
           created_at: string
           updated_at: string
         }
@@ -15,6 +18,9 @@ export interface Database {
           email: string
           full_name?: string | null
           avatar_url?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean
+          bank_account_info?: any | null
           created_at?: string
           updated_at?: string
         }
@@ -23,6 +29,9 @@ export interface Database {
           email?: string
           full_name?: string | null
           avatar_url?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean
+          bank_account_info?: any | null
           updated_at?: string
         }
       }

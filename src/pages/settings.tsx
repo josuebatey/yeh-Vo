@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,20 +7,27 @@ import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Settings as SettingsIcon, User, Bell, Shield, CreditCard, LogOut, Upload, Download, FileText } from 'lucide-react'
+import { Settings as SettingsIcon, User, Bell, Shield, CreditCard, LogOut, Upload, Download, FileText, Phone, CheckCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { BackButton } from '@/components/ui/back-button'
 import { paymentService } from '@/services/paymentService'
+import { PhoneVerificationDialog } from '@/components/ui/phone-verification-dialog'
+import { BankLinkingDialog } from '@/components/ui/bank-linking-dialog'
 
 export function Settings() {
-  const { user, profile, signOut } = useAuthStore()
+  const { user, profile, refreshUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false)
+  const [showBankDialog, setShowBankDialog] = useState(false)
   const [profileData, setProfileData] = useState({
     full_name: profile?.full_name || '',
     avatar_url: profile?.avatar_url || '',
+    phone_number: profile?.phone_number || '',
+    phone_verified: profile?.phone_verified || false,
+    bank_account_info: profile?.bank_account_info || null,
   })
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -34,16 +41,32 @@ export function Settings() {
     auto_lock: true,
   })
 
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        full_name: profile.full_name || '',
+        avatar_url: profile.avatar_url || '',
+        phone_number: profile.phone_number || '',
+        phone_verified: profile.phone_verified || false,
+        bank_account_info: profile.bank_account_info || null,
+      })
+    }
+  }, [profile])
+
   const handleUpdateProfile = async () => {
     setIsLoading(true)
     try {
       const { error } = await supabase
         .from('profiles')
-        .update(profileData)
+        .update({
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
+        })
         .eq('id', user?.id)
 
       if (error) throw error
 
+      await refreshUser()
       toast.success('Profile updated successfully!')
     } catch (error: any) {
       console.error('Failed to update profile:', error)
@@ -74,6 +97,16 @@ export function Settings() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handlePhoneVerified = async () => {
+    await refreshUser()
+    setProfileData(prev => ({ ...prev, phone_verified: true }))
+  }
+
+  const handleBankLinked = async () => {
+    await refreshUser()
+    toast.success('Bank account linked successfully!')
   }
 
   const handleExportData = async () => {
@@ -162,6 +195,7 @@ export function Settings() {
 
   const handleSignOut = async () => {
     try {
+      const { signOut } = useAuthStore.getState()
       await signOut()
       toast.success('Signed out successfully')
     } catch (error) {
@@ -246,6 +280,60 @@ export function Settings() {
                 </div>
               </div>
 
+              {/* Phone Verification */}
+              <div className="space-y-2">
+                <Label>Phone Number</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={profileData.phone_number || 'Not verified'}
+                    disabled
+                    className="bg-muted flex-1"
+                  />
+                  {profileData.phone_verified ? (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowPhoneDialog(true)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Phone className="mr-2 h-4 w-4" />
+                      Verify Phone
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Bank Account */}
+              <div className="space-y-2">
+                <Label>Bank Account</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={profileData.bank_account_info ? 'Bank account linked' : 'Not linked'}
+                    disabled
+                    className="bg-muted flex-1"
+                  />
+                  {profileData.bank_account_info ? (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      Linked
+                    </Badge>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowBankDialog(true)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Link Bank
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <Button onClick={handleUpdateProfile} disabled={isLoading}>
                 {isLoading ? 'Updating...' : 'Update Profile'}
               </Button>
@@ -272,7 +360,7 @@ export function Settings() {
                   Free Plan
                 </Badge>
                 <div className="text-sm text-muted-foreground">
-                  $10/day sending limit
+                  10 ALGO/day sending limit
                 </div>
               </div>
 
@@ -281,15 +369,19 @@ export function Settings() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Daily Limit:</span>
-                  <span>$10.00</span>
+                  <span>10 ALGO</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Used Today:</span>
-                  <span>$0.00</span>
+                  <span>0 ALGO</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Investments:</span>
-                  <span>Basic</span>
+                  <span>Phone Verified:</span>
+                  <span>{profileData.phone_verified ? '✅' : '❌'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Bank Linked:</span>
+                  <span>{profileData.bank_account_info ? '✅' : '❌'}</span>
                 </div>
               </div>
 
@@ -499,6 +591,19 @@ export function Settings() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Dialogs */}
+      <PhoneVerificationDialog
+        open={showPhoneDialog}
+        onOpenChange={setShowPhoneDialog}
+        onVerified={handlePhoneVerified}
+      />
+
+      <BankLinkingDialog
+        open={showBankDialog}
+        onOpenChange={setShowBankDialog}
+        onLinked={handleBankLinked}
+      />
     </div>
   )
 }
