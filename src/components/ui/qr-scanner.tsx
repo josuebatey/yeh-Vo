@@ -1,10 +1,13 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, X, RotateCcw, Type, Scan, AlertCircle, CheckCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Camera, X, RotateCcw, Zap, CheckCircle, AlertCircle, Smartphone, Monitor } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
+import jsQR from 'jsqr'
 
 interface QRScannerProps {
   onScan: (result: string) => void
@@ -12,342 +15,437 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ onScan, onClose }: QRScannerProps) {
-  const [isScanning, setIsScanning] = useState(false)
-  const [error, setError] = useState<string>('')
-  const [manualInput, setManualInput] = useState('')
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
-  const [scanResult, setScanResult] = useState<string>('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const scanIntervalRef = useRef<NodeJS.Timeout>()
+  const animationRef = useRef<number>()
+  
+  const [isScanning, setIsScanning] = useState(false)
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [error, setError] = useState<string>('')
+  const [manualInput, setManualInput] = useState('')
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
+  const [scanSuccess, setScanSuccess] = useState(false)
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('')
 
-  // Check if camera is supported
-  const isCameraSupported = useCallback(() => {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+  // Get available camera devices
+  const getDevices = useCallback(async () => {
+    try {
+      const deviceList = await navigator.mediaDevices.enumerateDevices()
+      const videoDevices = deviceList.filter(device => device.kind === 'videoinput')
+      setDevices(videoDevices)
+      
+      // Prefer back camera if available
+      const backCamera = videoDevices.find(device => 
+        device.label.toLowerCase().includes('back') || 
+        device.label.toLowerCase().includes('rear') ||
+        device.label.toLowerCase().includes('environment')
+      )
+      
+      if (backCamera) {
+        setSelectedDeviceId(backCamera.deviceId)
+        setFacingMode('environment')
+      } else if (videoDevices.length > 0) {
+        setSelectedDeviceId(videoDevices[0].deviceId)
+        setFacingMode('user')
+      }
+    } catch (error) {
+      console.error('Error getting devices:', error)
+    }
   }, [])
 
   // Start camera stream
   const startCamera = useCallback(async () => {
-    if (!isCameraSupported()) {
-      setError('Camera not supported on this device')
-      return
-    }
-
     try {
       setError('')
       setIsScanning(true)
 
-      // Stop any existing stream
+      // Stop existing stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
       }
 
       const constraints: MediaStreamConstraints = {
         video: {
-          facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          facingMode: facingMode,
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 }
         }
+      }
+
+      // Use specific device if selected
+      if (selectedDeviceId) {
+        constraints.video = {
+          ...constraints.video,
+          deviceId: { exact: selectedDeviceId }
+        }
+        delete (constraints.video as any).facingMode
       }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
-
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.playsInline = true
-        videoRef.current.muted = true
+        videoRef.current.setAttribute('playsinline', 'true') // iOS Safari compatibility
+        videoRef.current.play()
         
-        await videoRef.current.play()
-        
-        // Start scanning after video is ready
-        setTimeout(() => {
+        videoRef.current.onloadedmetadata = () => {
+          setHasPermission(true)
           startScanning()
-        }, 1000)
+        }
       }
-    } catch (err: any) {
-      console.error('Camera access failed:', err)
-      let errorMessage = 'Failed to access camera'
+    } catch (error: any) {
+      console.error('Camera access error:', error)
+      setHasPermission(false)
+      setIsScanning(false)
       
-      if (err.name === 'NotAllowedError') {
+      let errorMessage = 'Camera access failed'
+      if (error.name === 'NotAllowedError') {
         errorMessage = 'Camera permission denied. Please allow camera access and try again.'
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = 'No camera found on this device.'
-      } else if (err.name === 'NotSupportedError') {
-        errorMessage = 'Camera not supported on this device.'
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found. Please ensure your device has a camera.'
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Camera is being used by another application.'
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = 'Camera constraints not supported. Trying with basic settings...'
+        // Retry with basic constraints
+        setTimeout(() => {
+          setFacingMode('user')
+          setSelectedDeviceId('')
+        }, 1000)
       }
       
       setError(errorMessage)
-      setIsScanning(false)
+      toast.error(errorMessage)
     }
-  }, [facingMode, isCameraSupported])
+  }, [facingMode, selectedDeviceId])
 
-  // Stop camera stream
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-    
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current)
-    }
-    
-    setIsScanning(false)
-  }, [])
-
-  // Start QR code scanning
-  const startScanning = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return
-
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    const context = canvas.getContext('2d')
-
-    if (!context) return
-
-    scanIntervalRef.current = setInterval(() => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA && !isProcessing) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-        try {
-          // Get image data for QR detection
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-          
-          // Simple QR code detection simulation
-          // In a real implementation, you would use a QR code library here
-          detectQRCode(imageData)
-        } catch (error) {
-          console.error('QR detection error:', error)
-        }
-      }
-    }, 500) // Scan every 500ms
-  }, [isProcessing])
-
-  // Simulate QR code detection
+  // QR code detection function
   const detectQRCode = useCallback((imageData: ImageData) => {
-    // This is a simplified simulation
-    // In a real app, you would use a library like jsQR or qr-scanner
-    
-    // For demo purposes, we'll simulate finding a QR code occasionally
-    if (Math.random() < 0.1) { // 10% chance to simulate detection
-      const mockQRData = 'ALGORAND_ADDRESS_SIMULATION_' + Date.now()
-      handleQRDetected(mockQRData)
-    }
-  }, [])
-
-  // Handle QR code detection
-  const handleQRDetected = useCallback((data: string) => {
-    if (isProcessing || scanResult) return
-    
-    setIsProcessing(true)
-    setScanResult(data)
-    
-    // Stop scanning
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current)
-    }
-    
-    // Auto-confirm after 2 seconds or let user confirm
-    setTimeout(() => {
-      if (scanResult === data) {
-        onScan(data)
+    try {
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      })
+      
+      if (code && code.data) {
+        return code.data
       }
-    }, 2000)
-  }, [isProcessing, scanResult, onScan])
-
-  // Switch camera (front/back)
-  const switchCamera = useCallback(() => {
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user')
+      return null
+    } catch (error) {
+      console.error('QR detection error:', error)
+      return null
+    }
   }, [])
+
+  // Scanning loop
+  const startScanning = useCallback(() => {
+    const scan = () => {
+      if (!videoRef.current || !canvasRef.current || !isScanning) {
+        return
+      }
+
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      const context = canvas.getContext('2d')
+
+      if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) {
+        animationRef.current = requestAnimationFrame(scan)
+        return
+      }
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      // Draw video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Get image data for QR detection
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      
+      // Detect QR code
+      const qrResult = detectQRCode(imageData)
+      
+      if (qrResult) {
+        setScanSuccess(true)
+        setIsScanning(false)
+        
+        // Stop camera
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop())
+        }
+        
+        // Success feedback
+        toast.success('QR code detected successfully!')
+        
+        // Call onScan with result
+        setTimeout(() => {
+          onScan(qrResult)
+        }, 500)
+        
+        return
+      }
+
+      // Continue scanning
+      animationRef.current = requestAnimationFrame(scan)
+    }
+
+    animationRef.current = requestAnimationFrame(scan)
+  }, [isScanning, detectQRCode, onScan])
+
+  // Switch camera
+  const switchCamera = useCallback(() => {
+    if (devices.length > 1) {
+      const currentIndex = devices.findIndex(device => device.deviceId === selectedDeviceId)
+      const nextIndex = (currentIndex + 1) % devices.length
+      setSelectedDeviceId(devices[nextIndex].deviceId)
+      
+      // Update facing mode based on device label
+      const nextDevice = devices[nextIndex]
+      if (nextDevice.label.toLowerCase().includes('front') || 
+          nextDevice.label.toLowerCase().includes('user')) {
+        setFacingMode('user')
+      } else {
+        setFacingMode('environment')
+      }
+    } else {
+      // Fallback: toggle facing mode
+      setFacingMode(prev => prev === 'user' ? 'environment' : 'user')
+      setSelectedDeviceId('')
+    }
+  }, [devices, selectedDeviceId])
 
   // Handle manual input
-  const handleManualSubmit = useCallback(() => {
+  const handleManualSubmit = () => {
     if (manualInput.trim()) {
       onScan(manualInput.trim())
     }
-  }, [manualInput, onScan])
+  }
 
-  // Confirm scanned result
-  const confirmScan = useCallback(() => {
-    if (scanResult) {
-      onScan(scanResult)
+  // Initialize
+  useEffect(() => {
+    getDevices()
+  }, [getDevices])
+
+  // Start camera when component mounts or settings change
+  useEffect(() => {
+    if (hasPermission !== false) {
+      startCamera()
     }
-  }, [scanResult, onScan])
 
-  // Reset scan
-  const resetScan = useCallback(() => {
-    setScanResult('')
-    setIsProcessing(false)
-    startScanning()
-  }, [startScanning])
+    return () => {
+      // Cleanup
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+    }
+  }, [startCamera])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopCamera()
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
     }
-  }, [stopCamera])
+  }, [])
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-md mx-auto"
-      >
-        <Card className="w-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <Scan className="h-5 w-5" />
-              QR Code Scanner
-            </CardTitle>
+    <div className="space-y-4 w-full max-w-md mx-auto">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-lg">
+            <div className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              <span>QR Scanner</span>
+            </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {/* Camera View */}
-            {isCameraSupported() && (
-              <div className="space-y-4">
-                <div className="relative aspect-square bg-black rounded-lg overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    playsInline
-                    muted
-                  />
-                  <canvas
-                    ref={canvasRef}
-                    className="hidden"
-                  />
-                  
-                  {/* Scanning overlay */}
-                  {isScanning && !scanResult && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-48 h-48 border-2 border-white/50 rounded-lg relative">
-                        <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-lg" />
-                        <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-lg" />
-                        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-lg" />
-                        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-lg" />
-                        
-                        {/* Scanning line animation */}
-                        <motion.div
-                          className="absolute left-0 right-0 h-0.5 bg-primary"
-                          animate={{ y: [0, 192, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Success overlay */}
-                  {scanResult && (
-                    <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                      <div className="bg-white/90 dark:bg-black/90 rounded-lg p-4 text-center">
-                        <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                        <p className="text-sm font-medium">QR Code Detected!</p>
-                        <p className="text-xs text-muted-foreground mt-1 break-all">
-                          {scanResult.slice(0, 30)}...
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Camera Controls */}
-                <div className="flex gap-2">
-                  {!isScanning ? (
-                    <Button onClick={startCamera} className="flex-1">
-                      <Camera className="mr-2 h-4 w-4" />
-                      Start Camera
-                    </Button>
-                  ) : (
-                    <>
-                      <Button onClick={stopCamera} variant="outline" className="flex-1">
-                        Stop Camera
-                      </Button>
-                      <Button onClick={switchCamera} variant="outline" size="sm">
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                {/* Scan Result Actions */}
-                <AnimatePresence>
-                  {scanResult && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="flex gap-2"
-                    >
-                      <Button onClick={confirmScan} className="flex-1">
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Use This Code
-                      </Button>
-                      <Button onClick={resetScan} variant="outline">
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Manual Input Fallback */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Type className="h-4 w-4" />
-                <span>Or enter manually:</span>
-              </div>
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Camera View */}
+          <div className="relative">
+            <div className="relative w-full aspect-square bg-black rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                playsInline
+                muted
+                autoPlay
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="manual-input">Paste Address or QR Data</Label>
-                <Input
-                  id="manual-input"
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
-                  placeholder="Paste Algorand address or QR code data..."
-                  className="font-mono text-sm"
-                />
-              </div>
+              {/* Hidden canvas for QR detection */}
+              <canvas
+                ref={canvasRef}
+                className="hidden"
+              />
               
+              {/* Scanning overlay */}
+              <AnimatePresence>
+                {isScanning && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    {/* Scanning frame */}
+                    <div className="relative w-48 h-48 border-2 border-white rounded-lg">
+                      <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg" />
+                      
+                      {/* Scanning line animation */}
+                      <motion.div
+                        className="absolute left-0 right-0 h-0.5 bg-blue-500 shadow-lg"
+                        animate={{
+                          top: ['0%', '100%', '0%']
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: 'linear'
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Success overlay */}
+              <AnimatePresence>
+                {scanSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 bg-green-500/20 flex items-center justify-center"
+                  >
+                    <div className="bg-green-500 text-white p-4 rounded-full">
+                      <CheckCircle className="h-8 w-8" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Error overlay */}
+              {error && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4">
+                  <div className="text-center text-white">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-400" />
+                    <p className="text-sm">{error}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Status indicator */}
+            <div className="absolute top-2 left-2">
+              <Badge variant={isScanning ? "default" : "secondary"} className="text-xs">
+                {isScanning ? (
+                  <>
+                    <Zap className="h-3 w-3 mr-1" />
+                    Scanning...
+                  </>
+                ) : scanSuccess ? (
+                  <>
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Success!
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-3 w-3 mr-1" />
+                    Ready
+                  </>
+                )}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex gap-2">
+            <Button
+              onClick={switchCamera}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={!isScanning}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              {facingMode === 'user' ? (
+                <>
+                  <Smartphone className="h-4 w-4 mr-1" />
+                  Front
+                </>
+              ) : (
+                <>
+                  <Monitor className="h-4 w-4 mr-1" />
+                  Back
+                </>
+              )}
+            </Button>
+            
+            <Button
+              onClick={startCamera}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={isScanning}
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              Restart
+            </Button>
+          </div>
+
+          {/* Manual input fallback */}
+          <div className="space-y-2 pt-4 border-t">
+            <Label htmlFor="manual-input" className="text-sm font-medium">
+              Manual Input (if camera fails)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="manual-input"
+                placeholder="Paste QR code content or address..."
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                className="flex-1"
+              />
               <Button 
-                onClick={handleManualSubmit} 
+                onClick={handleManualSubmit}
                 disabled={!manualInput.trim()}
-                variant="outline"
-                className="w-full"
+                size="sm"
               >
-                Use Manual Input
+                Submit
               </Button>
             </div>
+          </div>
 
-            {/* Instructions */}
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>• Point camera at QR code to scan automatically</p>
-              <p>• Make sure QR code is well-lit and in focus</p>
-              <p>• Use manual input if camera scanning fails</p>
+          {/* Instructions */}
+          <div className="text-center space-y-2 pt-2 border-t">
+            <p className="text-sm text-muted-foreground">
+              Position the QR code within the scanning frame
+            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              <span>✓ Auto-detection</span>
+              <span>✓ Real-time scanning</span>
+              <span>✓ Multiple cameras</span>
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
