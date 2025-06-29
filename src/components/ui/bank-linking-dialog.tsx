@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CreditCard, Loader2, Shield } from 'lucide-react'
+import { CreditCard, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { paymentService } from '@/services/paymentService'
@@ -23,7 +23,7 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
     accountType: '',
     accountNumber: '',
     routingNumber: '',
-    accountHolderName: '',
+    accountHolderName: ''
   })
 
   const handleLinkAccount = async () => {
@@ -34,23 +34,16 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
 
     setIsLoading(true)
     try {
-      await paymentService.linkBankAccount(user?.id || '', {
-        ...bankInfo,
-        linkedAt: new Date().toISOString(),
-        verified: true, // For demo purposes
-      })
-      
+      await paymentService.linkBankAccount(user?.id || '', bankInfo)
       toast.success('Bank account linked successfully!')
       onLinked()
       onOpenChange(false)
-      
-      // Reset form
       setBankInfo({
         bankName: '',
         accountType: '',
         accountNumber: '',
         routingNumber: '',
-        accountHolderName: '',
+        accountHolderName: ''
       })
     } catch (error: any) {
       toast.error(error.message || 'Failed to link bank account')
@@ -59,8 +52,19 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
     }
   }
 
+  const handleClose = () => {
+    onOpenChange(false)
+    setBankInfo({
+      bankName: '',
+      accountType: '',
+      accountNumber: '',
+      routingNumber: '',
+      accountHolderName: ''
+    })
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -68,25 +72,14 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
             <span>Link Bank Account</span>
           </DialogTitle>
           <DialogDescription>
-            Connect your bank account for seamless transfers
+            Connect your bank account for bank transfer payments
           </DialogDescription>
         </DialogHeader>
-
+        
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg flex items-start space-x-2">
-            <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium">Secure & Encrypted</p>
-              <p>Your banking information is protected with bank-level security.</p>
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="bankName">Bank Name *</Label>
-            <Select 
-              value={bankInfo.bankName} 
-              onValueChange={(value) => setBankInfo(prev => ({ ...prev, bankName: value }))}
-            >
+            <Label htmlFor="bank-name">Bank Name</Label>
+            <Select value={bankInfo.bankName} onValueChange={(value) => setBankInfo(prev => ({ ...prev, bankName: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select your bank" />
               </SelectTrigger>
@@ -101,11 +94,8 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="accountType">Account Type</Label>
-            <Select 
-              value={bankInfo.accountType} 
-              onValueChange={(value) => setBankInfo(prev => ({ ...prev, accountType: value }))}
-            >
+            <Label htmlFor="account-type">Account Type</Label>
+            <Select value={bankInfo.accountType} onValueChange={(value) => setBankInfo(prev => ({ ...prev, accountType: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select account type" />
               </SelectTrigger>
@@ -117,9 +107,9 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="accountNumber">Account Number *</Label>
+            <Label htmlFor="account-number">Account Number</Label>
             <Input
-              id="accountNumber"
+              id="account-number"
               type="text"
               value={bankInfo.accountNumber}
               onChange={(e) => setBankInfo(prev => ({ ...prev, accountNumber: e.target.value }))}
@@ -128,9 +118,9 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="routingNumber">Routing Number *</Label>
+            <Label htmlFor="routing-number">Routing Number</Label>
             <Input
-              id="routingNumber"
+              id="routing-number"
               type="text"
               value={bankInfo.routingNumber}
               onChange={(e) => setBankInfo(prev => ({ ...prev, routingNumber: e.target.value }))}
@@ -139,9 +129,9 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="accountHolderName">Account Holder Name</Label>
+            <Label htmlFor="account-holder">Account Holder Name</Label>
             <Input
-              id="accountHolderName"
+              id="account-holder"
               type="text"
               value={bankInfo.accountHolderName}
               onChange={(e) => setBankInfo(prev => ({ ...prev, accountHolderName: e.target.value }))}
@@ -149,27 +139,22 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
             />
           </div>
 
-          <Button 
-            onClick={handleLinkAccount}
-            disabled={isLoading || !bankInfo.bankName || !bankInfo.accountNumber || !bankInfo.routingNumber}
-            className="w-full"
-          >
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="text-sm text-muted-foreground">
+              <strong>Note:</strong> This is a demo. In production, bank linking would use secure services like Plaid or Yodlee for account verification.
+            </div>
+          </div>
+
+          <Button onClick={handleLinkAccount} disabled={isLoading} className="w-full">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Linking Account...
               </>
             ) : (
-              <>
-                <CreditCard className="mr-2 h-4 w-4" />
-                Link Bank Account
-              </>
+              'Link Bank Account'
             )}
           </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            This is a demo. No real banking information is processed.
-          </p>
         </div>
       </DialogContent>
     </Dialog>

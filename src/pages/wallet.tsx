@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
-import { algorandService } from '@/services/algorandService'
 import { BackButton } from '@/components/ui/back-button'
 import { useNavigate } from 'react-router-dom'
 
