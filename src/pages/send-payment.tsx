@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
@@ -22,7 +22,6 @@ import { QRScanner } from '@/components/ui/qr-scanner'
 export function SendPayment() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [searchParams] = useSearchParams()
   const { user } = useAuthStore()
   const { wallet, refreshBalance } = useWalletStore()
   
@@ -42,10 +41,11 @@ export function SendPayment() {
   // Handle deep link parameters and voice commands
   useEffect(() => {
     // Check for deep link parameters first
-    const action = searchParams.get('action')
-    const to = searchParams.get('to')
-    const amount = searchParams.get('amount')
-    const note = searchParams.get('note')
+    const urlParams = new URLSearchParams(window.location.search)
+    const action = urlParams.get('action')
+    const to = urlParams.get('to')
+    const amount = urlParams.get('amount')
+    const note = urlParams.get('note')
 
     if (action === 'send' && to) {
       setFormData(prev => ({
@@ -73,7 +73,7 @@ export function SendPayment() {
         channel: command.channel || 'algorand',
       }))
     }
-  }, [searchParams, location.state])
+  }, [location.state])
 
   const handleVoiceCommand = async (transcript: string) => {
     const command = voiceService.parseVoiceCommand(transcript)
