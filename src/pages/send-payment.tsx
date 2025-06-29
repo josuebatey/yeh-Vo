@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, X, Video, VideoOff } from 'lucide-react'
+import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, X, Video, VideoOff, Scan } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -24,7 +24,9 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string>('')
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     checkCameraAccess()
@@ -48,6 +50,7 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
       await startCamera()
     } catch (err: any) {
       console.error('Camera access error:', err)
+      setPermissionDenied(true)
       setError('Camera access denied. Please allow camera permissions in your browser settings.')
     }
   }
@@ -56,38 +59,66 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
     try {
       setIsScanning(true)
       setError('')
+      setPermissionDenied(false)
 
       // Request camera access with back camera preference for mobile
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      const constraints = {
         video: { 
           facingMode: { ideal: 'environment' }, // Prefer back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      })
-      
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        }
+      }
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
       setStream(mediaStream)
       
-      if (videoElement) {
-        videoElement.srcObject = mediaStream
-        await videoElement.play()
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
         
-        // Start QR detection simulation
-        setTimeout(() => {
-          if (isScanning) {
-            scanForQR()
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play().then(() => {
+              console.log('Camera started successfully')
+              toast.success('Camera started! Position QR code in frame')
+              
+              // Start QR detection simulation
+              setTimeout(() => {
+                if (isScanning) {
+                  scanForQR()
+                }
+              }, 1000)
+            }).catch(err => {
+              console.error('Video play failed:', err)
+              setError('Failed to start video playback')
+            })
           }
-        }, 1000)
+        }
       }
     } catch (err: any) {
       console.error('Failed to start camera:', err)
       
       if (err.name === 'NotAllowedError') {
+        setPermissionDenied(true)
         setError('Camera access denied. Please allow camera permissions and refresh the page.')
       } else if (err.name === 'NotFoundError') {
         setError('No camera found. Please ensure your device has a camera.')
       } else if (err.name === 'NotReadableError') {
         setError('Camera is being used by another application.')
+      } else if (err.name === 'OverconstrainedError') {
+        setError('Camera constraints not supported. Trying with basic settings...')
+        // Retry with basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({ video: true })
+          setStream(basicStream)
+          if (videoRef.current) {
+            videoRef.current.srcObject = basicStream
+            await videoRef.current.play()
+          }
+        } catch (basicErr) {
+          setError('Failed to access camera with basic settings.')
+        }
       } else {
         setError('Failed to access camera. Please try again.')
       }
@@ -103,13 +134,16 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
       })
       setStream(null)
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
     setIsScanning(false)
   }
 
   const scanForQR = () => {
     // In a real implementation, you would use a QR code detection library here
     // For demo purposes, we'll simulate QR detection
-    if (isScanning && videoElement) {
+    if (isScanning && videoRef.current && canvasRef.current) {
       // Continue scanning every 500ms
       setTimeout(() => {
         if (isScanning) {
@@ -126,18 +160,19 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
     }
   }
 
-  const handleVideoRef = (video: HTMLVideoElement | null) => {
-    setVideoElement(video)
-    if (video && stream) {
-      video.srcObject = stream
-      video.play().catch(console.error)
-    }
+  const requestPermissionAgain = async () => {
+    setPermissionDenied(false)
+    setError('')
+    await checkCameraAccess()
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">QR Code Scanner</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Scan className="h-5 w-5" />
+          QR Code Scanner
+        </h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
@@ -150,25 +185,37 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
             <div className="flex-1">
               <h4 className="font-medium text-red-800 dark:text-red-200">Camera Access Required</h4>
               <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
-              <div className="mt-3 space-y-2">
-                <p className="text-xs text-red-600 dark:text-red-300">
-                  To enable camera access:
-                </p>
-                <ul className="text-xs text-red-600 dark:text-red-300 list-disc list-inside space-y-1">
-                  <li>Click the camera icon in your browser's address bar</li>
-                  <li>Select "Allow" for camera permissions</li>
-                  <li>Refresh the page and try again</li>
-                </ul>
-                <Button 
-                  onClick={checkCameraAccess} 
-                  size="sm" 
-                  variant="outline"
-                  className="mt-2"
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-              </div>
+              
+              {permissionDenied && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-red-600 dark:text-red-300 font-medium">
+                    To enable camera access:
+                  </p>
+                  <ul className="text-xs text-red-600 dark:text-red-300 list-disc list-inside space-y-1">
+                    <li>Look for the camera icon 📷 in your browser's address bar</li>
+                    <li>Click it and select "Allow" for camera permissions</li>
+                    <li>Or go to browser Settings → Privacy → Camera → Allow for this site</li>
+                    <li>Refresh the page and try again</li>
+                  </ul>
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      onClick={requestPermissionAgain} 
+                      size="sm" 
+                      variant="outline"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Try Again
+                    </Button>
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      size="sm" 
+                      variant="outline"
+                    >
+                      Refresh Page
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -176,11 +223,19 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
         <div className="space-y-4">
           <div className="relative bg-black rounded-lg overflow-hidden">
             <video
-              ref={handleVideoRef}
+              ref={videoRef}
               className="w-full h-64 object-cover"
               autoPlay
               playsInline
               muted
+              style={{ transform: 'scaleX(-1)' }} // Mirror for better UX
+            />
+            
+            <canvas
+              ref={canvasRef}
+              className="hidden"
+              width="640"
+              height="480"
             />
             
             {isScanning && (
@@ -196,14 +251,15 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
                     
                     {/* Scanning line animation */}
                     <div className="absolute inset-0 overflow-hidden rounded-lg">
-                      <div className="w-full h-0.5 bg-blue-500 animate-pulse" 
-                           style={{
-                             animation: 'scan 2s linear infinite',
-                             transformOrigin: 'center'
-                           }} />
+                      <div 
+                        className="w-full h-0.5 bg-blue-500 animate-pulse absolute"
+                        style={{
+                          animation: 'scan 2s linear infinite',
+                        }} 
+                      />
                     </div>
                   </div>
-                  <p className="text-white text-sm mt-2 text-center">
+                  <p className="text-white text-sm mt-2 text-center bg-black/50 px-2 py-1 rounded">
                     Position QR code within frame
                   </p>
                 </div>
@@ -216,7 +272,7 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
                 onClick={isScanning ? stopCamera : startCamera}
                 size="sm"
                 variant={isScanning ? "destructive" : "default"}
-                className="bg-black/50 hover:bg-black/70"
+                className="bg-black/70 hover:bg-black/90 text-white"
               >
                 {isScanning ? (
                   <>
@@ -233,17 +289,26 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
             </div>
           </div>
           
-          <p className="text-sm text-center text-muted-foreground">
-            Position the QR code within the frame to scan automatically
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Position the QR code within the frame to scan automatically
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">
+              <Camera className="h-3 w-3" />
+              <span>Camera active - scanning for QR codes</span>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-muted rounded-lg p-8 text-center">
           <Camera className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No Camera Available</h3>
+          <h3 className="text-lg font-semibold mb-2">Checking Camera...</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Camera not detected or access denied. You can manually enter the address below.
+            Please allow camera access when prompted
           </p>
+          <div className="animate-pulse flex justify-center">
+            <div className="h-2 w-32 bg-muted-foreground/20 rounded"></div>
+          </div>
         </div>
       )}
 
