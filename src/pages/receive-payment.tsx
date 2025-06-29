@@ -80,6 +80,18 @@ export function ReceivePayment() {
         console.error('Failed to initialize QR code:', error)
       }
     }
+
+    // Cleanup function to properly remove QR code DOM elements
+    return () => {
+      if (qrCodeRef.current) {
+        // Clear all child nodes to prevent DOM conflicts
+        while (qrCodeRef.current.firstChild) {
+          qrCodeRef.current.removeChild(qrCodeRef.current.firstChild)
+        }
+      }
+      qrCodeInstanceRef.current = null
+      setQrGenerated(false)
+    }
   }, [isMobile])
 
   // Update QR code data when dependencies change
@@ -127,15 +139,6 @@ export function ReceivePayment() {
       updateQRCode()
     }
   }, [updateQRCode, wallet?.address])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Let React handle DOM cleanup naturally
-      qrCodeInstanceRef.current = null
-      setQrGenerated(false)
-    }
-  }, [])
 
   const copyAddress = async () => {
     if (!wallet?.address) return
