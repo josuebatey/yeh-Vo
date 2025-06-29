@@ -3,10 +3,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Phone, Check } from 'lucide-react'
+import { Loader2, Phone, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { paymentService } from '@/services/paymentService'
 import { useAuthStore } from '@/stores/authStore'
+import { paymentService } from '@/services/paymentService'
 
 interface PhoneVerificationDialogProps {
   open: boolean
@@ -23,7 +23,7 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
   const [sentCode, setSentCode] = useState('')
 
   const handleSendCode = async () => {
-    if (!phoneNumber) {
+    if (!phoneNumber.trim()) {
       toast.error('Please enter a phone number')
       return
     }
@@ -32,46 +32,60 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
     try {
       const result = await paymentService.sendVerificationCode(phoneNumber)
       if (result.success) {
-        setSentCode(result.code || '')
+        setSentCode(result.code || '123456') // For demo, show the code
         setStep('code')
-        toast.success('Verification code sent!')
+        toast.success(`Verification code sent to ${phoneNumber}`)
+        toast.info(`Demo code: ${result.code || '123456'}`, {
+          description: 'In production, this would be sent via SMS',
+          duration: 10000,
+        })
       }
-    } catch (error) {
-      toast.error('Failed to send verification code')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send verification code')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleVerifyCode = async () => {
-    if (!user || !verificationCode) {
+    if (!verificationCode.trim()) {
       toast.error('Please enter the verification code')
+      return
+    }
+
+    if (verificationCode !== sentCode) {
+      toast.error('Invalid verification code')
       return
     }
 
     setIsLoading(true)
     try {
-      await paymentService.verifyPhoneNumber(user.id, phoneNumber, verificationCode)
+      await paymentService.verifyPhoneNumber(user?.id || '', phoneNumber, verificationCode)
       toast.success('Phone number verified successfully!')
       onVerified()
       onOpenChange(false)
-      resetForm()
+      resetDialog()
     } catch (error: any) {
-      toast.error(error.message || 'Verification failed')
+      toast.error(error.message || 'Failed to verify phone number')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const resetForm = () => {
+  const resetDialog = () => {
     setStep('phone')
     setPhoneNumber('')
     setVerificationCode('')
     setSentCode('')
   }
 
+  const handleClose = () => {
+    onOpenChange(false)
+    resetDialog()
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -96,12 +110,12 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+1234567890"
                 />
               </div>
               <Button 
                 onClick={handleSendCode}
-                disabled={isLoading || !phoneNumber}
+                disabled={isLoading || !phoneNumber.trim()}
                 className="w-full"
               >
                 {isLoading ? (
@@ -126,11 +140,9 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                   placeholder="123456"
                   maxLength={6}
                 />
-                {sentCode && (
-                  <p className="text-xs text-muted-foreground">
-                    Demo code: {sentCode}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Code sent to {phoneNumber}
+                </p>
               </div>
               <div className="flex space-x-2">
                 <Button 
@@ -138,11 +150,11 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                   onClick={() => setStep('phone')}
                   className="flex-1"
                 >
-                  Back
+                  Change Number
                 </Button>
                 <Button 
                   onClick={handleVerifyCode}
-                  disabled={isLoading || verificationCode.length !== 6}
+                  disabled={isLoading || !verificationCode.trim()}
                   className="flex-1"
                 >
                   {isLoading ? (
@@ -152,7 +164,7 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                     </>
                   ) : (
                     <>
-                      <Check className="mr-2 h-4 w-4" />
+                      <CheckCircle className="mr-2 h-4 w-4" />
                       Verify
                     </>
                   )}

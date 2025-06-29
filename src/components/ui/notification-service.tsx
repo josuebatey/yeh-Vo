@@ -1,3 +1,5 @@
+import { toast } from 'sonner'
+
 class NotificationService {
   private permission: NotificationPermission = 'default'
 
@@ -6,8 +8,7 @@ class NotificationService {
   }
 
   async requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications')
+    if (!this.isSupported()) {
       return false
     }
 
@@ -15,94 +16,122 @@ class NotificationService {
       return true
     }
 
-    if (this.permission === 'denied') {
-      console.warn('Notifications are blocked by the user')
-      return false
-    }
-
-    try {
-      const permission = await Notification.requestPermission()
-      this.permission = permission
-      return permission === 'granted'
-    } catch (error) {
-      console.error('Error requesting notification permission:', error)
-      return false
-    }
-  }
-
-  private async showNotification(title: string, options: NotificationOptions = {}): Promise<void> {
-    const hasPermission = await this.requestPermission()
-    
-    if (!hasPermission) {
-      console.warn('Cannot show notification: permission not granted')
-      return
-    }
-
-    try {
-      const notification = new Notification(title, {
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: 'voicepay',
-        requireInteraction: false,
-        ...options
-      })
-
-      // Auto-close after 5 seconds
-      setTimeout(() => {
-        notification.close()
-      }, 5000)
-
-      // Handle click events
-      notification.onclick = () => {
-        window.focus()
-        notification.close()
-      }
-    } catch (error) {
-      console.error('Error showing notification:', error)
-    }
-  }
-
-  async showPaymentSent(amount: number, currency: string, recipient: string): Promise<void> {
-    await this.showNotification('Payment Sent Successfully', {
-      body: `${amount} ${currency} sent to ${recipient.slice(0, 20)}${recipient.length > 20 ? '...' : ''}`,
-      icon: '/favicon.ico'
-    })
-  }
-
-  async showPaymentReceived(amount: number, currency: string, sender: string): Promise<void> {
-    await this.showNotification('Payment Received', {
-      body: `You received ${amount} ${currency} from ${sender.slice(0, 20)}${sender.length > 20 ? '...' : ''}`,
-      icon: '/favicon.ico'
-    })
-  }
-
-  async showInvestmentUpdate(message: string): Promise<void> {
-    await this.showNotification('Investment Update', {
-      body: message,
-      icon: '/favicon.ico'
-    })
-  }
-
-  async showBalanceUpdate(newBalance: number, currency: string): Promise<void> {
-    await this.showNotification('Balance Updated', {
-      body: `Your new balance is ${newBalance.toFixed(4)} ${currency}`,
-      icon: '/favicon.ico'
-    })
-  }
-
-  async showGeneral(title: string, message: string): Promise<void> {
-    await this.showNotification(title, {
-      body: message,
-      icon: '/favicon.ico'
-    })
+    const permission = await Notification.requestPermission()
+    this.permission = permission
+    return permission === 'granted'
   }
 
   isSupported(): boolean {
     return 'Notification' in window
   }
 
-  getPermissionStatus(): NotificationPermission {
-    return this.permission
+  showPaymentSent(amount: number, currency: string, recipient: string): void {
+    const message = `Sent ${amount} ${currency} to ${recipient.slice(0, 20)}...`
+    
+    toast.success(message, {
+      description: 'Payment completed successfully',
+      duration: 5000,
+    })
+
+    if (this.permission === 'granted') {
+      new Notification('VoicePay - Payment Sent', {
+        body: message,
+        icon: '/favicon.ico',
+        tag: 'payment-sent',
+      })
+    }
+  }
+
+  showPaymentReceived(amount: number, currency: string, fromAddress: string): void {
+    const message = `Received ${amount} ${currency} from ${fromAddress.slice(0, 20)}...`
+    
+    toast.success(message, {
+      description: 'Payment received successfully',
+      duration: 8000,
+    })
+
+    if (this.permission === 'granted') {
+      new Notification('VoicePay - Payment Received', {
+        body: message,
+        icon: '/favicon.ico',
+        tag: 'payment-received',
+      })
+    }
+  }
+
+  showBalanceUpdate(newBalance: number, currency: string): void {
+    const message = `Balance updated: ${newBalance.toFixed(4)} ${currency}`
+    
+    toast.info(message, {
+      description: 'Your wallet balance has been refreshed',
+      duration: 4000,
+    })
+  }
+
+  showInvestmentUpdate(message: string): void {
+    toast.success(message, {
+      description: 'Investment portfolio updated',
+      duration: 6000,
+    })
+
+    if (this.permission === 'granted') {
+      new Notification('VoicePay - Investment Update', {
+        body: message,
+        icon: '/favicon.ico',
+        tag: 'investment-update',
+      })
+    }
+  }
+
+  showTransactionUpdate(type: 'completed' | 'failed', amount: number, currency: string): void {
+    const message = `Transaction ${type}: ${amount} ${currency}`
+    const isSuccess = type === 'completed'
+    
+    if (isSuccess) {
+      toast.success(message, {
+        description: 'Transaction processed successfully',
+        duration: 5000,
+      })
+    } else {
+      toast.error(message, {
+        description: 'Transaction failed to process',
+        duration: 6000,
+      })
+    }
+
+    if (this.permission === 'granted') {
+      new Notification(`VoicePay - Transaction ${type}`, {
+        body: message,
+        icon: '/favicon.ico',
+        tag: 'transaction-update',
+      })
+    }
+  }
+
+  showDailyLimitWarning(remaining: number, currency: string): void {
+    const message = `Daily limit warning: ${remaining.toFixed(2)} ${currency} remaining`
+    
+    toast.warning(message, {
+      description: 'Consider upgrading to Pro for unlimited transfers',
+      duration: 8000,
+    })
+  }
+
+  showSystemNotification(title: string, message: string, type: 'info' | 'warning' | 'error' = 'info'): void {
+    const toastFn = type === 'error' ? toast.error : type === 'warning' ? toast.warning : toast.info
+    
+    toastFn(title, {
+      description: message,
+      duration: 6000,
+    })
+
+    if (this.permission === 'granted') {
+      new Notification(`VoicePay - ${title}`, {
+        body: message,
+        icon: '/favicon.ico',
+        tag: 'system-notification',
+      })
+    }
   }
 }
 

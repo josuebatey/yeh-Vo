@@ -20,6 +20,7 @@ import { paymentService } from '@/services/paymentService'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { BackButton } from '@/components/ui/back-button'
+import { useAutoRefresh } from '@/hooks/useAutoRefresh'
 
 export function Dashboard() {
   const { user } = useAuthStore()
@@ -32,6 +33,17 @@ export function Dashboard() {
     transactionCount: 0
   })
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+
+  // Auto refresh every 10 seconds
+  const { forceRefresh } = useAutoRefresh({
+    enabled: true,
+    interval: 10000,
+    onTransactionUpdate: (transactions) => {
+      setRecentTransactions(transactions)
+      loadStats(transactions)
+    }
+  })
 
   useEffect(() => {
     if (user) {
@@ -40,24 +52,25 @@ export function Dashboard() {
     }
   }, [user, loadWallet])
 
-  const loadStats = async () => {
+  const loadStats = async (transactions?: any[]) => {
     if (!user) return
 
     try {
-      const transactions = await paymentService.getTransactionHistory(user.id, 100)
+      const txData = transactions || await paymentService.getTransactionHistory(user.id, 100)
+      setRecentTransactions(txData.slice(0, 5)) // Keep recent 5 for display
       
-      const sent = transactions
+      const sent = txData
         .filter(tx => tx.type === 'send' && tx.status === 'completed')
         .reduce((sum, tx) => sum + tx.amount, 0)
       
-      const received = transactions
+      const received = txData
         .filter(tx => tx.type === 'receive' && tx.status === 'completed')
         .reduce((sum, tx) => sum + tx.amount, 0)
 
       const thisMonth = new Date()
       thisMonth.setDate(1)
       
-      const monthlyTransactions = transactions.filter(tx => 
+      const monthlyTransactions = txData.filter(tx => 
         new Date(tx.created_at) >= thisMonth
       )
       
@@ -67,7 +80,7 @@ export function Dashboard() {
         totalSent: sent,
         totalReceived: received,
         monthlyTotal,
-        transactionCount: transactions.length
+        transactionCount: txData.length
       })
     } catch (error) {
       console.error('Failed to load stats:', error)
@@ -127,6 +140,7 @@ export function Dashboard() {
     try {
       await refreshBalance()
       await loadStats()
+      await forceRefresh()
       toast.success('Balance refreshed!')
     } catch (error) {
       toast.error('Failed to refresh balance')
@@ -243,66 +257,130 @@ export function Dashboard() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Wallet Management</CardTitle>
+              <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Address: {wallet?.address ? `${wallet.address.slice(0, 8)}...${wallet.address.slice(-8)}` : 'Loading...'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Balance: {wallet?.balance?.toFixed(4) || '0'} ALGO
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Transactions: {stats.transactionCount}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleRefreshBalance}
-                  disabled={isRefreshing}
-                >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  {isRefreshing ? 'Refreshing...' : 'Refresh Balance'}
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
+              {recentTransactions.length > 0 ? (
+                <div className="space-y-2">
+                  {recentTransactions.slice(0, 3).map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                      <div className="flex items-center space-x-2">
+                        {tx.type === 'send' ? (
+                          <ArrowUpRight className="h-4 w-4 text-red-500" />
+                        ) : (
+                          <ArrowDownRight className="h-4 w-4 text-green-500" />
+                        )}
+                        <span className="text-sm">
+                          {tx.type === 'send' ? 'Sent' : 'Received'}
+                        </span>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {tx.type === 'send' ? '-' : '+'}
+                        {tx.amount.toFixed(2)} {tx.currency}
+                      </span>
+                    </div>
+                  ))}
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={handleFundWallet}
-                    disabled={isFunding}
+                    onClick={() => navigate('/history')}
+                    className="w-full"
                   >
-                    {isFunding ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Funding...
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="mr-2 h-4 w-4" />
-                        Auto Fund
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={openDispenser}
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Manual Fund
+                    View All Transactions
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Get free TestNet ALGO for testing
-                </p>
-              </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">No recent transactions</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/send')}
+                    className="mt-2"
+                  >
+                    Make Your First Payment
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Wallet Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Address:</span>
+                <p className="font-mono text-xs break-all">
+                  {wallet?.address ? `${wallet.address.slice(0, 8)}...${wallet.address.slice(-8)}` : 'Loading...'}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Balance:</span>
+                <p className="font-semibold">{wallet?.balance?.toFixed(4) || '0'} ALGO</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Transactions:</span>
+                <p className="font-semibold">{stats.transactionCount}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Auto-refresh:</span>
+                <p className="font-semibold text-green-500">Active</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleRefreshBalance}
+                disabled={isRefreshing}
+                className="flex-1"
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleFundWallet}
+                disabled={isFunding}
+                className="flex-1"
+              >
+                {isFunding ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Funding...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Auto Fund
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={openDispenser}
+                className="flex-1"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Manual Fund
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Get free TestNet ALGO for testing • Auto-refresh every 10 seconds
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   )
 }

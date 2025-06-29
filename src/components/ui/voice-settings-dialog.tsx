@@ -5,121 +5,190 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Volume2, Mic } from 'lucide-react'
+import { Volume2, Mic, Settings } from 'lucide-react'
 import { toast } from 'sonner'
+import { voiceService } from '@/services/voiceService'
 
 interface VoiceSettingsDialogProps {
   children: React.ReactNode
 }
 
 export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
+  const [open, setOpen] = useState(false)
   const [settings, setSettings] = useState({
-    voice: 'default',
-    speed: [1],
-    pitch: [1],
-    volume: [0.8],
+    language: 'en-US',
+    voiceRate: [1],
+    voicePitch: [1],
+    voiceVolume: [1],
     autoSpeak: true,
-    language: 'en-US'
+    continuousListening: false,
+    noiseReduction: true,
   })
 
-  const handleTestVoice = () => {
-    const utterance = new SpeechSynthesisUtterance('This is a test of your voice settings.')
-    utterance.rate = settings.speed[0]
-    utterance.pitch = settings.pitch[0]
-    utterance.volume = settings.volume[0]
-    utterance.lang = settings.language
-    speechSynthesis.speak(utterance)
-    toast.success('Voice test completed!')
+  const handleTestVoice = async () => {
+    try {
+      const utterance = new SpeechSynthesisUtterance('This is a test of your voice settings.')
+      utterance.rate = settings.voiceRate[0]
+      utterance.pitch = settings.voicePitch[0]
+      utterance.volume = settings.voiceVolume[0]
+      utterance.lang = settings.language
+      
+      speechSynthesis.speak(utterance)
+      toast.success('Voice test completed!')
+    } catch (error) {
+      toast.error('Failed to test voice settings')
+    }
   }
 
+  const handleSaveSettings = () => {
+    // In a real app, you'd save these to localStorage or user preferences
+    localStorage.setItem('voiceSettings', JSON.stringify(settings))
+    toast.success('Voice settings saved!')
+    setOpen(false)
+  }
+
+  const languages = [
+    { code: 'en-US', name: 'English (US)' },
+    { code: 'en-GB', name: 'English (UK)' },
+    { code: 'es-ES', name: 'Spanish' },
+    { code: 'fr-FR', name: 'French' },
+    { code: 'de-DE', name: 'German' },
+    { code: 'it-IT', name: 'Italian' },
+    { code: 'pt-BR', name: 'Portuguese' },
+    { code: 'ja-JP', name: 'Japanese' },
+    { code: 'ko-KR', name: 'Korean' },
+    { code: 'zh-CN', name: 'Chinese' },
+  ]
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Voice Settings</DialogTitle>
+          <DialogTitle className="flex items-center space-x-2">
+            <Settings className="h-5 w-5" />
+            <span>Voice Settings</span>
+          </DialogTitle>
           <DialogDescription>
-            Customize your voice recognition and text-to-speech preferences
+            Customize your voice recognition and speech settings
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Text-to-Speech</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Language</Label>
-                <Select value={settings.language} onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en-US">English (US)</SelectItem>
-                    <SelectItem value="en-GB">English (UK)</SelectItem>
-                    <SelectItem value="es-ES">Spanish</SelectItem>
-                    <SelectItem value="fr-FR">French</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Language Selection */}
+          <div className="space-y-2">
+            <Label>Language</Label>
+            <Select 
+              value={settings.language} 
+              onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="space-y-2">
-                <Label>Speed: {settings.speed[0]}</Label>
-                <Slider
-                  value={settings.speed}
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, speed: value }))}
-                  min={0.5}
-                  max={2}
-                  step={0.1}
-                />
-              </div>
+          {/* Voice Rate */}
+          <div className="space-y-2">
+            <Label>Speech Rate: {settings.voiceRate[0].toFixed(1)}x</Label>
+            <Slider
+              value={settings.voiceRate}
+              onValueChange={(value) => setSettings(prev => ({ ...prev, voiceRate: value }))}
+              min={0.5}
+              max={2}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
 
-              <div className="space-y-2">
-                <Label>Volume: {Math.round(settings.volume[0] * 100)}%</Label>
-                <Slider
-                  value={settings.volume}
-                  onValueChange={(value) => setSettings(prev => ({ ...prev, volume: value }))}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                />
-              </div>
+          {/* Voice Pitch */}
+          <div className="space-y-2">
+            <Label>Speech Pitch: {settings.voicePitch[0].toFixed(1)}</Label>
+            <Slider
+              value={settings.voicePitch}
+              onValueChange={(value) => setSettings(prev => ({ ...prev, voicePitch: value }))}
+              min={0.5}
+              max={2}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
 
-              <div className="flex items-center justify-between">
+          {/* Voice Volume */}
+          <div className="space-y-2">
+            <Label>Speech Volume: {Math.round(settings.voiceVolume[0] * 100)}%</Label>
+            <Slider
+              value={settings.voiceVolume}
+              onValueChange={(value) => setSettings(prev => ({ ...prev, voiceVolume: value }))}
+              min={0.1}
+              max={1}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
+
+          {/* Toggle Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <Label>Auto-speak responses</Label>
-                <Switch
-                  checked={settings.autoSpeak}
-                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoSpeak: checked }))}
-                />
+                <p className="text-sm text-muted-foreground">Automatically speak AI responses</p>
               </div>
+              <Switch
+                checked={settings.autoSpeak}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, autoSpeak: checked }))}
+              />
+            </div>
 
-              <Button onClick={handleTestVoice} variant="outline" className="w-full">
-                <Volume2 className="mr-2 h-4 w-4" />
-                Test Voice
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Speech Recognition</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Speech recognition uses your browser's built-in capabilities. Make sure to:
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Continuous listening</Label>
+                <p className="text-sm text-muted-foreground">Keep microphone active</p>
               </div>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Allow microphone access</li>
-                <li>• Speak clearly and at normal pace</li>
-                <li>• Use a quiet environment</li>
-                <li>• Wait for the listening indicator</li>
-              </ul>
-            </CardContent>
-          </Card>
+              <Switch
+                checked={settings.continuousListening}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, continuousListening: checked }))}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Noise reduction</Label>
+                <p className="text-sm text-muted-foreground">Filter background noise</p>
+              </div>
+              <Switch
+                checked={settings.noiseReduction}
+                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, noiseReduction: checked }))}
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline"
+              onClick={handleTestVoice}
+              className="flex-1"
+            >
+              <Volume2 className="mr-2 h-4 w-4" />
+              Test Voice
+            </Button>
+            <Button 
+              onClick={handleSaveSettings}
+              className="flex-1"
+            >
+              Save Settings
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
