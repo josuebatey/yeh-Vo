@@ -9,39 +9,60 @@ const resources = {
     translation: {
       // Auth Page
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'Send and receive payments with your voice',
+        tagline: 'The future of voice-powered payments',
         getStarted: 'Get Started',
         description: 'Create an account or sign in to start using VoicePay',
+        loginDescription: 'Welcome back! Please sign in to your account.',
+        signupDescription: 'Create your account to get started with VoicePay.',
         signIn: 'Sign In',
         signUp: 'Sign Up',
         email: 'Email',
         password: 'Password',
+        confirmPassword: 'Confirm Password',
         fullName: 'Full Name',
-        enterEmail: 'Enter your email',
-        enterPassword: 'Enter your password',
-        createPassword: 'Create a password',
-        enterFullName: 'Enter your full name',
+        emailPlaceholder: 'Enter your email',
+        passwordPlaceholder: 'Enter your password',
+        confirmPasswordPlaceholder: 'Confirm your password',
+        fullNamePlaceholder: 'Enter your full name',
         createAccount: 'Create Account',
-        features: 'Voice commands • QR codes • Multi-channel payments',
         welcomeBack: 'Welcome back!',
         accountCreated: 'Account created! Check your email to verify.',
-        forgotPassword: 'Forgot Password?',
-        noAccount: "Don't have an account?",
-        haveAccount: 'Already have an account?',
-        signUpLink: 'Sign up',
-        signInLink: 'Sign in',
-        orContinueWith: 'Or continue with',
-        google: 'Google',
-        apple: 'Apple',
-        microsoft: 'Microsoft',
-        termsAndPrivacy: 'By continuing, you agree to our Terms of Service and Privacy Policy',
-        secureLogin: 'Secure Login',
-        encryptedData: 'Your data is encrypted and secure',
-        multiLanguage: 'Multi-language Support',
-        voiceCommands: 'Voice Commands',
-        blockchainSecure: 'Blockchain Secure',
-        instantPayments: 'Instant Payments'
+        loginSuccess: 'Successfully signed in!',
+        signupSuccess: 'Account created successfully!',
+        passwordMismatch: 'Passwords do not match',
+        error: 'An error occurred. Please try again.',
+        or: 'or',
+        noAccount: "Don't have an account? Sign up",
+        hasAccount: 'Already have an account? Sign in',
+        features: {
+          wallet: {
+            title: 'Secure Wallet',
+            description: 'Your crypto wallet with bank-level security'
+          },
+          voice: {
+            title: 'Voice Commands',
+            description: 'Send payments using natural voice commands'
+          },
+          security: {
+            title: 'Blockchain Security',
+            description: 'Protected by Algorand blockchain technology'
+          },
+          global: {
+            title: 'Global Reach',
+            description: 'Send money anywhere in the world instantly'
+          },
+          instant: {
+            title: 'Instant Payments',
+            description: 'Lightning-fast transactions in seconds'
+          },
+          investment: {
+            title: 'Smart Investing',
+            description: 'Grow your wealth with automated investing'
+          }
+        }
       },
       // Common
       common: {
@@ -109,30 +130,60 @@ const resources = {
   es: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'Envía y recibe pagos con tu voz',
+        tagline: 'El futuro de los pagos por voz',
         getStarted: 'Comenzar',
         description: 'Crea una cuenta o inicia sesión para comenzar a usar VoicePay',
+        loginDescription: '¡Bienvenido de vuelta! Por favor inicia sesión en tu cuenta.',
+        signupDescription: 'Crea tu cuenta para comenzar con VoicePay.',
         signIn: 'Iniciar Sesión',
         signUp: 'Registrarse',
         email: 'Correo Electrónico',
         password: 'Contraseña',
+        confirmPassword: 'Confirmar Contraseña',
         fullName: 'Nombre Completo',
-        enterEmail: 'Ingresa tu correo electrónico',
-        enterPassword: 'Ingresa tu contraseña',
-        createPassword: 'Crea una contraseña',
-        enterFullName: 'Ingresa tu nombre completo',
+        emailPlaceholder: 'Ingresa tu correo electrónico',
+        passwordPlaceholder: 'Ingresa tu contraseña',
+        confirmPasswordPlaceholder: 'Confirma tu contraseña',
+        fullNamePlaceholder: 'Ingresa tu nombre completo',
         createAccount: 'Crear Cuenta',
-        features: 'Comandos de voz • Códigos QR • Pagos multicanal',
         welcomeBack: '¡Bienvenido de vuelta!',
         accountCreated: '¡Cuenta creada! Revisa tu correo para verificar.',
-        orContinueWith: 'O continúa con',
-        termsAndPrivacy: 'Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad',
-        voiceCommands: 'Comandos de Voz',
-        blockchainSecure: 'Seguridad Blockchain',
-        instantPayments: 'Pagos Instantáneos',
-        multiLanguage: 'Soporte Multiidioma',
-        encryptedData: 'Tus datos están encriptados y seguros'
+        loginSuccess: '¡Sesión iniciada exitosamente!',
+        signupSuccess: '¡Cuenta creada exitosamente!',
+        passwordMismatch: 'Las contraseñas no coinciden',
+        error: 'Ocurrió un error. Por favor intenta de nuevo.',
+        or: 'o',
+        noAccount: '¿No tienes cuenta? Regístrate',
+        hasAccount: '¿Ya tienes cuenta? Inicia sesión',
+        features: {
+          wallet: {
+            title: 'Billetera Segura',
+            description: 'Tu billetera cripto con seguridad bancaria'
+          },
+          voice: {
+            title: 'Comandos de Voz',
+            description: 'Envía pagos usando comandos de voz naturales'
+          },
+          security: {
+            title: 'Seguridad Blockchain',
+            description: 'Protegido por la tecnología blockchain de Algorand'
+          },
+          global: {
+            title: 'Alcance Global',
+            description: 'Envía dinero a cualquier parte del mundo al instante'
+          },
+          instant: {
+            title: 'Pagos Instantáneos',
+            description: 'Transacciones ultrarrápidas en segundos'
+          },
+          investment: {
+            title: 'Inversión Inteligente',
+            description: 'Haz crecer tu riqueza con inversión automatizada'
+          }
+        }
       },
       common: {
         loading: 'Cargando...',
@@ -157,30 +208,60 @@ const resources = {
   fr: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'Envoyez et recevez des paiements avec votre voix',
+        tagline: 'L\'avenir des paiements vocaux',
         getStarted: 'Commencer',
         description: 'Créez un compte ou connectez-vous pour commencer à utiliser VoicePay',
+        loginDescription: 'Bon retour ! Veuillez vous connecter à votre compte.',
+        signupDescription: 'Créez votre compte pour commencer avec VoicePay.',
         signIn: 'Se Connecter',
         signUp: "S'inscrire",
         email: 'Email',
         password: 'Mot de passe',
+        confirmPassword: 'Confirmer le mot de passe',
         fullName: 'Nom complet',
-        enterEmail: 'Entrez votre email',
-        enterPassword: 'Entrez votre mot de passe',
-        createPassword: 'Créez un mot de passe',
-        enterFullName: 'Entrez votre nom complet',
+        emailPlaceholder: 'Entrez votre email',
+        passwordPlaceholder: 'Entrez votre mot de passe',
+        confirmPasswordPlaceholder: 'Confirmez votre mot de passe',
+        fullNamePlaceholder: 'Entrez votre nom complet',
         createAccount: 'Créer un compte',
-        features: 'Commandes vocales • Codes QR • Paiements multi-canaux',
         welcomeBack: 'Bon retour !',
         accountCreated: 'Compte créé ! Vérifiez votre email pour confirmer.',
-        orContinueWith: 'Ou continuer avec',
-        termsAndPrivacy: 'En continuant, vous acceptez nos Conditions de Service et Politique de Confidentialité',
-        voiceCommands: 'Commandes Vocales',
-        blockchainSecure: 'Sécurité Blockchain',
-        instantPayments: 'Paiements Instantanés',
-        multiLanguage: 'Support Multilingue',
-        encryptedData: 'Vos données sont cryptées et sécurisées'
+        loginSuccess: 'Connexion réussie !',
+        signupSuccess: 'Compte créé avec succès !',
+        passwordMismatch: 'Les mots de passe ne correspondent pas',
+        error: 'Une erreur s\'est produite. Veuillez réessayer.',
+        or: 'ou',
+        noAccount: 'Pas de compte ? Inscrivez-vous',
+        hasAccount: 'Déjà un compte ? Connectez-vous',
+        features: {
+          wallet: {
+            title: 'Portefeuille Sécurisé',
+            description: 'Votre portefeuille crypto avec sécurité bancaire'
+          },
+          voice: {
+            title: 'Commandes Vocales',
+            description: 'Envoyez des paiements avec des commandes vocales naturelles'
+          },
+          security: {
+            title: 'Sécurité Blockchain',
+            description: 'Protégé par la technologie blockchain Algorand'
+          },
+          global: {
+            title: 'Portée Mondiale',
+            description: 'Envoyez de l\'argent partout dans le monde instantanément'
+          },
+          instant: {
+            title: 'Paiements Instantanés',
+            description: 'Transactions ultra-rapides en secondes'
+          },
+          investment: {
+            title: 'Investissement Intelligent',
+            description: 'Faites fructifier votre patrimoine avec l\'investissement automatisé'
+          }
+        }
       },
       common: {
         loading: 'Chargement...',
@@ -205,30 +286,60 @@ const resources = {
   pt: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'Envie e receba pagamentos com sua voz',
+        tagline: 'O futuro dos pagamentos por voz',
         getStarted: 'Começar',
         description: 'Crie uma conta ou faça login para começar a usar o VoicePay',
+        loginDescription: 'Bem-vindo de volta! Por favor, faça login em sua conta.',
+        signupDescription: 'Crie sua conta para começar com o VoicePay.',
         signIn: 'Entrar',
         signUp: 'Cadastrar',
         email: 'Email',
         password: 'Senha',
+        confirmPassword: 'Confirmar Senha',
         fullName: 'Nome Completo',
-        enterEmail: 'Digite seu email',
-        enterPassword: 'Digite sua senha',
-        createPassword: 'Crie uma senha',
-        enterFullName: 'Digite seu nome completo',
+        emailPlaceholder: 'Digite seu email',
+        passwordPlaceholder: 'Digite sua senha',
+        confirmPasswordPlaceholder: 'Confirme sua senha',
+        fullNamePlaceholder: 'Digite seu nome completo',
         createAccount: 'Criar Conta',
-        features: 'Comandos de voz • Códigos QR • Pagamentos multicanal',
         welcomeBack: 'Bem-vindo de volta!',
         accountCreated: 'Conta criada! Verifique seu email para confirmar.',
-        orContinueWith: 'Ou continue com',
-        termsAndPrivacy: 'Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade',
-        voiceCommands: 'Comandos de Voz',
-        blockchainSecure: 'Segurança Blockchain',
-        instantPayments: 'Pagamentos Instantâneos',
-        multiLanguage: 'Suporte Multilíngue',
-        encryptedData: 'Seus dados são criptografados e seguros'
+        loginSuccess: 'Login realizado com sucesso!',
+        signupSuccess: 'Conta criada com sucesso!',
+        passwordMismatch: 'As senhas não coincidem',
+        error: 'Ocorreu um erro. Tente novamente.',
+        or: 'ou',
+        noAccount: 'Não tem conta? Cadastre-se',
+        hasAccount: 'Já tem conta? Faça login',
+        features: {
+          wallet: {
+            title: 'Carteira Segura',
+            description: 'Sua carteira cripto com segurança bancária'
+          },
+          voice: {
+            title: 'Comandos de Voz',
+            description: 'Envie pagamentos usando comandos de voz naturais'
+          },
+          security: {
+            title: 'Segurança Blockchain',
+            description: 'Protegido pela tecnologia blockchain Algorand'
+          },
+          global: {
+            title: 'Alcance Global',
+            description: 'Envie dinheiro para qualquer lugar do mundo instantaneamente'
+          },
+          instant: {
+            title: 'Pagamentos Instantâneos',
+            description: 'Transações ultrarrápidas em segundos'
+          },
+          investment: {
+            title: 'Investimento Inteligente',
+            description: 'Faça seu patrimônio crescer com investimento automatizado'
+          }
+        }
       },
       common: {
         loading: 'Carregando...',
@@ -253,46 +364,65 @@ const resources = {
   ar: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'أرسل واستقبل المدفوعات بصوتك',
+        tagline: 'مستقبل المدفوعات الصوتية',
         getStarted: 'ابدأ',
         description: 'أنشئ حساباً أو سجل دخولك لبدء استخدام VoicePay',
+        loginDescription: 'مرحباً بعودتك! يرجى تسجيل الدخول إلى حسابك.',
+        signupDescription: 'أنشئ حسابك للبدء مع VoicePay.',
         signIn: 'تسجيل الدخول',
         signUp: 'إنشاء حساب',
         email: 'البريد الإلكتروني',
         password: 'كلمة المرور',
+        confirmPassword: 'تأكيد كلمة المرور',
         fullName: 'الاسم الكامل',
-        enterEmail: 'أدخل بريدك الإلكتروني',
-        enterPassword: 'أدخل كلمة المرور',
-        createPassword: 'أنشئ كلمة مرور',
-        enterFullName: 'أدخل اسمك الكامل',
+        emailPlaceholder: 'أدخل بريدك الإلكتروني',
+        passwordPlaceholder: 'أدخل كلمة المرور',
+        confirmPasswordPlaceholder: 'أكد كلمة المرور',
+        fullNamePlaceholder: 'أدخل اسمك الكامل',
         createAccount: 'إنشاء حساب',
-        features: 'أوامر صوتية • رموز QR • مدفوعات متعددة القنوات',
         welcomeBack: 'مرحباً بعودتك!',
         accountCreated: 'تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد.',
-        orContinueWith: 'أو تابع مع',
-        termsAndPrivacy: 'بالمتابعة، أنت توافق على شروط الخدمة وسياسة الخصوصية',
-        voiceCommands: 'الأوامر الصوتية',
-        blockchainSecure: 'أمان البلوك تشين',
-        instantPayments: 'مدفوعات فورية',
-        multiLanguage: 'دعم متعدد اللغات',
-        encryptedData: 'بياناتك مشفرة وآمنة'
+        loginSuccess: 'تم تسجيل الدخول بنجاح!',
+        signupSuccess: 'تم إنشاء الحساب بنجاح!',
+        passwordMismatch: 'كلمات المرور غير متطابقة',
+        error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
+        or: 'أو',
+        noAccount: 'ليس لديك حساب؟ سجل الآن',
+        hasAccount: 'لديك حساب بالفعل؟ سجل دخولك',
+        features: {
+          wallet: {
+            title: 'محفظة آمنة',
+            description: 'محفظتك الرقمية بأمان مصرفي'
+          },
+          voice: {
+            title: 'الأوامر الصوتية',
+            description: 'أرسل المدفوعات باستخدام أوامر صوتية طبيعية'
+          },
+          security: {
+            title: 'أمان البلوك تشين',
+            description: 'محمي بتقنية البلوك تشين من Algorand'
+          },
+          global: {
+            title: 'وصول عالمي',
+            description: 'أرسل الأموال إلى أي مكان في العالم فوراً'
+          },
+          instant: {
+            title: 'مدفوعات فورية',
+            description: 'معاملات فائقة السرعة في ثوانٍ'
+          },
+          investment: {
+            title: 'استثمار ذكي',
+            description: 'نمِّ ثروتك بالاستثمار الآلي'
+          }
+        }
       },
       common: {
         loading: 'جاري التحميل...',
         language: 'اللغة',
         logout: 'تسجيل الخروج'
-      },
-      nav: {
-        dashboard: 'لوحة التحكم',
-        sendPayment: 'إرسال دفعة',
-        receive: 'استقبال',
-        history: 'التاريخ',
-        invest: 'استثمار',
-        wallet: 'المحفظة',
-        voiceCommands: 'الأوامر الصوتية',
-        aiAssistant: 'المساعد الذكي',
-        settings: 'الإعدادات'
       }
     }
   },
@@ -301,194 +431,65 @@ const resources = {
   sw: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: 'Tuma na pokea malipo kwa sauti yako',
+        tagline: 'Mustakabali wa malipo ya sauti',
         getStarted: 'Anza',
         description: 'Fungua akaunti au ingia ili kuanza kutumia VoicePay',
+        loginDescription: 'Karibu tena! Tafadhali ingia kwenye akaunti yako.',
+        signupDescription: 'Fungua akaunti yako ili kuanza na VoicePay.',
         signIn: 'Ingia',
         signUp: 'Jisajili',
         email: 'Barua pepe',
         password: 'Nenosiri',
+        confirmPassword: 'Thibitisha Nenosiri',
         fullName: 'Jina kamili',
-        enterEmail: 'Ingiza barua pepe yako',
-        enterPassword: 'Ingiza nenosiri lako',
-        createPassword: 'Tengeneza nenosiri',
-        enterFullName: 'Ingiza jina lako kamili',
+        emailPlaceholder: 'Ingiza barua pepe yako',
+        passwordPlaceholder: 'Ingiza nenosiri lako',
+        confirmPasswordPlaceholder: 'Thibitisha nenosiri lako',
+        fullNamePlaceholder: 'Ingiza jina lako kamili',
         createAccount: 'Fungua Akaunti',
-        features: 'Amri za sauti • Misimbo ya QR • Malipo ya njia nyingi',
         welcomeBack: 'Karibu tena!',
         accountCreated: 'Akaunti imetengenezwa! Angalia barua pepe yako ili kuthibitisha.',
-        orContinueWith: 'Au endelea na',
-        termsAndPrivacy: 'Kwa kuendelea, unakubali Masharti yetu ya Huduma na Sera ya Faragha',
-        voiceCommands: 'Amri za Sauti',
-        blockchainSecure: 'Usalama wa Blockchain',
-        instantPayments: 'Malipo ya Haraka',
-        multiLanguage: 'Msaada wa Lugha Nyingi',
-        encryptedData: 'Data yako imefichwa na ni salama'
+        loginSuccess: 'Umeingia kwa mafanikio!',
+        signupSuccess: 'Akaunti imetengenezwa kwa mafanikio!',
+        passwordMismatch: 'Nenosiri hazifanani',
+        error: 'Hitilafu imetokea. Tafadhali jaribu tena.',
+        or: 'au',
+        noAccount: 'Huna akaunti? Jisajili',
+        hasAccount: 'Una akaunti tayari? Ingia',
+        features: {
+          wallet: {
+            title: 'Mkoba Salama',
+            description: 'Mkoba wako wa kripto na usalama wa benki'
+          },
+          voice: {
+            title: 'Amri za Sauti',
+            description: 'Tuma malipo kwa kutumia amri za sauti za asili'
+          },
+          security: {
+            title: 'Usalama wa Blockchain',
+            description: 'Umelindwa na teknolojia ya blockchain ya Algorand'
+          },
+          global: {
+            title: 'Ufikio wa Kimataifa',
+            description: 'Tuma pesa popote duniani papo hapo'
+          },
+          instant: {
+            title: 'Malipo ya Haraka',
+            description: 'Miamala ya kasi sana kwa sekunde'
+          },
+          investment: {
+            title: 'Uwekezaji Mahiri',
+            description: 'Ongeza utajiri wako kwa uwekezaji wa kiotomatiki'
+          }
+        }
       },
       common: {
         loading: 'Inapakia...',
         language: 'Lugha',
         logout: 'Toka'
-      },
-      nav: {
-        dashboard: 'Dashibodi',
-        sendPayment: 'Tuma Malipo',
-        receive: 'Pokea',
-        history: 'Historia',
-        invest: 'Wekeza',
-        wallet: 'Mkoba',
-        voiceCommands: 'Amri za Sauti',
-        aiAssistant: 'Msaidizi wa AI',
-        settings: 'Mipangilio'
-      }
-    }
-  },
-
-  // Hausa (West Africa)
-  ha: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: 'Aika da karɓar kuɗi da muryar ku',
-        getStarted: 'Fara',
-        description: 'Ƙirƙiri asusun ko shiga don fara amfani da VoicePay',
-        signIn: 'Shiga',
-        signUp: 'Yi rajista',
-        email: 'Imel',
-        password: 'Kalmar sirri',
-        fullName: 'Cikakken suna',
-        enterEmail: 'Shigar da imel ɗin ku',
-        enterPassword: 'Shigar da kalmar sirrin ku',
-        createPassword: 'Ƙirƙiri kalmar sirri',
-        enterFullName: 'Shigar da cikakken sunan ku',
-        createAccount: 'Ƙirƙiri Asusun',
-        features: 'Umarnin murya • Lambobin QR • Biyan kuɗi ta hanyoyi daban-daban',
-        welcomeBack: 'Barka da dawowa!',
-        accountCreated: 'An ƙirƙiri asusun! Duba imel ɗin ku don tabbatarwa.',
-        orContinueWith: 'Ko ci gaba da',
-        termsAndPrivacy: 'Ta hanyar ci gaba, kun yarda da Sharuɗɗan Sabis ɗinmu da Manufar Sirri',
-        voiceCommands: 'Umarnin Murya',
-        blockchainSecure: 'Tsaron Blockchain',
-        instantPayments: 'Biyan Kuɗi nan take',
-        multiLanguage: 'Goyan bayan Harsuna da yawa',
-        encryptedData: 'Bayanan ku an ɓoye kuma suna da aminci'
-      },
-      common: {
-        loading: 'Ana lodawa...',
-        language: 'Harshe',
-        logout: 'Fita'
-      }
-    }
-  },
-
-  // Yoruba (West Africa)
-  yo: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: 'Fi ohùn rẹ ránṣẹ́ àti gbà owó',
-        getStarted: 'Bẹ̀rẹ̀',
-        description: 'Ṣẹ̀dá àkáǹtì tàbí wọlé láti bẹ̀rẹ̀ lílo VoicePay',
-        signIn: 'Wọlé',
-        signUp: 'Forúkọsílẹ̀',
-        email: 'Ímeèlì',
-        password: 'Ọ̀rọ̀ aṣínà',
-        fullName: 'Orúkọ kíkún',
-        enterEmail: 'Tẹ ímeèlì rẹ sínú',
-        enterPassword: 'Tẹ ọ̀rọ̀ aṣínà rẹ sínú',
-        createPassword: 'Ṣẹ̀dá ọ̀rọ̀ aṣínà',
-        enterFullName: 'Tẹ orúkọ kíkún rẹ sínú',
-        createAccount: 'Ṣẹ̀dá Àkáǹtì',
-        features: 'Àwọn àṣẹ ohùn • Àwọn kóòdù QR • Ìsanwó ọ̀nà púpọ̀',
-        welcomeBack: 'Káàbọ̀ padà!',
-        accountCreated: 'A ti ṣẹ̀dá àkáǹtì! Wo ímeèlì rẹ fún ìjẹ́rìísí.',
-        orContinueWith: 'Tàbí tẹ̀síwájú pẹ̀lú',
-        termsAndPrivacy: 'Nípa títẹ̀síwájú, o gbà àwọn Òfin Iṣẹ́ wa àti Ìlànà Àṣírí',
-        voiceCommands: 'Àwọn Àṣẹ Ohùn',
-        blockchainSecure: 'Àábo Blockchain',
-        instantPayments: 'Ìsanwó Lẹ́sẹ̀kẹsẹ̀',
-        multiLanguage: 'Àtìlẹ́yìn Èdè Púpọ̀',
-        encryptedData: 'Dátà rẹ ti di ìkọ̀kọ̀ ó sì wà láàbò'
-      },
-      common: {
-        loading: 'Ń gbé...',
-        language: 'Èdè',
-        logout: 'Jáde'
-      }
-    }
-  },
-
-  // Amharic (Ethiopia)
-  am: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: 'በድምፅዎ ገንዘብ ይላኩ እና ይቀበሉ',
-        getStarted: 'ይጀምሩ',
-        description: 'VoicePay መጠቀም ለመጀመር መለያ ይፍጠሩ ወይም ይግቡ',
-        signIn: 'ግባ',
-        signUp: 'ይመዝገቡ',
-        email: 'ኢሜል',
-        password: 'የይለፍ ቃል',
-        fullName: 'ሙሉ ስም',
-        enterEmail: 'ኢሜልዎን ያስገቡ',
-        enterPassword: 'የይለፍ ቃልዎን ያስገቡ',
-        createPassword: 'የይለፍ ቃል ይፍጠሩ',
-        enterFullName: 'ሙሉ ስምዎን ያስገቡ',
-        createAccount: 'መለያ ይፍጠሩ',
-        features: 'የድምፅ ትዕዛዞች • QR ኮዶች • ባለብዙ ቻናል ክፍያዎች',
-        welcomeBack: 'እንኳን ደህና መጡ!',
-        accountCreated: 'መለያ ተፈጥሯል! ለማረጋገጥ ኢሜልዎን ይመልከቱ።',
-        orContinueWith: 'ወይም ይቀጥሉ በ',
-        termsAndPrivacy: 'በመቀጠል የእኛን የአገልግሎት ውሎች እና የግላዊነት ፖሊሲ ይቀበላሉ',
-        voiceCommands: 'የድምፅ ትዕዛዞች',
-        blockchainSecure: 'የብሎክቼይን ደህንነት',
-        instantPayments: 'ፈጣን ክፍያዎች',
-        multiLanguage: 'ባለብዙ ቋንቋ ድጋፍ',
-        encryptedData: 'መረጃዎ የተመሰጠረ እና ደህንነቱ የተጠበቀ ነው'
-      },
-      common: {
-        loading: 'በመጫን ላይ...',
-        language: 'ቋንቋ',
-        logout: 'ውጣ'
-      }
-    }
-  },
-
-  // Hindi (India)
-  hi: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: 'अपनी आवाज़ से पैसे भेजें और प्राप्त करें',
-        getStarted: 'शुरू करें',
-        description: 'VoicePay का उपयोग शुरू करने के लिए खाता बनाएं या साइन इन करें',
-        signIn: 'साइन इन करें',
-        signUp: 'साइन अप करें',
-        email: 'ईमेल',
-        password: 'पासवर्ड',
-        fullName: 'पूरा नाम',
-        enterEmail: 'अपना ईमेल दर्ज करें',
-        enterPassword: 'अपना पासवर्ड दर्ज करें',
-        createPassword: 'पासवर्ड बनाएं',
-        enterFullName: 'अपना पूरा नाम दर्ज करें',
-        createAccount: 'खाता बनाएं',
-        features: 'आवाज़ कमांड • QR कोड • मल्टी-चैनल भुगतान',
-        welcomeBack: 'वापसी पर स्वागत है!',
-        accountCreated: 'खाता बनाया गया! सत्यापन के लिए अपना ईमेल जांचें।',
-        orContinueWith: 'या जारी रखें',
-        termsAndPrivacy: 'जारी रखकर, आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत हैं',
-        voiceCommands: 'आवाज़ कमांड',
-        blockchainSecure: 'ब्लॉकचेन सुरक्षा',
-        instantPayments: 'तत्काल भुगतान',
-        multiLanguage: 'बहुभाषी समर्थन',
-        encryptedData: 'आपका डेटा एन्क्रिप्टेड और सुरक्षित है'
-      },
-      common: {
-        loading: 'लोड हो रहा है...',
-        language: 'भाषा',
-        logout: 'लॉग आउट'
       }
     }
   },
@@ -497,109 +498,65 @@ const resources = {
   zh: {
     translation: {
       auth: {
+        appName: 'VoicePay',
         title: 'VoicePay',
         subtitle: '用您的声音发送和接收付款',
+        tagline: '语音支付的未来',
         getStarted: '开始使用',
         description: '创建账户或登录以开始使用VoicePay',
+        loginDescription: '欢迎回来！请登录您的账户。',
+        signupDescription: '创建您的账户以开始使用VoicePay。',
         signIn: '登录',
         signUp: '注册',
         email: '邮箱',
         password: '密码',
+        confirmPassword: '确认密码',
         fullName: '全名',
-        enterEmail: '输入您的邮箱',
-        enterPassword: '输入您的密码',
-        createPassword: '创建密码',
-        enterFullName: '输入您的全名',
+        emailPlaceholder: '输入您的邮箱',
+        passwordPlaceholder: '输入您的密码',
+        confirmPasswordPlaceholder: '确认您的密码',
+        fullNamePlaceholder: '输入您的全名',
         createAccount: '创建账户',
-        features: '语音命令 • 二维码 • 多渠道支付',
         welcomeBack: '欢迎回来！',
         accountCreated: '账户已创建！请检查您的邮箱进行验证。',
-        orContinueWith: '或继续使用',
-        termsAndPrivacy: '继续即表示您同意我们的服务条款和隐私政策',
-        voiceCommands: '语音命令',
-        blockchainSecure: '区块链安全',
-        instantPayments: '即时支付',
-        multiLanguage: '多语言支持',
-        encryptedData: '您的数据已加密且安全'
+        loginSuccess: '登录成功！',
+        signupSuccess: '账户创建成功！',
+        passwordMismatch: '密码不匹配',
+        error: '发生错误，请重试。',
+        or: '或',
+        noAccount: '没有账户？立即注册',
+        hasAccount: '已有账户？立即登录',
+        features: {
+          wallet: {
+            title: '安全钱包',
+            description: '您的加密钱包具有银行级安全性'
+          },
+          voice: {
+            title: '语音命令',
+            description: '使用自然语音命令发送付款'
+          },
+          security: {
+            title: '区块链安全',
+            description: '受Algorand区块链技术保护'
+          },
+          global: {
+            title: '全球覆盖',
+            description: '即时向世界任何地方汇款'
+          },
+          instant: {
+            title: '即时支付',
+            description: '秒级超快交易'
+          },
+          investment: {
+            title: '智能投资',
+            description: '通过自动投资增长您的财富'
+          }
+        }
       },
       common: {
         loading: '加载中...',
         language: '语言',
         logout: '退出登录'
-      }
-    }
-  },
-
-  // Russian (Russia & Eastern Europe)
-  ru: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: 'Отправляйте и получайте платежи голосом',
-        getStarted: 'Начать',
-        description: 'Создайте аккаунт или войдите, чтобы начать использовать VoicePay',
-        signIn: 'Войти',
-        signUp: 'Регистрация',
-        email: 'Электронная почта',
-        password: 'Пароль',
-        fullName: 'Полное имя',
-        enterEmail: 'Введите вашу электронную почту',
-        enterPassword: 'Введите ваш пароль',
-        createPassword: 'Создайте пароль',
-        enterFullName: 'Введите ваше полное имя',
-        createAccount: 'Создать аккаунт',
-        features: 'Голосовые команды • QR-коды • Многоканальные платежи',
-        welcomeBack: 'Добро пожаловать обратно!',
-        accountCreated: 'Аккаунт создан! Проверьте вашу электронную почту для подтверждения.',
-        orContinueWith: 'Или продолжить с',
-        termsAndPrivacy: 'Продолжая, вы соглашаетесь с нашими Условиями обслуживания и Политикой конфиденциальности',
-        voiceCommands: 'Голосовые команды',
-        blockchainSecure: 'Безопасность блокчейна',
-        instantPayments: 'Мгновенные платежи',
-        multiLanguage: 'Многоязычная поддержка',
-        encryptedData: 'Ваши данные зашифрованы и защищены'
-      },
-      common: {
-        loading: 'Загрузка...',
-        language: 'Язык',
-        logout: 'Выйти'
-      }
-    }
-  },
-
-  // Japanese (Japan)
-  ja: {
-    translation: {
-      auth: {
-        title: 'VoicePay',
-        subtitle: '音声で支払いを送受信',
-        getStarted: '始める',
-        description: 'VoicePayの使用を開始するにはアカウントを作成するかサインインしてください',
-        signIn: 'サインイン',
-        signUp: 'サインアップ',
-        email: 'メール',
-        password: 'パスワード',
-        fullName: 'フルネーム',
-        enterEmail: 'メールアドレスを入力',
-        enterPassword: 'パスワードを入力',
-        createPassword: 'パスワードを作成',
-        enterFullName: 'フルネームを入力',
-        createAccount: 'アカウント作成',
-        features: '音声コマンド • QRコード • マルチチャネル決済',
-        welcomeBack: 'おかえりなさい！',
-        accountCreated: 'アカウントが作成されました！確認のためメールをチェックしてください。',
-        orContinueWith: 'または続行',
-        termsAndPrivacy: '続行することで、利用規約とプライバシーポリシーに同意したものとみなされます',
-        voiceCommands: '音声コマンド',
-        blockchainSecure: 'ブロックチェーンセキュリティ',
-        instantPayments: '即座の支払い',
-        multiLanguage: '多言語サポート',
-        encryptedData: 'あなたのデータは暗号化され安全です'
-      },
-      common: {
-        loading: '読み込み中...',
-        language: '言語',
-        logout: 'ログアウト'
       }
     }
   }
