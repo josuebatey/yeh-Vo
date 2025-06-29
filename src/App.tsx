@@ -25,8 +25,16 @@ function AppRoutes() {
   const { user, refreshUser } = useAuthStore()
 
   useEffect(() => {
-    // Request notification permission
-    notificationService.requestPermission()
+    // Request notification permission on app startup
+    if (notificationService.isSupported()) {
+      notificationService.requestPermission().then((granted) => {
+        if (granted) {
+          console.log('Notification permission granted')
+        } else {
+          console.log('Notification permission denied')
+        }
+      })
+    }
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {

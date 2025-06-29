@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { generateAccount, secretKeyToMnemonic, mnemonicToSecretKey } from 'algosdk'
 import { supabase } from '@/lib/supabase'
 import { algorandService } from '@/services/algorandService'
+import { notificationService } from '@/components/ui/notification-service'
 
 interface Wallet {
   address: string
@@ -119,6 +120,8 @@ export const useWalletStore = create<WalletState>()(
 
         try {
           const balance = await algorandService.getBalance(wallet.address)
+          const oldBalance = wallet.balance
+          
           set({ wallet: { ...wallet, balance } })
           
           // Update in database
@@ -126,6 +129,11 @@ export const useWalletStore = create<WalletState>()(
             .from('wallets')
             .update({ balance, updated_at: new Date().toISOString() })
             .eq('algorand_address', wallet.address)
+
+          // Show notification if balance changed significantly
+          if (Math.abs(balance - oldBalance) > 0.001) {
+            notificationService.showBalanceUpdate(balance, 'ALGO')
+          }
         } catch (error) {
           console.error('Failed to refresh balance:', error)
         }

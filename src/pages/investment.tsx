@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { TrendingUp, DollarSign, Calendar, Target, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -11,6 +12,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { supabase } from '@/lib/supabase'
 import { BackButton } from '@/components/ui/back-button'
+import { notificationService } from '@/components/ui/notification-service'
 
 interface Investment {
   id: string
@@ -29,6 +31,8 @@ export function Investment() {
   const [isLoading, setIsLoading] = useState(false)
   const [investAmount, setInvestAmount] = useState('')
   const [selectedAPY, setSelectedAPY] = useState(8.5)
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false)
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -93,13 +97,26 @@ export function Investment() {
       if (error) throw error
 
       // Update wallet balance (simulate deduction)
-      await supabase
+      const { data: wallets } = await supabase
         .from('wallets')
-        .update({ 
-          balance: wallet.balance - amount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('algorand_address', wallet.address)
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      if (wallets && wallets.length > 0) {
+        await supabase
+          .from('wallets')
+          .update({ 
+            balance: wallets[0].balance - amount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+      }
+
+      // Show notification
+      notificationService.showInvestmentUpdate(
+        `Investment of ${amount} ALGO started with ${selectedAPY}% APY`
+      )
 
       toast.success(`Successfully invested ${amount} ALGO!`)
       setInvestAmount('')
@@ -114,29 +131,51 @@ export function Investment() {
     }
   }
 
-  const handleWithdraw = async (investmentId: string, currentValue: number) => {
-    if (!user || !wallet) return
+  const handleWithdrawClick = (investment: Investment) => {
+    setSelectedInvestment(investment)
+    setShowWithdrawDialog(true)
+  }
 
+  const handleWithdraw = async () => {
+    if (!user || !wallet || !selectedInvestment) return
+
+    const currentValue = calculateCurrentValue(selectedInvestment)
+    
     setIsLoading(true)
     try {
       // Mark investment as withdrawn
       const { error: updateError } = await supabase
         .from('investments')
         .update({ status: 'withdrawn' })
-        .eq('id', investmentId)
+        .eq('id', selectedInvestment.id)
 
       if (updateError) throw updateError
 
       // Update wallet balance (add withdrawal)
-      await supabase
+      const { data: wallets } = await supabase
         .from('wallets')
-        .update({ 
-          balance: wallet.balance + currentValue,
-          updated_at: new Date().toISOString()
-        })
-        .eq('algorand_address', wallet.address)
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      if (wallets && wallets.length > 0) {
+        await supabase
+          .from('wallets')
+          .update({ 
+            balance: wallets[0].balance + currentValue,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+      }
+
+      // Show notification
+      notificationService.showInvestmentUpdate(
+        `Investment withdrawn: ${currentValue.toFixed(4)} ALGO added to wallet`
+      )
 
       toast.success(`Successfully withdrew ${currentValue.toFixed(4)} ALGO!`)
+      setShowWithdrawDialog(false)
+      setSelectedInvestment(null)
       loadInvestments()
       refreshBalance()
       
@@ -149,7 +188,7 @@ export function Investment() {
   }
 
   const totalInvested = investments.reduce((sum, inv) => sum + inv.amount_invested, 0)
-  const totalCurrentValue = investments.reduce((sum, inv) => sum + calculateCurrentValue(inv),0)
+  const totalCurrentValue = investments.reduce((sum, inv) => sum + calculateCurrentValue(inv), 0)
   const totalGains = totalCurrentValue - totalInvested
 
   const investmentOptions = [
@@ -366,7 +405,7 @@ export function Investment() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleWithdraw(investment.id, currentValue)}
+                          onClick={() => handleWithdrawClick(investment)}
                           disabled={isLoading}
                           className="w-full"
                         >
@@ -381,6 +420,64 @@ export function Investment() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Withdrawal Confirmation Dialog */}
+      <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Withdrawal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to withdraw this investment?
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvestment && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Original Investment:</span>
+                    <span>{selectedInvestment.amount_invested.toFixed(4)} ALGO</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Current Value:</span>
+                    <span className="text-green-500">{calculateCurrentValue(selectedInvestment).toFixed(4)} ALGO</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Gains:</span>
+                    <span className="text-green-500">
+                      +{(calculateCurrentValue(selectedInvestment) - selectedInvestment.amount_invested).toFixed(4)} ALGO
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowWithdrawDialog(false)}
+                  className="flex-1"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleWithdraw}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Withdrawing...
+                    </>
+                  ) : (
+                    'Confirm Withdrawal'
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

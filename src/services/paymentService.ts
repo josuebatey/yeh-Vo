@@ -112,7 +112,7 @@ export const paymentService = {
         balance: currentBalance - request.amount,
         updated_at: new Date().toISOString()
       })
-      .eq('algorand_address', wallet.algorand_address)
+      .eq('user_id', userId)
 
     return txId
   },
@@ -153,7 +153,7 @@ export const paymentService = {
     }
 
     // Create a receive transaction for the recipient
-    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown')
+    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown', 'mobile_money')
 
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
@@ -194,48 +194,55 @@ export const paymentService = {
     }
 
     // Create a receive transaction for the recipient
-    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown')
+    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown', 'bank')
 
     return `bank_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
-  async simulateReceivePayment(userId: string, amount: number, fromAddress: string): Promise<void> {
-    // Create receive transaction record
-    const { error } = await supabase
-      .from('transactions')
-      .insert({
-        user_id: userId,
-        type: 'receive',
-        amount: amount,
-        currency: 'ALGO',
-        channel: 'algorand',
-        from_address: fromAddress,
-        status: 'completed',
-        algorand_tx_id: `received_${Date.now()}`,
-      })
-
-    if (error) throw error
-
-    // Update wallet balance - handle potential multiple wallets
-    const { data: wallets } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', userId)
-      .limit(1)
-
-    if (wallets && wallets.length > 0) {
-      const wallet = wallets[0]
-      await supabase
-        .from('wallets')
-        .update({ 
-          balance: wallet.balance + amount,
-          updated_at: new Date().toISOString()
+  async simulateReceivePayment(userId: string, amount: number, fromAddress: string, channel: 'algorand' | 'mobile_money' | 'bank' = 'algorand'): Promise<void> {
+    try {
+      // Create receive transaction record
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: userId,
+          type: 'receive',
+          amount: amount,
+          currency: 'ALGO',
+          channel: channel,
+          from_address: fromAddress,
+          status: 'completed',
+          algorand_tx_id: `received_${channel}_${Date.now()}`,
         })
-        .eq('user_id', userId)
-    }
 
-    // Show notification
-    notificationService.showPaymentReceived(amount, 'ALGO', fromAddress)
+      if (error) {
+        console.error('Error creating receive transaction:', error)
+        return
+      }
+
+      // Update wallet balance - handle potential multiple wallets
+      const { data: wallets } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(1)
+
+      if (wallets && wallets.length > 0) {
+        const wallet = wallets[0]
+        await supabase
+          .from('wallets')
+          .update({ 
+            balance: wallet.balance + amount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+
+        // Show notification for the recipient
+        notificationService.showPaymentReceived(amount, 'ALGO', fromAddress)
+      }
+    } catch (error) {
+      console.error('Error in simulateReceivePayment:', error)
+    }
   },
 
   async getTransactionHistory(userId: string, limit = 50): Promise<any[]> {

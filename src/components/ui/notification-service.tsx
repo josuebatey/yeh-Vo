@@ -1,7 +1,9 @@
-import { toast } from 'sonner'
-
 class NotificationService {
-  private hasPermission = false
+  private permission: NotificationPermission = 'default'
+
+  constructor() {
+    this.permission = Notification.permission
+  }
 
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
@@ -9,24 +11,30 @@ class NotificationService {
       return false
     }
 
-    if (Notification.permission === 'granted') {
-      this.hasPermission = true
+    if (this.permission === 'granted') {
       return true
     }
 
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission()
-      this.hasPermission = permission === 'granted'
-      return this.hasPermission
+    if (this.permission === 'denied') {
+      console.warn('Notifications are blocked by the user')
+      return false
     }
 
-    return false
+    try {
+      const permission = await Notification.requestPermission()
+      this.permission = permission
+      return permission === 'granted'
+    } catch (error) {
+      console.error('Error requesting notification permission:', error)
+      return false
+    }
   }
 
-  private showNotification(title: string, options: NotificationOptions = {}) {
-    if (!this.hasPermission) {
-      // Fallback to toast notification
-      toast.info(title)
+  private async showNotification(title: string, options: NotificationOptions = {}): Promise<void> {
+    const hasPermission = await this.requestPermission()
+    
+    if (!hasPermission) {
+      console.warn('Cannot show notification: permission not granted')
       return
     }
 
@@ -34,6 +42,8 @@ class NotificationService {
       const notification = new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
+        tag: 'voicepay',
+        requireInteraction: false,
         ...options
       })
 
@@ -42,55 +52,57 @@ class NotificationService {
         notification.close()
       }, 5000)
 
-      return notification
+      // Handle click events
+      notification.onclick = () => {
+        window.focus()
+        notification.close()
+      }
     } catch (error) {
-      console.error('Failed to show notification:', error)
-      toast.info(title)
+      console.error('Error showing notification:', error)
     }
   }
 
-  showPaymentSent(amount: number, currency: string, recipient: string) {
-    const title = 'Payment Sent Successfully'
-    const body = `${amount} ${currency} sent to ${recipient.slice(0, 20)}...`
-    
-    this.showNotification(title, {
-      body,
-      tag: 'payment-sent',
-      requireInteraction: false
+  async showPaymentSent(amount: number, currency: string, recipient: string): Promise<void> {
+    await this.showNotification('Payment Sent Successfully', {
+      body: `${amount} ${currency} sent to ${recipient.slice(0, 20)}${recipient.length > 20 ? '...' : ''}`,
+      icon: '/favicon.ico'
     })
   }
 
-  showPaymentReceived(amount: number, currency: string, sender: string) {
-    const title = 'Payment Received'
-    const body = `Received ${amount} ${currency} from ${sender.slice(0, 20)}...`
-    
-    this.showNotification(title, {
-      body,
-      tag: 'payment-received',
-      requireInteraction: true
+  async showPaymentReceived(amount: number, currency: string, sender: string): Promise<void> {
+    await this.showNotification('Payment Received', {
+      body: `You received ${amount} ${currency} from ${sender.slice(0, 20)}${sender.length > 20 ? '...' : ''}`,
+      icon: '/favicon.ico'
     })
   }
 
-  showInvestmentUpdate(amount: number, type: 'created' | 'withdrawn') {
-    const title = type === 'created' ? 'Investment Created' : 'Investment Withdrawn'
-    const body = `${amount} ALGO ${type === 'created' ? 'invested' : 'withdrawn'} successfully`
-    
-    this.showNotification(title, {
-      body,
-      tag: 'investment-update',
-      requireInteraction: false
+  async showInvestmentUpdate(message: string): Promise<void> {
+    await this.showNotification('Investment Update', {
+      body: message,
+      icon: '/favicon.ico'
     })
   }
 
-  showBalanceUpdate(newBalance: number) {
-    const title = 'Balance Updated'
-    const body = `Your new balance is ${newBalance.toFixed(4)} ALGO`
-    
-    this.showNotification(title, {
-      body,
-      tag: 'balance-update',
-      requireInteraction: false
+  async showBalanceUpdate(newBalance: number, currency: string): Promise<void> {
+    await this.showNotification('Balance Updated', {
+      body: `Your new balance is ${newBalance.toFixed(4)} ${currency}`,
+      icon: '/favicon.ico'
     })
+  }
+
+  async showGeneral(title: string, message: string): Promise<void> {
+    await this.showNotification(title, {
+      body: message,
+      icon: '/favicon.ico'
+    })
+  }
+
+  isSupported(): boolean {
+    return 'Notification' in window
+  }
+
+  getPermissionStatus(): NotificationPermission {
+    return this.permission
   }
 }
 
