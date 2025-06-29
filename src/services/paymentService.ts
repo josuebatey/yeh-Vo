@@ -177,6 +177,8 @@ export const paymentService = {
       .eq('email', request.recipient)
       .single()
 
+    console.ingfo(userId)
+
     if (!recipientProfile) {
       throw new Error('Recipient not found. Please ensure they have a VoicePay account with linked bank account.')
     }
