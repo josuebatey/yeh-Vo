@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Mic, MicOff } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -7,10 +7,10 @@ import { voiceService } from '@/services/voiceService'
 
 interface VoiceCommandButtonProps {
   onCommand: (transcript: string) => void
-  className?: string
+  disabled?: boolean
 }
 
-export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonProps) {
+export function VoiceCommandButton({ onCommand, disabled = false }: VoiceCommandButtonProps) {
   const [isListening, setIsListening] = useState(false)
 
   const handleVoiceCommand = async () => {
@@ -19,14 +19,24 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
       return
     }
 
+    if (isListening) {
+      setIsListening(false)
+      return
+    }
+
     try {
       setIsListening(true)
       const transcript = await voiceService.startListening()
-      onCommand(transcript)
-      toast.success(`Voice command received: "${transcript}"`)
+      
+      if (transcript.trim()) {
+        onCommand(transcript)
+        toast.success(`Voice command: "${transcript}"`)
+      } else {
+        toast.error('No voice input detected')
+      }
     } catch (error) {
       console.error('Voice command failed:', error)
-      toast.error('Voice command failed. Please try again.')
+      toast.error('Voice command failed')
     } finally {
       setIsListening(false)
     }
@@ -39,20 +49,26 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
     >
       <Button
         onClick={handleVoiceCommand}
-        disabled={isListening}
-        className={className}
+        disabled={disabled}
         variant={isListening ? "destructive" : "default"}
+        size="sm"
+        className={`relative ${isListening ? 'animate-pulse' : ''}`}
       >
         {isListening ? (
-          <>
-            <MicOff className="mr-2 h-4 w-4 animate-pulse" />
-            Listening...
-          </>
+          <MicOff className="h-4 w-4" />
         ) : (
-          <>
-            <Mic className="mr-2 h-4 w-4" />
-            Voice Command
-          </>
+          <Mic className="h-4 w-4" />
+        )}
+        <span className="ml-2">
+          {isListening ? 'Stop' : 'Voice'}
+        </span>
+        
+        {isListening && (
+          <motion.div
+            className="absolute -inset-1 rounded-md bg-red-500/20"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          />
         )}
       </Button>
     </motion.div>
