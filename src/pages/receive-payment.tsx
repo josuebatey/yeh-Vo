@@ -43,11 +43,11 @@ export function ReceivePayment() {
     console.log('Generated QR Code URL:', deepLinkUrl) // Debug log
 
     const qrCode = new QRCodeStyling({
-      width: 300,
-      height: 300,
+      width: 280,
+      height: 280,
       type: 'svg',
       data: deepLinkUrl, // Full deep link with domain
-      margin: 10,
+      margin: 8,
       qrOptions: {
         typeNumber: 0,
         mode: 'Byte',
@@ -205,61 +205,62 @@ export function ReceivePayment() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
-      <div>
+    <div className="p-4 md:p-6 w-full max-w-6xl mx-auto space-y-6 overflow-hidden">
+      <div className="w-full">
         <BackButton />
         <h1 className="text-2xl md:text-3xl font-bold">Receive Payment</h1>
         <p className="text-muted-foreground">Share your QR code or payment link to receive payments</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 w-full">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
+          className="w-full min-w-0"
         >
-          <Card>
+          <Card className="w-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <QrCode className="h-5 w-5" />
-                Smart QR Code
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <QrCode className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Smart QR Code</span>
                 {qrGenerated && (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-center">
+            <CardContent className="space-y-4 w-full">
+              <div className="flex justify-center w-full">
                 <div 
                   ref={qrCodeRef}
-                  className="bg-white p-4 rounded-lg shadow-sm border min-h-[300px] min-w-[300px] flex items-center justify-center"
+                  className="bg-white p-3 rounded-lg shadow-sm border w-[280px] h-[280px] flex items-center justify-center flex-shrink-0"
                 >
                   {!qrGenerated && (
                     <div className="text-center text-muted-foreground">
                       <QrCode className="h-12 w-12 mx-auto mb-2" />
-                      <p>Generating QR code...</p>
+                      <p className="text-sm">Generating QR code...</p>
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
+              <div className="text-center space-y-3 w-full">
+                <p className="text-sm text-muted-foreground px-2">
                   Scan this QR code to automatically open VoicePay send page
                 </p>
                 
-                <div className="flex items-center justify-center gap-2 text-xs text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-full">
-                  <Camera className="h-3 w-3" />
-                  <span>Auto-opens send page with pre-filled details</span>
+                <div className="flex items-center justify-center gap-2 text-xs text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-full mx-auto max-w-fit">
+                  <Camera className="h-3 w-3 flex-shrink-0" />
+                  <span className="text-center">Auto-opens send page with pre-filled details</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button onClick={copyPaymentLink} variant="outline" size="sm" className="flex-1">
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy Link
+                <div className="flex flex-col gap-2 w-full">
+                  <Button onClick={copyPaymentLink} variant="outline" size="sm" className="w-full">
+                    <Copy className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Copy Link</span>
                   </Button>
-                  <Button onClick={generateQRCode} variant="outline" size="sm" className="flex-1">
-                    <QrCode className="mr-2 h-4 w-4" />
-                    Regenerate
+                  <Button onClick={generateQRCode} variant="outline" size="sm" className="w-full">
+                    <QrCode className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Regenerate</span>
                   </Button>
                 </div>
               </div>
@@ -270,14 +271,14 @@ export function ReceivePayment() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+          className="space-y-6 w-full min-w-0"
         >
-          <Card>
+          <Card className="w-full">
             <CardHeader>
-              <CardTitle>Payment Request Details</CardTitle>
+              <CardTitle className="text-base md:text-lg">Payment Request Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
+            <CardContent className="space-y-4 w-full">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="amount">Requested Amount (optional)</Label>
                 <Input
                   id="amount"
@@ -287,13 +288,14 @@ export function ReceivePayment() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00 ALGO"
+                  className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
                   Leave empty for any amount
                 </p>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label htmlFor="note">Note (optional)</Label>
                 <Input
                   id="note"
@@ -301,63 +303,67 @@ export function ReceivePayment() {
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Payment for..."
                   maxLength={100}
+                  className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
                   {note.length}/100 characters
                 </p>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-3">
+              <div className="bg-muted/50 rounded-lg p-3 w-full overflow-hidden">
                 <h4 className="font-medium mb-2">Preview Link:</h4>
-                <p className="text-xs font-mono break-all text-muted-foreground">
+                <p className="text-xs font-mono break-all text-muted-foreground overflow-wrap-anywhere">
                   {`${window.location.origin}/send?action=send&to=${wallet?.address || '...'}`}
                   {amount && `&amount=${amount}`}
                   {note && `&note=${encodeURIComponent(note)}`}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
                 <Button onClick={sharePaymentRequest} className="w-full">
-                  <Share className="mr-2 h-4 w-4" />
-                  Share Request
+                  <Share className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Share Request</span>
                 </Button>
                 <Button onClick={openInNewTab} variant="outline" className="w-full">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Test Link
+                  <ExternalLink className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Test Link</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="w-full">
             <CardHeader>
-              <CardTitle>Wallet Details</CardTitle>
+              <CardTitle className="text-base md:text-lg">Wallet Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
+            <CardContent className="space-y-4 w-full">
+              <div className="space-y-2 w-full">
                 <Label>Your Address</Label>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <div className="flex flex-col gap-2 w-full">
                   <Input 
                     value={wallet?.address || 'Loading...'}
                     readOnly
-                    className="font-mono text-xs md:text-sm flex-1"
+                    className="font-mono text-xs md:text-sm w-full"
                   />
-                  <div className="flex space-x-2">
-                    <Button size="sm" onClick={copyAddress}>
-                      <Copy className="h-4 w-4" />
+                  <div className="flex gap-2 w-full">
+                    <Button size="sm" onClick={copyAddress} className="flex-1">
+                      <Copy className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Copy</span>
                     </Button>
-                    <Button size="sm" variant="outline" onClick={speakAddress}>
-                      <Volume2 className="h-4 w-4" />
+                    <Button size="sm" variant="outline" onClick={speakAddress} className="flex-1">
+                      <Volume2 className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Speak</span>
                     </Button>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 w-full">
                 <Label>Current Balance</Label>
                 <Input 
                   value={`${wallet?.balance?.toFixed(4) || '0'} ALGO`}
                   readOnly
+                  className="w-full"
                 />
               </div>
             </CardContent>
@@ -365,12 +371,12 @@ export function ReceivePayment() {
         </motion.div>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>How It Works</CardTitle>
+          <CardTitle className="text-base md:text-lg">How It Works</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
+        <CardContent className="w-full">
+          <div className="grid gap-6 md:grid-cols-3 w-full">
             <div className="text-center space-y-3">
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto">
                 <QrCode className="h-6 w-6 text-blue-600 dark:text-blue-400" />
