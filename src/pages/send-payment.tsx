@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Send, QrCode, Mic, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Send, QrCode, Mic, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -56,6 +56,7 @@ export function SendPayment() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [txId, setTxId] = useState<string>('')
+  const [errorMessage, setErrorMessage] = useState<string>('')
   const [formData, setFormData] = useState({
     amount: '',
     recipient: '',
@@ -105,13 +106,15 @@ export function SendPayment() {
     setShowConfirmDialog(false)
     setIsLoading(true)
     setTxStatus('pending')
+    setErrorMessage('')
 
     try {
       // Check daily limits
       const limitCheck = await paymentService.checkDailyLimits(user.id, parseFloat(formData.amount))
       if (!limitCheck.canSend) {
-        toast.error(limitCheck.reason)
+        setErrorMessage(limitCheck.reason || 'Daily limit exceeded')
         setTxStatus('error')
+        toast.error(limitCheck.reason)
         return
       }
 
@@ -151,6 +154,7 @@ export function SendPayment() {
     } catch (error: any) {
       console.error('Payment failed:', error)
       setTxStatus('error')
+      setErrorMessage(error.message || 'Payment failed')
       toast.error(error.message || 'Payment failed')
       await voiceService.speak('Payment failed. Please try again.')
     } finally {
@@ -164,6 +168,28 @@ export function SendPayment() {
       case 'mobile_money': return 'Mobile Money'
       case 'bank': return 'Bank Transfer'
       default: return channel
+    }
+  }
+
+  const getRecipientPlaceholder = (channel: string) => {
+    switch (channel) {
+      case 'algorand': return 'Algorand address (58 characters)'
+      case 'mobile_money': return 'Recipient email address'
+      case 'bank': return 'Recipient email address'
+      default: return 'Recipient identifier'
+    }
+  }
+
+  const getChannelInfo = (channel: string) => {
+    switch (channel) {
+      case 'algorand': 
+        return 'Direct blockchain transfer using Algorand network'
+      case 'mobile_money': 
+        return 'Transfer to another VoicePay user via mobile money'
+      case 'bank': 
+        return 'Transfer to another VoicePay user via bank transfer'
+      default: 
+        return ''
     }
   }
 
@@ -227,7 +253,7 @@ export function SendPayment() {
                   <AlertCircle className="h-12 w-12 text-red-500 flex-shrink-0" />
                   <div className="text-center sm:text-left">
                     <h3 className="text-xl font-semibold text-red-500">Payment Failed</h3>
-                    <p className="text-muted-foreground">Please check your details and try again</p>
+                    <p className="text-muted-foreground break-words">{errorMessage}</p>
                     <Button 
                       onClick={() => setTxStatus('idle')}
                       variant="outline"
@@ -292,22 +318,10 @@ export function SendPayment() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="recipient">Recipient</Label>
-                        <Input
-                          id="recipient"
-                          value={formData.recipient}
-                          onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
-                          placeholder="Address, phone number, or account number"
-                          required
-                          className="break-all"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
                         <Label htmlFor="channel">Payment Channel</Label>
                         <Select 
                           value={formData.channel} 
-                          onValueChange={(value: any) => setFormData(prev => ({ ...prev, channel: value }))}
+                          onValueChange={(value: any) => setFormData(prev => ({ ...prev, channel: value, recipient: '' }))}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -318,6 +332,22 @@ export function SendPayment() {
                             <SelectItem value="bank">Bank Transfer</SelectItem>
                           </SelectContent>
                         </Select>
+                        <div className="flex items-start space-x-2 text-sm text-muted-foreground">
+                          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span>{getChannelInfo(formData.channel)}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="recipient">Recipient</Label>
+                        <Input
+                          id="recipient"
+                          value={formData.recipient}
+                          onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
+                          placeholder={getRecipientPlaceholder(formData.channel)}
+                          required
+                          className="break-all"
+                        />
                       </div>
 
                       <div className="bg-muted/50 rounded-lg p-4">

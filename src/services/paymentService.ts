@@ -12,6 +12,11 @@ export interface PaymentRequest {
 
 export const paymentService = {
   async sendPayment(userId: string, request: PaymentRequest): Promise<string> {
+    // Validate recipient based on channel
+    if (!this.validateRecipient(request.recipient, request.channel)) {
+      throw new Error(this.getValidationError(request.channel))
+    }
+
     // Create transaction record
     const { data: transaction, error } = await supabase
       .from('transactions')
@@ -38,10 +43,10 @@ export const paymentService = {
           txId = await this.sendAlgorandPayment(userId, request)
           break
         case 'mobile_money':
-          txId = await this.sendMobileMoneyPayment(request)
+          txId = await this.sendMobileMoneyPayment(userId, request)
           break
         case 'bank':
-          txId = await this.sendBankTransfer(request)
+          txId = await this.sendBankTransfer(userId, request)
           break
         default:
           throw new Error('Unsupported payment channel')
@@ -84,15 +89,10 @@ export const paymentService = {
 
     const wallet = wallets[0]
 
-    // Check if recipient address is valid
-    if (!this.isValidAlgorandAddress(request.recipient)) {
-      throw new Error('Invalid Algorand address')
-    }
-
     // Check sufficient balance
     const currentBalance = await algorandService.getBalance(wallet.algorand_address)
     if (currentBalance < request.amount) {
-      throw new Error('Insufficient balance')
+      throw new Error(`Insufficient balance. You have ${currentBalance.toFixed(4)} ALGO but need ${request.amount} ALGO`)
     }
 
     // Decrypt mnemonic (in production, use proper decryption)
@@ -117,10 +117,23 @@ export const paymentService = {
     return txId
   },
 
-  async sendMobileMoneyPayment(request: PaymentRequest): Promise<string> {
-    // Simulate mobile money API call with proper validation
-    if (!this.isValidPhoneNumber(request.recipient)) {
-      throw new Error('Invalid phone number for mobile money transfer')
+  async sendMobileMoneyPayment(userId: string, request: PaymentRequest): Promise<string> {
+    // Get user's profile to check if they have a registered mobile number
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    // For demo purposes, simulate that the recipient must be a registered user
+    const { data: recipientProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', request.recipient)
+      .single()
+
+    if (!recipientProfile) {
+      throw new Error('Recipient not found. Mobile money transfers require the recipient to have a VoicePay account.')
     }
 
     if (request.amount < 0.1) {
@@ -139,13 +152,29 @@ export const paymentService = {
       throw new Error('Mobile money service temporarily unavailable')
     }
 
+    // Create a receive transaction for the recipient
+    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown')
+
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
-  async sendBankTransfer(request: PaymentRequest): Promise<string> {
-    // Simulate bank transfer API call with proper validation
-    if (!this.isValidAccountNumber(request.recipient)) {
-      throw new Error('Invalid bank account number')
+  async sendBankTransfer(userId: string, request: PaymentRequest): Promise<string> {
+    // Get user's profile to check if they have bank details
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    // For demo purposes, simulate that the recipient must be a registered user
+    const { data: recipientProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', request.recipient)
+      .single()
+
+    if (!recipientProfile) {
+      throw new Error('Recipient not found. Bank transfers require the recipient to have a VoicePay account.')
     }
 
     if (request.amount < 1) {
@@ -163,6 +192,9 @@ export const paymentService = {
     if (Math.random() < 0.05) {
       throw new Error('Bank transfer service temporarily unavailable')
     }
+
+    // Create a receive transaction for the recipient
+    await this.simulateReceivePayment(recipientProfile.id, request.amount, profile?.email || 'unknown')
 
     return `bank_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
@@ -276,8 +308,38 @@ export const paymentService = {
   },
 
   // Validation helpers
+  validateRecipient(recipient: string, channel: string): boolean {
+    switch (channel) {
+      case 'algorand':
+        return this.isValidAlgorandAddress(recipient)
+      case 'mobile_money':
+        return this.isValidEmail(recipient) // Using email as identifier for demo
+      case 'bank':
+        return this.isValidEmail(recipient) // Using email as identifier for demo
+      default:
+        return false
+    }
+  },
+
+  getValidationError(channel: string): string {
+    switch (channel) {
+      case 'algorand':
+        return 'Invalid Algorand address. Must be 58 characters long and contain only uppercase letters and numbers 2-7.'
+      case 'mobile_money':
+        return 'Invalid recipient. Please enter the email address of a registered VoicePay user.'
+      case 'bank':
+        return 'Invalid recipient. Please enter the email address of a registered VoicePay user.'
+      default:
+        return 'Invalid recipient format'
+    }
+  },
+
   isValidAlgorandAddress(address: string): boolean {
     return /^[A-Z2-7]{58}$/.test(address)
+  },
+
+  isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   },
 
   isValidPhoneNumber(phone: string): boolean {

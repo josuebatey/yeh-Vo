@@ -3,11 +3,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-interface BackButtonProps {
-  className?: string
-}
-
-export function BackButton({ className }: BackButtonProps) {
+export function BackButton() {
   const navigate = useNavigate()
 
   return (
@@ -15,7 +11,7 @@ export function BackButton({ className }: BackButtonProps) {
       variant="ghost"
       size="sm"
       onClick={() => navigate(-1)}
-      className={`md:hidden ${className}`}
+      className="mb-2 -ml-2"
     >
       <ArrowLeft className="h-4 w-4 mr-2" />
       Back
