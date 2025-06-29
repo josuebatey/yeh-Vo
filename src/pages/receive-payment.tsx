@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,12 +22,6 @@ export function ReceivePayment() {
 
     // Create deep link URL that opens VoicePay send page with pre-filled data
     const baseUrl = window.location.origin
-    const deepLinkData = {
-      action: 'send',
-      to: wallet.address,
-      amount: amount || undefined,
-      note: note || undefined
-    }
     
     // Create URL with query parameters for web deep linking
     const params = new URLSearchParams()
