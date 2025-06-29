@@ -52,10 +52,10 @@ export const paymentService = {
           txId = await this.sendAlgorandPayment(userId, request)
           break
         case 'mobile_money':
-          txId = await this.sendMobileMoneyPayment(userId, request, senderProfile?.email || 'unknown')
+          txId = await this.sendMobileMoneyPayment(request, senderProfile?.email || 'unknown')
           break
         case 'bank':
-          txId = await this.sendBankTransfer(userId, request, senderProfile?.email || 'unknown')
+          txId = await this.sendBankTransfer(request, senderProfile?.email || 'unknown')
           break
         default:
           throw new Error('Unsupported payment channel')
@@ -126,14 +126,13 @@ export const paymentService = {
     return txId
   },
 
-  async sendMobileMoneyPayment(userId: string, request: PaymentRequest, fromEmail: string): Promise<string> {
+  async sendMobileMoneyPayment(request: PaymentRequest, fromEmail: string): Promise<string> {
     // Find recipient by email or phone
     const { data: recipientProfile } = await supabase
       .from('profiles')
       .select('*')
       .or(`email.eq.${request.recipient},phone_number.eq.${request.recipient}`)
       .single()
-    
 
     if (!recipientProfile) {
       throw new Error('Recipient not found. Please ensure they have a VoicePay account with verified phone number.')
@@ -170,7 +169,7 @@ export const paymentService = {
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
-  async sendBankTransfer(userId: string, request: PaymentRequest, fromEmail: string): Promise<string> {
+  async sendBankTransfer(request: PaymentRequest, fromEmail: string): Promise<string> {
     // Find recipient by email
     const { data: recipientProfile } = await supabase
       .from('profiles')
