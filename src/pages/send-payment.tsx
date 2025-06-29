@@ -23,8 +23,8 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
   const [hasCamera, setHasCamera] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string>('')
-  const videoRef = useState<HTMLVideoElement | null>(null)[0]
-  const canvasRef = useState<HTMLCanvasElement | null>(null)[0]
+  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null)
+  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
     checkCameraAccess()
@@ -136,14 +136,14 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
         <div className="space-y-4">
           <div className="relative bg-black rounded-lg overflow-hidden">
             <video
-              ref={(el) => { if (el) videoRef = el }}
+              ref={setVideoRef}
               className="w-full h-64 object-cover"
               autoPlay
               playsInline
               muted
             />
             <canvas
-              ref={(el) => { if (el) canvasRef = el }}
+              ref={setCanvasRef}
               className="hidden"
             />
             {isScanning && (
