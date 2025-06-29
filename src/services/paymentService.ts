@@ -133,6 +133,7 @@ export const paymentService = {
       .select('*')
       .or(`email.eq.${request.recipient},phone_number.eq.${request.recipient}`)
       .single()
+    
 
     if (!recipientProfile) {
       throw new Error('Recipient not found. Please ensure they have a VoicePay account with verified phone number.')
@@ -176,8 +177,6 @@ export const paymentService = {
       .select('*')
       .eq('email', request.recipient)
       .single()
-
-    console.ingfo(userId)
 
     if (!recipientProfile) {
       throw new Error('Recipient not found. Please ensure they have a VoicePay account with linked bank account.')
