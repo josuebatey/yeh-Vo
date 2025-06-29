@@ -6,8 +6,10 @@ import { Mic, MicOff, Volume2, MessageSquare, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { VoiceCommandButton } from '@/components/ui/voice-command-button'
+import { VoiceSettingsDialog } from '@/components/ui/voice-settings-dialog'
 import { voiceService } from '@/services/voiceService'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '@/components/ui/back-button'
 
 export function VoiceCommands() {
   const navigate = useNavigate()
@@ -94,10 +96,13 @@ export function VoiceCommands() {
   ]
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Voice Commands</h1>
-        <p className="text-muted-foreground">Control VoicePay with your voice</p>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">Voice Commands</h1>
+          <p className="text-muted-foreground">Control VoicePay with your voice</p>
+        </div>
       </div>
 
       {/* Voice Status */}
@@ -113,7 +118,7 @@ export function VoiceCommands() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <span className="font-medium">Speech Recognition:</span>
@@ -133,15 +138,17 @@ export function VoiceCommands() {
               )}
             </div>
 
-            <div className="flex space-x-2">
-              <Button onClick={testTTS} variant="outline">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={testTTS} variant="outline" className="flex-1">
                 <Volume2 className="mr-2 h-4 w-4" />
                 Test Text-to-Speech
               </Button>
-              <Button variant="outline">
-                <Settings className="mr-2 h-4 w-4" />
-                Voice Settings
-              </Button>
+              <VoiceSettingsDialog>
+                <Button variant="outline" className="flex-1">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Voice Settings
+                </Button>
+              </VoiceSettingsDialog>
             </div>
           </CardContent>
         </Card>
@@ -168,7 +175,7 @@ export function VoiceCommands() {
                     transition={{ delay: 0.1 * index }}
                     className="p-4 border rounded-lg space-y-2"
                   >
-                    <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                    <div className="font-mono text-sm bg-muted px-2 py-1 rounded break-words">
                       {cmd.command}
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -218,16 +225,16 @@ export function VoiceCommands() {
                             : 'border-red-500/20 bg-red-500/5'
                         }`}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="text-sm font-medium">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium break-words">
                               "{item.transcript}"
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {item.timestamp.toLocaleTimeString()}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 flex-shrink-0">
                             {item.action && (
                               <Badge variant="outline" className="text-xs">
                                 {item.action}

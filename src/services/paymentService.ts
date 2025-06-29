@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { algorandService } from './algorandService'
+import { notificationService } from '@/components/ui/notification-service'
 
 export interface PaymentRequest {
   amount: number
@@ -78,6 +79,17 @@ export const paymentService = {
 
     if (error) throw error
 
+    // Check if recipient address is valid
+    if (!this.isValidAlgorandAddress(request.recipient)) {
+      throw new Error('Invalid Algorand address')
+    }
+
+    // Check sufficient balance
+    const currentBalance = await algorandService.getBalance(wallet.algorand_address)
+    if (currentBalance < request.amount) {
+      throw new Error('Insufficient balance')
+    }
+
     // Decrypt mnemonic (in production, use proper decryption)
     const mnemonic = atob(wallet.encrypted_mnemonic)
 
@@ -88,23 +100,104 @@ export const paymentService = {
       mnemonic
     )
 
+    // Update wallet balance
+    await supabase
+      .from('wallets')
+      .update({ 
+        balance: currentBalance - request.amount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('algorand_address', wallet.algorand_address)
+
     return txId
   },
 
   async sendMobileMoneyPayment(request: PaymentRequest): Promise<string> {
-    // Mock mobile money API call
-    await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API delay
+    // Simulate mobile money API call with proper validation
+    if (!this.isValidPhoneNumber(request.recipient)) {
+      throw new Error('Invalid phone number for mobile money transfer')
+    }
+
+    if (request.amount < 0.1) {
+      throw new Error('Minimum mobile money transfer amount is 0.1')
+    }
+
+    if (request.amount > 1000) {
+      throw new Error('Maximum mobile money transfer amount is 1000')
+    }
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Mock success response
+    // Simulate occasional failures for realism
+    if (Math.random() < 0.1) {
+      throw new Error('Mobile money service temporarily unavailable')
+    }
+
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
   async sendBankTransfer(request: PaymentRequest): Promise<string> {
-    // Mock bank transfer API call
-    await new Promise(resolve => setTimeout(resolve, 3000)) // Simulate API delay
+    // Simulate bank transfer API call with proper validation
+    if (!this.isValidAccountNumber(request.recipient)) {
+      throw new Error('Invalid bank account number')
+    }
+
+    if (request.amount < 1) {
+      throw new Error('Minimum bank transfer amount is 1')
+    }
+
+    if (request.amount > 10000) {
+      throw new Error('Maximum bank transfer amount is 10,000')
+    }
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 3000))
     
-    // Mock success response
+    // Simulate occasional failures for realism
+    if (Math.random() < 0.05) {
+      throw new Error('Bank transfer service temporarily unavailable')
+    }
+
     return `bank_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  },
+
+  async simulateReceivePayment(userId: string, amount: number, fromAddress: string): Promise<void> {
+    // Create receive transaction record
+    const { error } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        type: 'receive',
+        amount: amount,
+        currency: 'ALGO',
+        channel: 'algorand',
+        from_address: fromAddress,
+        status: 'completed',
+        algorand_tx_id: `received_${Date.now()}`,
+      })
+
+    if (error) throw error
+
+    // Update wallet balance
+    const { data: wallet } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (wallet) {
+      await supabase
+        .from('wallets')
+        .update({ 
+          balance: wallet.balance + amount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+    }
+
+    // Show notification
+    notificationService.showPaymentReceived(amount, 'ALGO', fromAddress)
   },
 
   async getTransactionHistory(userId: string, limit = 50): Promise<any[]> {
@@ -171,5 +264,18 @@ export const paymentService = {
       user_id: userId,
       amount: amount,
     })
+  },
+
+  // Validation helpers
+  isValidAlgorandAddress(address: string): boolean {
+    return /^[A-Z2-7]{58}$/.test(address)
+  },
+
+  isValidPhoneNumber(phone: string): boolean {
+    return /^\+?[\d\s\-\(\)]{10,15}$/.test(phone)
+  },
+
+  isValidAccountNumber(account: string): boolean {
+    return /^\d{8,20}$/.test(account)
   },
 }

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Send, QrCode, Mic, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -14,6 +15,8 @@ import { useWalletStore } from '@/stores/walletStore'
 import { paymentService } from '@/services/paymentService'
 import { VoiceCommandButton } from '@/components/ui/voice-command-button'
 import { voiceService } from '@/services/voiceService'
+import { BackButton } from '@/components/ui/back-button'
+import { notificationService } from '@/components/ui/notification-service'
 
 // Simple QR Scanner component since react-qr-reader has compatibility issues
 function SimpleQRScanner({ onScan, onClose }: { onScan: (result: string) => void, onClose: () => void }) {
@@ -46,10 +49,11 @@ export function SendPayment() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
-  const { wallet } = useWalletStore()
+  const { wallet, refreshBalance } = useWalletStore()
   
   const [isLoading, setIsLoading] = useState(false)
   const [showQrScanner, setShowQrScanner] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [txId, setTxId] = useState<string>('')
   const [formData, setFormData] = useState({
@@ -91,10 +95,14 @@ export function SendPayment() {
     toast.success('Address scanned successfully!')
   }
 
-  const handleSendPayment = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleConfirmPayment = () => {
+    setShowConfirmDialog(true)
+  }
+
+  const handleSendPayment = async () => {
     if (!user) return
 
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setTxStatus('pending')
 
@@ -118,8 +126,19 @@ export function SendPayment() {
       
       setTxId(txId)
       setTxStatus('success')
+      
+      // Show notification
+      notificationService.showPaymentSent(
+        parseFloat(formData.amount), 
+        formData.currency, 
+        formData.recipient
+      )
+      
       await voiceService.speak(`Payment of ${formData.amount} ${formData.currency} sent successfully!`)
       toast.success('Payment sent successfully!')
+
+      // Refresh wallet balance
+      await refreshBalance()
 
       // Reset form
       setFormData({
@@ -149,10 +168,11 @@ export function SendPayment() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Send Payment</h1>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">Send Payment</h1>
           <p className="text-muted-foreground">Send money via voice, QR code, or manual entry</p>
         </div>
         <VoiceCommandButton onCommand={handleVoiceCommand} />
@@ -168,21 +188,23 @@ export function SendPayment() {
           >
             <Card className="border-green-500/20 bg-green-500/5">
               <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <CheckCircle className="h-12 w-12 text-green-500" />
-                  <div>
+                <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <CheckCircle className="h-12 w-12 text-green-500 flex-shrink-0" />
+                  <div className="text-center sm:text-left">
                     <h3 className="text-xl font-semibold text-green-500">Payment Sent!</h3>
-                    <p className="text-muted-foreground">Transaction ID: {txId}</p>
-                    <div className="flex space-x-2 mt-4">
+                    <p className="text-muted-foreground break-all">Transaction ID: {txId}</p>
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
                       <Button 
                         onClick={() => setTxStatus('idle')}
                         variant="outline"
+                        size="sm"
                       >
                         Send Another
                       </Button>
                       <Button 
                         onClick={() => navigate('/history')}
                         variant="default"
+                        size="sm"
                       >
                         View History
                       </Button>
@@ -201,15 +223,16 @@ export function SendPayment() {
           >
             <Card className="border-red-500/20 bg-red-500/5">
               <CardContent className="p-6">
-                <div className="flex items-center space-x-4">
-                  <AlertCircle className="h-12 w-12 text-red-500" />
-                  <div>
+                <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <AlertCircle className="h-12 w-12 text-red-500 flex-shrink-0" />
+                  <div className="text-center sm:text-left">
                     <h3 className="text-xl font-semibold text-red-500">Payment Failed</h3>
                     <p className="text-muted-foreground">Please check your details and try again</p>
                     <Button 
                       onClick={() => setTxStatus('idle')}
                       variant="outline"
                       className="mt-4"
+                      size="sm"
                     >
                       Try Again
                     </Button>
@@ -237,8 +260,8 @@ export function SendPayment() {
                   </TabsList>
 
                   <TabsContent value="manual">
-                    <form onSubmit={handleSendPayment} className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
+                    <form onSubmit={(e) => { e.preventDefault(); handleConfirmPayment(); }} className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="amount">Amount</Label>
                           <Input
@@ -276,6 +299,7 @@ export function SendPayment() {
                           onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
                           placeholder="Address, phone number, or account number"
                           required
+                          className="break-all"
                         />
                       </div>
 
@@ -305,7 +329,7 @@ export function SendPayment() {
                           </div>
                           <div className="flex justify-between">
                             <span>To:</span>
-                            <span className="truncate ml-2">{formData.recipient || 'Not specified'}</span>
+                            <span className="truncate ml-2 max-w-[150px]">{formData.recipient || 'Not specified'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Via:</span>
@@ -323,17 +347,8 @@ export function SendPayment() {
                         className="w-full" 
                         disabled={isLoading || !formData.amount || !formData.recipient}
                       >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {txStatus === 'pending' ? 'Sending Payment...' : 'Processing...'}
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send Payment
-                          </>
-                        )}
+                        <Send className="mr-2 h-4 w-4" />
+                        Review Payment
                       </Button>
                     </form>
                   </TabsContent>
@@ -366,6 +381,62 @@ export function SendPayment() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Please review your payment details before confirming.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium">Amount:</span>
+                  <span>{formData.amount} {formData.currency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">To:</span>
+                  <span className="truncate ml-2 max-w-[200px]">{formData.recipient}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Channel:</span>
+                  <span>{getChannelDisplay(formData.channel)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSendPayment}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Confirm & Send
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

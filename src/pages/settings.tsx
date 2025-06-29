@@ -7,11 +7,13 @@ import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Settings as SettingsIcon, User, Bell, Shield, CreditCard, LogOut } from 'lucide-react'
+import { Settings as SettingsIcon, User, Bell, Shield, CreditCard, LogOut, Upload, Download, FileText } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
+import { BackButton } from '@/components/ui/back-button'
+import { paymentService } from '@/services/paymentService'
 
 export function Settings() {
   const { user, profile, signOut } = useAuthStore()
@@ -51,6 +53,113 @@ export function Settings() {
     }
   }
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsLoading(true)
+      
+      // In a real app, you'd upload to Supabase Storage
+      // For demo, we'll use a placeholder URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setProfileData(prev => ({ ...prev, avatar_url: result }))
+        toast.success('Profile picture updated!')
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      toast.error('Failed to upload profile picture')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Get user data
+      const { data: transactions } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user?.id)
+
+      const { data: investments } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('user_id', user?.id)
+
+      const { data: wallet } = await supabase
+        .from('wallets')
+        .select('algorand_address, balance, created_at')
+        .eq('user_id', user?.id)
+
+      const exportData = {
+        profile: profile,
+        transactions: transactions || [],
+        investments: investments || [],
+        wallet: wallet?.[0] || null,
+        exported_at: new Date().toISOString()
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `voicepay-data-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast.success('Data exported successfully!')
+    } catch (error) {
+      toast.error('Failed to export data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDownloadTransactions = async () => {
+    try {
+      setIsLoading(true)
+      
+      const transactions = await paymentService.getTransactionHistory(user?.id || '', 1000)
+      
+      const csvContent = [
+        'Date,Type,Amount,Currency,Channel,Status,To/From Address,Transaction ID',
+        ...transactions.map(tx => [
+          new Date(tx.created_at).toLocaleDateString(),
+          tx.type,
+          tx.amount,
+          tx.currency,
+          tx.channel,
+          tx.status,
+          tx.to_address || tx.from_address || '',
+          tx.algorand_tx_id || ''
+        ].join(','))
+      ].join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `voicepay-transactions-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast.success('Transactions downloaded successfully!')
+    } catch (error) {
+      toast.error('Failed to download transactions')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -65,10 +174,13 @@ export function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences</p>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">Manage your account and preferences</p>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -86,16 +198,26 @@ export function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={profileData.avatar_url} />
                   <AvatarFallback className="text-lg">
                     {profileData.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
-                  <Button variant="outline" size="sm">
-                    Change Photo
+                <div className="space-y-2 text-center sm:text-left">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <Button variant="outline" size="sm" asChild>
+                    <label htmlFor="avatar-upload" className="cursor-pointer">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Change Photo
+                    </label>
                   </Button>
                   <div className="text-sm text-muted-foreground">
                     JPG, GIF or PNG. 1MB max.
@@ -340,10 +462,22 @@ export function Settings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="outline" className="flex-1">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={handleExportData}
+                disabled={isLoading}
+              >
+                <Download className="mr-2 h-4 w-4" />
                 Export Data
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={handleDownloadTransactions}
+                disabled={isLoading}
+              >
+                <FileText className="mr-2 h-4 w-4" />
                 Download Transactions
               </Button>
               <Button variant="destructive" onClick={handleSignOut} className="flex-1">

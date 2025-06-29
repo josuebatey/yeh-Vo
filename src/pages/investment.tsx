@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { supabase } from '@/lib/supabase'
+import { BackButton } from '@/components/ui/back-button'
 
 interface Investment {
   id: string
@@ -23,7 +24,7 @@ interface Investment {
 
 export function Investment() {
   const { user } = useAuthStore()
-  const { wallet } = useWalletStore()
+  const { wallet, refreshBalance } = useWalletStore()
   const [investments, setInvestments] = useState<Investment[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [investAmount, setInvestAmount] = useState('')
@@ -103,6 +104,7 @@ export function Investment() {
       toast.success(`Successfully invested ${amount} ALGO!`)
       setInvestAmount('')
       loadInvestments()
+      refreshBalance()
       
     } catch (error: any) {
       console.error('Investment failed:', error)
@@ -136,6 +138,7 @@ export function Investment() {
 
       toast.success(`Successfully withdrew ${currentValue.toFixed(4)} ALGO!`)
       loadInvestments()
+      refreshBalance()
       
     } catch (error: any) {
       console.error('Withdrawal failed:', error)
@@ -146,7 +149,7 @@ export function Investment() {
   }
 
   const totalInvested = investments.reduce((sum, inv) => sum + inv.amount_invested, 0)
-  const totalCurrentValue = investments.reduce((sum, inv) => sum + calculateCurrentValue(inv), 0)
+  const totalCurrentValue = investments.reduce((sum, inv) => sum + calculateCurrentValue(inv),0)
   const totalGains = totalCurrentValue - totalInvested
 
   const investmentOptions = [
@@ -156,14 +159,15 @@ export function Investment() {
   ]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Investment Portfolio</h1>
+        <BackButton />
+        <h1 className="text-2xl md:text-3xl font-bold">Investment Portfolio</h1>
         <p className="text-muted-foreground">Grow your wealth with automated investing</p>
       </div>
 
       {/* Portfolio Overview */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -174,7 +178,7 @@ export function Investment() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalInvested.toFixed(4)} ALGO</div>
+              <div className="text-xl md:text-2xl font-bold">{totalInvested.toFixed(4)} ALGO</div>
             </CardContent>
           </Card>
         </motion.div>
@@ -190,7 +194,7 @@ export function Investment() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalCurrentValue.toFixed(4)} ALGO</div>
+              <div className="text-xl md:text-2xl font-bold">{totalCurrentValue.toFixed(4)} ALGO</div>
             </CardContent>
           </Card>
         </motion.div>
@@ -206,7 +210,7 @@ export function Investment() {
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totalGains >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <div className={`text-xl md:text-2xl font-bold ${totalGains >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {totalGains >= 0 ? '+' : ''}{totalGains.toFixed(4)} ALGO
               </div>
             </CardContent>
@@ -253,8 +257,8 @@ export function Investment() {
                     }`}
                     onClick={() => setSelectedAPY(option.apy)}
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                      <div className="flex-1">
                         <div className="font-semibold">{option.name}</div>
                         <div className="text-sm text-muted-foreground">{option.risk}</div>
                         <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
@@ -336,7 +340,7 @@ export function Investment() {
 
                     return (
                       <div key={investment.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                           <div>
                             <div className="font-semibold">{investment.amount_invested.toFixed(4)} ALGO</div>
                             <div className="text-sm text-muted-foreground">

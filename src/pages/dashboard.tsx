@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -14,19 +14,62 @@ import { useWalletStore } from '@/stores/walletStore'
 import { useAuthStore } from '@/stores/authStore'
 import { VoiceCommandButton } from '@/components/ui/voice-command-button'
 import { voiceService } from '@/services/voiceService'
+import { paymentService } from '@/services/paymentService'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '@/components/ui/back-button'
 
 export function Dashboard() {
   const { user } = useAuthStore()
   const { wallet, loadWallet, refreshBalance, fundWallet } = useWalletStore()
   const navigate = useNavigate()
+  const [stats, setStats] = useState({
+    totalSent: 0,
+    totalReceived: 0,
+    monthlyTotal: 0,
+    transactionCount: 0
+  })
 
   useEffect(() => {
     if (user) {
       loadWallet(user.id)
+      loadStats()
     }
   }, [user, loadWallet])
+
+  const loadStats = async () => {
+    if (!user) return
+
+    try {
+      const transactions = await paymentService.getTransactionHistory(user.id, 100)
+      
+      const sent = transactions
+        .filter(tx => tx.type === 'send' && tx.status === 'completed')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+      
+      const received = transactions
+        .filter(tx => tx.type === 'receive' && tx.status === 'completed')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      const thisMonth = new Date()
+      thisMonth.setDate(1)
+      
+      const monthlyTransactions = transactions.filter(tx => 
+        new Date(tx.created_at) >= thisMonth
+      )
+      
+      const monthlyTotal = monthlyTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+
+      setStats({
+        totalSent: sent,
+        totalReceived: received,
+        monthlyTotal,
+        transactionCount: transactions.length
+      })
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    }
+  }
 
   const handleVoiceCommand = async (transcript: string) => {
     const command = voiceService.parseVoiceCommand(transcript)
@@ -56,12 +99,17 @@ export function Dashboard() {
     try {
       await fundWallet()
       toast.success('Wallet funding requested. Please wait for confirmation.')
+      // Refresh stats after funding
+      setTimeout(() => {
+        refreshBalance()
+        loadStats()
+      }, 3000)
     } catch (error) {
       toast.error('Failed to fund wallet')
     }
   }
 
-  const stats = [
+  const dashboardStats = [
     {
       title: 'Wallet Balance',
       value: `${wallet?.balance?.toFixed(4) || '0'} ALGO`,
@@ -70,36 +118,37 @@ export function Dashboard() {
     },
     {
       title: 'This Month',
-      value: '$0.00',
+      value: `${stats.monthlyTotal.toFixed(2)} ALGO`,
       icon: DollarSign,
       color: 'text-green-600',
     },
     {
       title: 'Sent',
-      value: '0',
+      value: stats.totalSent.toFixed(2),
       icon: ArrowUpRight,
       color: 'text-red-600',
     },
     {
       title: 'Received',
-      value: '0',
+      value: stats.totalReceived.toFixed(2),
       icon: ArrowDownRight,
       color: 'text-green-600',
     },
   ]
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back to VoicePay</p>
         </div>
         <VoiceCommandButton onCommand={handleVoiceCommand} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {dashboardStats.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -112,14 +161,14 @@ export function Dashboard() {
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -174,12 +223,18 @@ export function Dashboard() {
                 <p className="text-sm text-muted-foreground">
                   Balance: {wallet?.balance?.toFixed(4) || '0'} ALGO
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  Transactions: {stats.transactionCount}
+                </p>
               </div>
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={refreshBalance}
+                  onClick={() => {
+                    refreshBalance()
+                    loadStats()
+                  }}
                 >
                   Refresh Balance
                 </Button>

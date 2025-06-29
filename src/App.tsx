@@ -16,6 +16,7 @@ import { AIAssistant } from '@/pages/assistant'
 import { Settings } from '@/pages/settings'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
+import { notificationService } from '@/components/ui/notification-service'
 import './App.css'
 
 const queryClient = new QueryClient()
@@ -24,6 +25,9 @@ function AppRoutes() {
   const { user, refreshUser } = useAuthStore()
 
   useEffect(() => {
+    // Request notification permission
+    notificationService.requestPermission()
+
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {

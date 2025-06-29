@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { voiceService } from '@/services/voiceService'
+import { BackButton } from '@/components/ui/back-button'
 
 interface Message {
   id: string
@@ -144,14 +145,17 @@ export function AIAssistant() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">AI Assistant</h1>
-        <p className="text-muted-foreground">Get help with VoicePay features and your finances</p>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">AI Assistant</h1>
+          <p className="text-muted-foreground">Get help with VoicePay features and your finances</p>
+        </div>
       </div>
 
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader className="border-b">
+      <Card className="h-[70vh] md:h-[600px] flex flex-col">
+        <CardHeader className="border-b flex-shrink-0">
           <CardTitle className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1" />
@@ -167,7 +171,7 @@ export function AIAssistant() {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <AnimatePresence>
@@ -179,10 +183,10 @@ export function AIAssistant() {
                   exit={{ opacity: 0, y: -20 }}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`flex items-start space-x-2 max-w-[70%] ${
+                  <div className={`flex items-start space-x-2 max-w-[85%] md:max-w-[70%] ${
                     message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                   }`}>
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
                       {message.type === 'user' ? (
                         <AvatarFallback>
                           <User className="h-4 w-4" />
@@ -201,7 +205,7 @@ export function AIAssistant() {
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted'
                     }`}>
-                      <div className="text-sm">{message.content}</div>
+                      <div className="text-sm break-words">{message.content}</div>
                       <div className="text-xs opacity-70 mt-1">
                         {message.timestamp.toLocaleTimeString()}
                       </div>
@@ -248,13 +252,14 @@ export function AIAssistant() {
           </div>
 
           {/* Input */}
-          <div className="border-t p-4">
+          <div className="border-t p-4 flex-shrink-0">
             <div className="flex space-x-2">
               <Button
                 onClick={handleVoiceInput}
                 disabled={isListening}
                 variant="outline"
                 size="sm"
+                className="flex-shrink-0"
               >
                 <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse text-red-500' : ''}`} />
               </Button>
@@ -264,8 +269,13 @@ export function AIAssistant() {
                 placeholder="Ask me anything about VoicePay..."
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 disabled={isLoading}
+                className="flex-1"
               />
-              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={isLoading || !input.trim()}
+                className="flex-shrink-0"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
@@ -279,7 +289,7 @@ export function AIAssistant() {
           <CardTitle>Quick Questions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[
               "What's my current balance?",
               "How do I send money?",
@@ -293,9 +303,9 @@ export function AIAssistant() {
                 variant="outline"
                 size="sm"
                 onClick={() => setInput(question)}
-                className="justify-start"
+                className="justify-start text-left h-auto py-2 px-3"
               >
-                {question}
+                <span className="truncate">{question}</span>
               </Button>
             ))}
           </div>

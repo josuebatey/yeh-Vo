@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
 import { voiceService } from '@/services/voiceService'
+import { BackButton } from '@/components/ui/back-button'
 import QRCodeStyling from 'qr-code-styling'
 
 export function ReceivePayment() {
@@ -20,8 +21,8 @@ export function ReceivePayment() {
     if (!wallet?.address || !qrCodeRef.current) return
 
     const qrCode = new QRCodeStyling({
-      width: 300,
-      height: 300,
+      width: 250,
+      height: 250,
       type: 'svg',
       data: wallet.address,
       image: undefined,
@@ -95,13 +96,14 @@ export function ReceivePayment() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Receive Payment</h1>
+        <BackButton />
+        <h1 className="text-2xl md:text-3xl font-bold">Receive Payment</h1>
         <p className="text-muted-foreground">Share your address or QR code to receive payments</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -136,18 +138,20 @@ export function ReceivePayment() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Your Address</Label>
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <Input 
                     value={wallet?.address || 'Loading...'}
                     readOnly
-                    className="font-mono text-sm"
+                    className="font-mono text-xs md:text-sm flex-1"
                   />
-                  <Button size="sm" onClick={copyAddress}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={speakAddress}>
-                    <Volume2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button size="sm" onClick={copyAddress}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={speakAddress}>
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               

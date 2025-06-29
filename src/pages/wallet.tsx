@@ -2,15 +2,18 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Copy, RefreshCw, ExternalLink, Eye, EyeOff, Wallet as WalletIcon } from 'lucide-react'
+import { Copy, RefreshCw, ExternalLink, Eye, EyeOff, Wallet as WalletIcon, Send, QrCode, History } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { algorandService } from '@/services/algorandService'
+import { BackButton } from '@/components/ui/back-button'
+import { useNavigate } from 'react-router-dom'
 
 export function WalletPage() {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const { wallet, refreshBalance, fundWallet } = useWalletStore()
   const [showMnemonic, setShowMnemonic] = useState(false)
@@ -98,10 +101,13 @@ export function WalletPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Wallet Management</h1>
-        <p className="text-muted-foreground">Manage your Algorand wallet and view transaction details</p>
+    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <BackButton />
+          <h1 className="text-2xl md:text-3xl font-bold">Wallet Management</h1>
+          <p className="text-muted-foreground">Manage your Algorand wallet and view transaction details</p>
+        </div>
       </div>
 
       {/* Wallet Overview */}
@@ -118,7 +124,7 @@ export function WalletPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
-              <div className="text-4xl font-bold mb-2">
+              <div className="text-3xl md:text-4xl font-bold mb-2">
                 {wallet?.balance?.toFixed(4) || '0.0000'} ALGO
               </div>
               <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
@@ -126,12 +132,12 @@ export function WalletPage() {
               </Badge>
             </div>
 
-            <div className="flex justify-center space-x-2">
-              <Button onClick={handleRefreshBalance} disabled={isRefreshing} variant="outline">
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
+              <Button onClick={handleRefreshBalance} disabled={isRefreshing} variant="outline" size="sm">
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button onClick={handleFundWallet} disabled={isFunding}>
+              <Button onClick={handleFundWallet} disabled={isFunding} size="sm">
                 {isFunding ? (
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -139,7 +145,7 @@ export function WalletPage() {
                 )}
                 Fund from TestNet
               </Button>
-              <Button onClick={openInExplorer} variant="outline">
+              <Button onClick={openInExplorer} variant="outline" size="sm">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Explorer
               </Button>
@@ -162,7 +168,7 @@ export function WalletPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">Public Address</div>
-                <div className="p-3 bg-muted rounded-lg font-mono text-sm break-all">
+                <div className="p-3 bg-muted rounded-lg font-mono text-xs md:text-sm break-all">
                   {wallet?.address || 'Loading...'}
                 </div>
                 <Button onClick={copyAddress} variant="outline" size="sm" className="w-full">
@@ -227,7 +233,7 @@ export function WalletPage() {
                       <div className="text-sm text-red-500 font-medium mb-2">
                         ⚠️ Keep this phrase secure and private!
                       </div>
-                      <div className="font-mono text-sm break-all">
+                      <div className="font-mono text-xs md:text-sm break-all">
                         {mnemonic || 'Loading...'}
                       </div>
                     </div>
@@ -270,22 +276,38 @@ export function WalletPage() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
-              <Button variant="outline" className="h-20 flex-col">
-                <WalletIcon className="h-6 w-6 mb-2" />
-                <span>Send Payment</span>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col"
+                onClick={() => navigate('/send')}
+              >
+                <Send className="h-6 w-6 mb-2" />
+                <span className="text-xs md:text-sm">Send Payment</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
-                <Copy className="h-6 w-6 mb-2" />
-                <span>Receive Payment</span>
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col"
+                onClick={() => navigate('/receive')}
+              >
+                <QrCode className="h-6 w-6 mb-2" />
+                <span className="text-xs md:text-sm">Receive Payment</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
-                <RefreshCw className="h-6 w-6 mb-2" />
-                <span>Transaction History</span>
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col"
+                onClick={() => navigate('/history')}
+              >
+                <History className="h-6 w-6 mb-2" />
+                <span className="text-xs md:text-sm">Transaction History</span>
               </Button>
-              <Button variant="outline" className="h-20 flex-col">
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col"
+                onClick={openInExplorer}
+              >
                 <ExternalLink className="h-6 w-6 mb-2" />
-                <span>Block Explorer</span>
+                <span className="text-xs md:text-sm">Block Explorer</span>
               </Button>
             </div>
           </CardContent>

@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { paymentService } from '@/services/paymentService'
 import { algorandService } from '@/services/algorandService'
 import { format } from 'date-fns'
+import { BackButton } from '@/components/ui/back-button'
 
 interface Transaction {
   id: string
@@ -90,8 +91,9 @@ export function TransactionHistory() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Transaction History</h1>
+      <div className="p-4 md:p-6 space-y-6">
+        <BackButton />
+        <h1 className="text-2xl md:text-3xl font-bold">Transaction History</h1>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
             <Card key={i}>
@@ -110,16 +112,17 @@ export function TransactionHistory() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Transaction History</h1>
+        <BackButton />
+        <h1 className="text-2xl md:text-3xl font-bold">Transaction History</h1>
         <p className="text-muted-foreground">View all your payment transactions</p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -132,7 +135,7 @@ export function TransactionHistory() {
               </div>
             </div>
             <Select value={filterChannel} onValueChange={setFilterChannel}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full lg:w-40">
                 <SelectValue placeholder="Channel" />
               </SelectTrigger>
               <SelectContent>
@@ -143,7 +146,7 @@ export function TransactionHistory() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full lg:w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -187,10 +190,10 @@ export function TransactionHistory() {
               transition={{ delay: index * 0.1 }}
             >
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-2 rounded-full ${
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                      <div className={`p-2 rounded-full flex-shrink-0 ${
                         tx.type === 'send' 
                           ? 'bg-red-500/10 text-red-500' 
                           : 'bg-green-500/10 text-green-500'
@@ -201,8 +204,8 @@ export function TransactionHistory() {
                           <ArrowDownRight className="h-4 w-4" />
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <span className="font-semibold">
                             {tx.type === 'send' ? 'Sent' : 'Received'}
                           </span>
@@ -211,7 +214,7 @@ export function TransactionHistory() {
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <div>
+                          <div className="break-all">
                             {tx.type === 'send' ? 'To: ' : 'From: '}
                             <span className="font-mono">
                               {(tx.to_address || tx.from_address || 'Unknown')
@@ -224,7 +227,7 @@ export function TransactionHistory() {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <div className="text-lg font-semibold">
                         {tx.type === 'send' ? '-' : '+'}
                         {tx.amount.toFixed(4)} {tx.currency}
