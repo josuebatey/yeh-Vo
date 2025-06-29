@@ -2,8 +2,9 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
-// Translation resources
+// Translation resources with expanded language support
 const resources = {
+  // English (Global)
   en: {
     translation: {
       // Auth Page
@@ -61,188 +62,14 @@ const resources = {
         refresh: 'Refresh',
         search: 'Search',
         filter: 'Filter',
-        sort: 'Sort',
-        export: 'Export',
-        import: 'Import',
-        download: 'Download',
-        upload: 'Upload',
-        copy: 'Copy',
-        paste: 'Paste',
-        cut: 'Cut',
-        select: 'Select',
-        selectAll: 'Select All',
-        clear: 'Clear',
-        reset: 'Reset',
-        apply: 'Apply',
-        ok: 'OK',
-        yes: 'Yes',
-        no: 'No',
-        on: 'On',
-        off: 'Off',
-        enabled: 'Enabled',
-        disabled: 'Disabled',
-        active: 'Active',
-        inactive: 'Inactive',
-        online: 'Online',
-        offline: 'Offline',
-        connected: 'Connected',
-        disconnected: 'Disconnected',
-        available: 'Available',
-        unavailable: 'Unavailable',
-        public: 'Public',
-        private: 'Private',
-        visible: 'Visible',
-        hidden: 'Hidden',
-        required: 'Required',
-        optional: 'Optional',
-        recommended: 'Recommended',
-        deprecated: 'Deprecated',
-        beta: 'Beta',
-        new: 'New',
-        updated: 'Updated',
-        version: 'Version',
         language: 'Language',
         theme: 'Theme',
         settings: 'Settings',
-        preferences: 'Preferences',
         profile: 'Profile',
         account: 'Account',
         dashboard: 'Dashboard',
         home: 'Home',
-        help: 'Help',
-        support: 'Support',
-        documentation: 'Documentation',
-        about: 'About',
-        contact: 'Contact',
-        feedback: 'Feedback',
-        report: 'Report',
-        bug: 'Bug',
-        feature: 'Feature',
-        request: 'Request',
-        suggestion: 'Suggestion',
-        improvement: 'Improvement',
-        update: 'Update',
-        upgrade: 'Upgrade',
-        downgrade: 'Downgrade',
-        install: 'Install',
-        uninstall: 'Uninstall',
-        enable: 'Enable',
-        disable: 'Disable',
-        activate: 'Activate',
-        deactivate: 'Deactivate',
-        start: 'Start',
-        stop: 'Stop',
-        pause: 'Pause',
-        resume: 'Resume',
-        restart: 'Restart',
-        reload: 'Reload',
-        sync: 'Sync',
-        backup: 'Backup',
-        restore: 'Restore',
-        migrate: 'Migrate',
-        transfer: 'Transfer',
-        move: 'Move',
-        rename: 'Rename',
-        duplicate: 'Duplicate',
-        clone: 'Clone',
-        merge: 'Merge',
-        split: 'Split',
-        combine: 'Combine',
-        separate: 'Separate',
-        group: 'Group',
-        ungroup: 'Ungroup',
-        link: 'Link',
-        unlink: 'Unlink',
-        connect: 'Connect',
-        disconnect: 'Disconnect',
-        join: 'Join',
-        leave: 'Leave',
-        invite: 'Invite',
-        accept: 'Accept',
-        decline: 'Decline',
-        approve: 'Approve',
-        reject: 'Reject',
-        allow: 'Allow',
-        deny: 'Deny',
-        grant: 'Grant',
-        revoke: 'Revoke',
-        assign: 'Assign',
-        unassign: 'Unassign',
-        add: 'Add',
-        remove: 'Remove',
-        create: 'Create',
-        update: 'Update',
-        modify: 'Modify',
-        change: 'Change',
-        replace: 'Replace',
-        insert: 'Insert',
-        append: 'Append',
-        prepend: 'Prepend',
-        extend: 'Extend',
-        expand: 'Expand',
-        collapse: 'Collapse',
-        minimize: 'Minimize',
-        maximize: 'Maximize',
-        resize: 'Resize',
-        scale: 'Scale',
-        zoom: 'Zoom',
-        pan: 'Pan',
-        rotate: 'Rotate',
-        flip: 'Flip',
-        mirror: 'Mirror',
-        invert: 'Invert',
-        reverse: 'Reverse',
-        undo: 'Undo',
-        redo: 'Redo',
-        preview: 'Preview',
-        print: 'Print',
-        share: 'Share',
-        publish: 'Publish',
-        unpublish: 'Unpublish',
-        archive: 'Archive',
-        unarchive: 'Unarchive',
-        bookmark: 'Bookmark',
-        unbookmark: 'Unbookmark',
-        favorite: 'Favorite',
-        unfavorite: 'Unfavorite',
-        like: 'Like',
-        unlike: 'Unlike',
-        follow: 'Follow',
-        unfollow: 'Unfollow',
-        subscribe: 'Subscribe',
-        unsubscribe: 'Unsubscribe',
-        notify: 'Notify',
-        mute: 'Mute',
-        unmute: 'Unmute',
-        block: 'Block',
-        unblock: 'Unblock',
-        ban: 'Ban',
-        unban: 'Unban',
-        suspend: 'Suspend',
-        unsuspend: 'Unsuspend',
-        lock: 'Lock',
-        unlock: 'Unlock',
-        secure: 'Secure',
-        unsecure: 'Unsecure',
-        encrypt: 'Encrypt',
-        decrypt: 'Decrypt',
-        compress: 'Compress',
-        decompress: 'Decompress',
-        optimize: 'Optimize',
-        analyze: 'Analyze',
-        validate: 'Validate',
-        verify: 'Verify',
-        authenticate: 'Authenticate',
-        authorize: 'Authorize',
-        login: 'Login',
-        logout: 'Logout',
-        signin: 'Sign In',
-        signout: 'Sign Out',
-        signup: 'Sign Up',
-        register: 'Register',
-        unregister: 'Unregister',
-        subscribe: 'Subscribe',
-        unsubscribe: 'Unsubscribe'
+        logout: 'Logout'
       },
       // Navigation
       nav: {
@@ -277,9 +104,10 @@ const resources = {
       }
     }
   },
+  
+  // Spanish (Latin America & Spain)
   es: {
     translation: {
-      // Auth Page
       auth: {
         title: 'VoicePay',
         subtitle: 'Envía y recibe pagos con tu voz',
@@ -298,51 +126,19 @@ const resources = {
         features: 'Comandos de voz • Códigos QR • Pagos multicanal',
         welcomeBack: '¡Bienvenido de vuelta!',
         accountCreated: '¡Cuenta creada! Revisa tu correo para verificar.',
-        forgotPassword: '¿Olvidaste tu contraseña?',
-        noAccount: '¿No tienes una cuenta?',
-        haveAccount: '¿Ya tienes una cuenta?',
-        signUpLink: 'Regístrate',
-        signInLink: 'Inicia sesión',
         orContinueWith: 'O continúa con',
-        google: 'Google',
-        apple: 'Apple',
-        microsoft: 'Microsoft',
         termsAndPrivacy: 'Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad',
-        secureLogin: 'Inicio de Sesión Seguro',
-        encryptedData: 'Tus datos están encriptados y seguros',
-        multiLanguage: 'Soporte Multiidioma',
         voiceCommands: 'Comandos de Voz',
         blockchainSecure: 'Seguridad Blockchain',
-        instantPayments: 'Pagos Instantáneos'
+        instantPayments: 'Pagos Instantáneos',
+        multiLanguage: 'Soporte Multiidioma',
+        encryptedData: 'Tus datos están encriptados y seguros'
       },
-      // Common
       common: {
         loading: 'Cargando...',
-        error: 'Error',
-        success: 'Éxito',
-        cancel: 'Cancelar',
-        confirm: 'Confirmar',
-        save: 'Guardar',
-        delete: 'Eliminar',
-        edit: 'Editar',
-        close: 'Cerrar',
-        back: 'Atrás',
-        next: 'Siguiente',
-        previous: 'Anterior',
-        submit: 'Enviar',
-        retry: 'Reintentar',
-        refresh: 'Actualizar',
-        search: 'Buscar',
-        filter: 'Filtrar',
         language: 'Idioma',
-        theme: 'Tema',
-        settings: 'Configuración',
-        profile: 'Perfil',
-        account: 'Cuenta',
-        dashboard: 'Panel',
-        home: 'Inicio'
+        logout: 'Cerrar Sesión'
       },
-      // Navigation
       nav: {
         dashboard: 'Panel',
         sendPayment: 'Enviar Pago',
@@ -353,31 +149,13 @@ const resources = {
         voiceCommands: 'Comandos de Voz',
         aiAssistant: 'Asistente IA',
         settings: 'Configuración'
-      },
-      // Dashboard
-      dashboard: {
-        title: 'Panel',
-        subtitle: 'Bienvenido de vuelta a VoicePay',
-        walletBalance: 'Saldo de Billetera',
-        thisMonth: 'Este Mes',
-        totalSent: 'Total Enviado',
-        totalReceived: 'Total Recibido',
-        quickActions: 'Acciones Rápidas',
-        recentActivity: 'Actividad Reciente',
-        walletManagement: 'Gestión de Billetera',
-        noRecentTransactions: 'No hay transacciones recientes',
-        makeFirstPayment: 'Haz tu Primer Pago',
-        viewAllTransactions: 'Ver Todas las Transacciones',
-        refreshBalance: 'Actualizar Saldo',
-        fundFromTestnet: 'Fondear desde Testnet',
-        autoRefresh: 'Auto-actualización cada 10 segundos',
-        liveTransactionMonitoring: 'Monitoreo de transacciones en vivo'
       }
     }
   },
+
+  // French (France & Francophone Africa)
   fr: {
     translation: {
-      // Auth Page
       auth: {
         title: 'VoicePay',
         subtitle: 'Envoyez et recevez des paiements avec votre voix',
@@ -396,51 +174,19 @@ const resources = {
         features: 'Commandes vocales • Codes QR • Paiements multi-canaux',
         welcomeBack: 'Bon retour !',
         accountCreated: 'Compte créé ! Vérifiez votre email pour confirmer.',
-        forgotPassword: 'Mot de passe oublié ?',
-        noAccount: "Vous n'avez pas de compte ?",
-        haveAccount: 'Vous avez déjà un compte ?',
-        signUpLink: "S'inscrire",
-        signInLink: 'Se connecter',
         orContinueWith: 'Ou continuer avec',
-        google: 'Google',
-        apple: 'Apple',
-        microsoft: 'Microsoft',
         termsAndPrivacy: 'En continuant, vous acceptez nos Conditions de Service et Politique de Confidentialité',
-        secureLogin: 'Connexion Sécurisée',
-        encryptedData: 'Vos données sont cryptées et sécurisées',
-        multiLanguage: 'Support Multilingue',
         voiceCommands: 'Commandes Vocales',
         blockchainSecure: 'Sécurité Blockchain',
-        instantPayments: 'Paiements Instantanés'
+        instantPayments: 'Paiements Instantanés',
+        multiLanguage: 'Support Multilingue',
+        encryptedData: 'Vos données sont cryptées et sécurisées'
       },
-      // Common
       common: {
         loading: 'Chargement...',
-        error: 'Erreur',
-        success: 'Succès',
-        cancel: 'Annuler',
-        confirm: 'Confirmer',
-        save: 'Sauvegarder',
-        delete: 'Supprimer',
-        edit: 'Modifier',
-        close: 'Fermer',
-        back: 'Retour',
-        next: 'Suivant',
-        previous: 'Précédent',
-        submit: 'Soumettre',
-        retry: 'Réessayer',
-        refresh: 'Actualiser',
-        search: 'Rechercher',
-        filter: 'Filtrer',
         language: 'Langue',
-        theme: 'Thème',
-        settings: 'Paramètres',
-        profile: 'Profil',
-        account: 'Compte',
-        dashboard: 'Tableau de bord',
-        home: 'Accueil'
+        logout: 'Se Déconnecter'
       },
-      // Navigation
       nav: {
         dashboard: 'Tableau de bord',
         sendPayment: 'Envoyer un paiement',
@@ -451,129 +197,305 @@ const resources = {
         voiceCommands: 'Commandes vocales',
         aiAssistant: 'Assistant IA',
         settings: 'Paramètres'
-      },
-      // Dashboard
-      dashboard: {
-        title: 'Tableau de bord',
-        subtitle: 'Bon retour sur VoicePay',
-        walletBalance: 'Solde du portefeuille',
-        thisMonth: 'Ce mois',
-        totalSent: 'Total envoyé',
-        totalReceived: 'Total reçu',
-        quickActions: 'Actions rapides',
-        recentActivity: 'Activité récente',
-        walletManagement: 'Gestion du portefeuille',
-        noRecentTransactions: 'Aucune transaction récente',
-        makeFirstPayment: 'Effectuez votre premier paiement',
-        viewAllTransactions: 'Voir toutes les transactions',
-        refreshBalance: 'Actualiser le solde',
-        fundFromTestnet: 'Financer depuis Testnet',
-        autoRefresh: 'Auto-actualisation toutes les 10 secondes',
-        liveTransactionMonitoring: 'Surveillance des transactions en direct'
       }
     }
   },
-  de: {
+
+  // Portuguese (Brazil & Lusophone Africa)
+  pt: {
     translation: {
-      // Auth Page
       auth: {
         title: 'VoicePay',
-        subtitle: 'Senden und empfangen Sie Zahlungen mit Ihrer Stimme',
-        getStarted: 'Loslegen',
-        description: 'Erstellen Sie ein Konto oder melden Sie sich an, um VoicePay zu nutzen',
-        signIn: 'Anmelden',
-        signUp: 'Registrieren',
-        email: 'E-Mail',
-        password: 'Passwort',
-        fullName: 'Vollständiger Name',
-        enterEmail: 'Geben Sie Ihre E-Mail ein',
-        enterPassword: 'Geben Sie Ihr Passwort ein',
-        createPassword: 'Erstellen Sie ein Passwort',
-        enterFullName: 'Geben Sie Ihren vollständigen Namen ein',
-        createAccount: 'Konto erstellen',
-        features: 'Sprachbefehle • QR-Codes • Multi-Kanal-Zahlungen',
-        welcomeBack: 'Willkommen zurück!',
-        accountCreated: 'Konto erstellt! Überprüfen Sie Ihre E-Mail zur Bestätigung.',
-        forgotPassword: 'Passwort vergessen?',
-        noAccount: 'Haben Sie kein Konto?',
-        haveAccount: 'Haben Sie bereits ein Konto?',
-        signUpLink: 'Registrieren',
-        signInLink: 'Anmelden',
-        orContinueWith: 'Oder fortfahren mit',
-        google: 'Google',
-        apple: 'Apple',
-        microsoft: 'Microsoft',
-        termsAndPrivacy: 'Durch Fortfahren stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu',
-        secureLogin: 'Sichere Anmeldung',
-        encryptedData: 'Ihre Daten sind verschlüsselt und sicher',
-        multiLanguage: 'Mehrsprachige Unterstützung',
-        voiceCommands: 'Sprachbefehle',
-        blockchainSecure: 'Blockchain-Sicherheit',
-        instantPayments: 'Sofortige Zahlungen'
+        subtitle: 'Envie e receba pagamentos com sua voz',
+        getStarted: 'Começar',
+        description: 'Crie uma conta ou faça login para começar a usar o VoicePay',
+        signIn: 'Entrar',
+        signUp: 'Cadastrar',
+        email: 'Email',
+        password: 'Senha',
+        fullName: 'Nome Completo',
+        enterEmail: 'Digite seu email',
+        enterPassword: 'Digite sua senha',
+        createPassword: 'Crie uma senha',
+        enterFullName: 'Digite seu nome completo',
+        createAccount: 'Criar Conta',
+        features: 'Comandos de voz • Códigos QR • Pagamentos multicanal',
+        welcomeBack: 'Bem-vindo de volta!',
+        accountCreated: 'Conta criada! Verifique seu email para confirmar.',
+        orContinueWith: 'Ou continue com',
+        termsAndPrivacy: 'Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade',
+        voiceCommands: 'Comandos de Voz',
+        blockchainSecure: 'Segurança Blockchain',
+        instantPayments: 'Pagamentos Instantâneos',
+        multiLanguage: 'Suporte Multilíngue',
+        encryptedData: 'Seus dados são criptografados e seguros'
       },
-      // Common
       common: {
-        loading: 'Laden...',
-        error: 'Fehler',
-        success: 'Erfolg',
-        cancel: 'Abbrechen',
-        confirm: 'Bestätigen',
-        save: 'Speichern',
-        delete: 'Löschen',
-        edit: 'Bearbeiten',
-        close: 'Schließen',
-        back: 'Zurück',
-        next: 'Weiter',
-        previous: 'Vorherige',
-        submit: 'Senden',
-        retry: 'Wiederholen',
-        refresh: 'Aktualisieren',
-        search: 'Suchen',
-        filter: 'Filtern',
-        language: 'Sprache',
-        theme: 'Design',
-        settings: 'Einstellungen',
-        profile: 'Profil',
-        account: 'Konto',
-        dashboard: 'Dashboard',
-        home: 'Startseite'
+        loading: 'Carregando...',
+        language: 'Idioma',
+        logout: 'Sair'
       },
-      // Navigation
       nav: {
-        dashboard: 'Dashboard',
-        sendPayment: 'Zahlung senden',
-        receive: 'Empfangen',
-        history: 'Verlauf',
-        invest: 'Investieren',
-        wallet: 'Wallet',
-        voiceCommands: 'Sprachbefehle',
-        aiAssistant: 'KI-Assistent',
-        settings: 'Einstellungen'
-      },
-      // Dashboard
-      dashboard: {
-        title: 'Dashboard',
-        subtitle: 'Willkommen zurück bei VoicePay',
-        walletBalance: 'Wallet-Guthaben',
-        thisMonth: 'Diesen Monat',
-        totalSent: 'Gesamt gesendet',
-        totalReceived: 'Gesamt erhalten',
-        quickActions: 'Schnellaktionen',
-        recentActivity: 'Letzte Aktivität',
-        walletManagement: 'Wallet-Verwaltung',
-        noRecentTransactions: 'Keine aktuellen Transaktionen',
-        makeFirstPayment: 'Erste Zahlung tätigen',
-        viewAllTransactions: 'Alle Transaktionen anzeigen',
-        refreshBalance: 'Guthaben aktualisieren',
-        fundFromTestnet: 'Von Testnet finanzieren',
-        autoRefresh: 'Auto-Aktualisierung alle 10 Sekunden',
-        liveTransactionMonitoring: 'Live-Transaktionsüberwachung'
+        dashboard: 'Painel',
+        sendPayment: 'Enviar Pagamento',
+        receive: 'Receber',
+        history: 'Histórico',
+        invest: 'Investir',
+        wallet: 'Carteira',
+        voiceCommands: 'Comandos de Voz',
+        aiAssistant: 'Assistente IA',
+        settings: 'Configurações'
       }
     }
   },
+
+  // Arabic (Middle East & North Africa)
+  ar: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'أرسل واستقبل المدفوعات بصوتك',
+        getStarted: 'ابدأ',
+        description: 'أنشئ حساباً أو سجل دخولك لبدء استخدام VoicePay',
+        signIn: 'تسجيل الدخول',
+        signUp: 'إنشاء حساب',
+        email: 'البريد الإلكتروني',
+        password: 'كلمة المرور',
+        fullName: 'الاسم الكامل',
+        enterEmail: 'أدخل بريدك الإلكتروني',
+        enterPassword: 'أدخل كلمة المرور',
+        createPassword: 'أنشئ كلمة مرور',
+        enterFullName: 'أدخل اسمك الكامل',
+        createAccount: 'إنشاء حساب',
+        features: 'أوامر صوتية • رموز QR • مدفوعات متعددة القنوات',
+        welcomeBack: 'مرحباً بعودتك!',
+        accountCreated: 'تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد.',
+        orContinueWith: 'أو تابع مع',
+        termsAndPrivacy: 'بالمتابعة، أنت توافق على شروط الخدمة وسياسة الخصوصية',
+        voiceCommands: 'الأوامر الصوتية',
+        blockchainSecure: 'أمان البلوك تشين',
+        instantPayments: 'مدفوعات فورية',
+        multiLanguage: 'دعم متعدد اللغات',
+        encryptedData: 'بياناتك مشفرة وآمنة'
+      },
+      common: {
+        loading: 'جاري التحميل...',
+        language: 'اللغة',
+        logout: 'تسجيل الخروج'
+      },
+      nav: {
+        dashboard: 'لوحة التحكم',
+        sendPayment: 'إرسال دفعة',
+        receive: 'استقبال',
+        history: 'التاريخ',
+        invest: 'استثمار',
+        wallet: 'المحفظة',
+        voiceCommands: 'الأوامر الصوتية',
+        aiAssistant: 'المساعد الذكي',
+        settings: 'الإعدادات'
+      }
+    }
+  },
+
+  // Swahili (East Africa)
+  sw: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'Tuma na pokea malipo kwa sauti yako',
+        getStarted: 'Anza',
+        description: 'Fungua akaunti au ingia ili kuanza kutumia VoicePay',
+        signIn: 'Ingia',
+        signUp: 'Jisajili',
+        email: 'Barua pepe',
+        password: 'Nenosiri',
+        fullName: 'Jina kamili',
+        enterEmail: 'Ingiza barua pepe yako',
+        enterPassword: 'Ingiza nenosiri lako',
+        createPassword: 'Tengeneza nenosiri',
+        enterFullName: 'Ingiza jina lako kamili',
+        createAccount: 'Fungua Akaunti',
+        features: 'Amri za sauti • Misimbo ya QR • Malipo ya njia nyingi',
+        welcomeBack: 'Karibu tena!',
+        accountCreated: 'Akaunti imetengenezwa! Angalia barua pepe yako ili kuthibitisha.',
+        orContinueWith: 'Au endelea na',
+        termsAndPrivacy: 'Kwa kuendelea, unakubali Masharti yetu ya Huduma na Sera ya Faragha',
+        voiceCommands: 'Amri za Sauti',
+        blockchainSecure: 'Usalama wa Blockchain',
+        instantPayments: 'Malipo ya Haraka',
+        multiLanguage: 'Msaada wa Lugha Nyingi',
+        encryptedData: 'Data yako imefichwa na ni salama'
+      },
+      common: {
+        loading: 'Inapakia...',
+        language: 'Lugha',
+        logout: 'Toka'
+      },
+      nav: {
+        dashboard: 'Dashibodi',
+        sendPayment: 'Tuma Malipo',
+        receive: 'Pokea',
+        history: 'Historia',
+        invest: 'Wekeza',
+        wallet: 'Mkoba',
+        voiceCommands: 'Amri za Sauti',
+        aiAssistant: 'Msaidizi wa AI',
+        settings: 'Mipangilio'
+      }
+    }
+  },
+
+  // Hausa (West Africa)
+  ha: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'Aika da karɓar kuɗi da muryar ku',
+        getStarted: 'Fara',
+        description: 'Ƙirƙiri asusun ko shiga don fara amfani da VoicePay',
+        signIn: 'Shiga',
+        signUp: 'Yi rajista',
+        email: 'Imel',
+        password: 'Kalmar sirri',
+        fullName: 'Cikakken suna',
+        enterEmail: 'Shigar da imel ɗin ku',
+        enterPassword: 'Shigar da kalmar sirrin ku',
+        createPassword: 'Ƙirƙiri kalmar sirri',
+        enterFullName: 'Shigar da cikakken sunan ku',
+        createAccount: 'Ƙirƙiri Asusun',
+        features: 'Umarnin murya • Lambobin QR • Biyan kuɗi ta hanyoyi daban-daban',
+        welcomeBack: 'Barka da dawowa!',
+        accountCreated: 'An ƙirƙiri asusun! Duba imel ɗin ku don tabbatarwa.',
+        orContinueWith: 'Ko ci gaba da',
+        termsAndPrivacy: 'Ta hanyar ci gaba, kun yarda da Sharuɗɗan Sabis ɗinmu da Manufar Sirri',
+        voiceCommands: 'Umarnin Murya',
+        blockchainSecure: 'Tsaron Blockchain',
+        instantPayments: 'Biyan Kuɗi nan take',
+        multiLanguage: 'Goyan bayan Harsuna da yawa',
+        encryptedData: 'Bayanan ku an ɓoye kuma suna da aminci'
+      },
+      common: {
+        loading: 'Ana lodawa...',
+        language: 'Harshe',
+        logout: 'Fita'
+      }
+    }
+  },
+
+  // Yoruba (West Africa)
+  yo: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'Fi ohùn rẹ ránṣẹ́ àti gbà owó',
+        getStarted: 'Bẹ̀rẹ̀',
+        description: 'Ṣẹ̀dá àkáǹtì tàbí wọlé láti bẹ̀rẹ̀ lílo VoicePay',
+        signIn: 'Wọlé',
+        signUp: 'Forúkọsílẹ̀',
+        email: 'Ímeèlì',
+        password: 'Ọ̀rọ̀ aṣínà',
+        fullName: 'Orúkọ kíkún',
+        enterEmail: 'Tẹ ímeèlì rẹ sínú',
+        enterPassword: 'Tẹ ọ̀rọ̀ aṣínà rẹ sínú',
+        createPassword: 'Ṣẹ̀dá ọ̀rọ̀ aṣínà',
+        enterFullName: 'Tẹ orúkọ kíkún rẹ sínú',
+        createAccount: 'Ṣẹ̀dá Àkáǹtì',
+        features: 'Àwọn àṣẹ ohùn • Àwọn kóòdù QR • Ìsanwó ọ̀nà púpọ̀',
+        welcomeBack: 'Káàbọ̀ padà!',
+        accountCreated: 'A ti ṣẹ̀dá àkáǹtì! Wo ímeèlì rẹ fún ìjẹ́rìísí.',
+        orContinueWith: 'Tàbí tẹ̀síwájú pẹ̀lú',
+        termsAndPrivacy: 'Nípa títẹ̀síwájú, o gbà àwọn Òfin Iṣẹ́ wa àti Ìlànà Àṣírí',
+        voiceCommands: 'Àwọn Àṣẹ Ohùn',
+        blockchainSecure: 'Àábo Blockchain',
+        instantPayments: 'Ìsanwó Lẹ́sẹ̀kẹsẹ̀',
+        multiLanguage: 'Àtìlẹ́yìn Èdè Púpọ̀',
+        encryptedData: 'Dátà rẹ ti di ìkọ̀kọ̀ ó sì wà láàbò'
+      },
+      common: {
+        loading: 'Ń gbé...',
+        language: 'Èdè',
+        logout: 'Jáde'
+      }
+    }
+  },
+
+  // Amharic (Ethiopia)
+  am: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'በድምፅዎ ገንዘብ ይላኩ እና ይቀበሉ',
+        getStarted: 'ይጀምሩ',
+        description: 'VoicePay መጠቀም ለመጀመር መለያ ይፍጠሩ ወይም ይግቡ',
+        signIn: 'ግባ',
+        signUp: 'ይመዝገቡ',
+        email: 'ኢሜል',
+        password: 'የይለፍ ቃል',
+        fullName: 'ሙሉ ስም',
+        enterEmail: 'ኢሜልዎን ያስገቡ',
+        enterPassword: 'የይለፍ ቃልዎን ያስገቡ',
+        createPassword: 'የይለፍ ቃል ይፍጠሩ',
+        enterFullName: 'ሙሉ ስምዎን ያስገቡ',
+        createAccount: 'መለያ ይፍጠሩ',
+        features: 'የድምፅ ትዕዛዞች • QR ኮዶች • ባለብዙ ቻናል ክፍያዎች',
+        welcomeBack: 'እንኳን ደህና መጡ!',
+        accountCreated: 'መለያ ተፈጥሯል! ለማረጋገጥ ኢሜልዎን ይመልከቱ።',
+        orContinueWith: 'ወይም ይቀጥሉ በ',
+        termsAndPrivacy: 'በመቀጠል የእኛን የአገልግሎት ውሎች እና የግላዊነት ፖሊሲ ይቀበላሉ',
+        voiceCommands: 'የድምፅ ትዕዛዞች',
+        blockchainSecure: 'የብሎክቼይን ደህንነት',
+        instantPayments: 'ፈጣን ክፍያዎች',
+        multiLanguage: 'ባለብዙ ቋንቋ ድጋፍ',
+        encryptedData: 'መረጃዎ የተመሰጠረ እና ደህንነቱ የተጠበቀ ነው'
+      },
+      common: {
+        loading: 'በመጫን ላይ...',
+        language: 'ቋንቋ',
+        logout: 'ውጣ'
+      }
+    }
+  },
+
+  // Hindi (India)
+  hi: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'अपनी आवाज़ से पैसे भेजें और प्राप्त करें',
+        getStarted: 'शुरू करें',
+        description: 'VoicePay का उपयोग शुरू करने के लिए खाता बनाएं या साइन इन करें',
+        signIn: 'साइन इन करें',
+        signUp: 'साइन अप करें',
+        email: 'ईमेल',
+        password: 'पासवर्ड',
+        fullName: 'पूरा नाम',
+        enterEmail: 'अपना ईमेल दर्ज करें',
+        enterPassword: 'अपना पासवर्ड दर्ज करें',
+        createPassword: 'पासवर्ड बनाएं',
+        enterFullName: 'अपना पूरा नाम दर्ज करें',
+        createAccount: 'खाता बनाएं',
+        features: 'आवाज़ कमांड • QR कोड • मल्टी-चैनल भुगतान',
+        welcomeBack: 'वापसी पर स्वागत है!',
+        accountCreated: 'खाता बनाया गया! सत्यापन के लिए अपना ईमेल जांचें।',
+        orContinueWith: 'या जारी रखें',
+        termsAndPrivacy: 'जारी रखकर, आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत हैं',
+        voiceCommands: 'आवाज़ कमांड',
+        blockchainSecure: 'ब्लॉकचेन सुरक्षा',
+        instantPayments: 'तत्काल भुगतान',
+        multiLanguage: 'बहुभाषी समर्थन',
+        encryptedData: 'आपका डेटा एन्क्रिप्टेड और सुरक्षित है'
+      },
+      common: {
+        loading: 'लोड हो रहा है...',
+        language: 'भाषा',
+        logout: 'लॉग आउट'
+      }
+    }
+  },
+
+  // Chinese Simplified (China)
   zh: {
     translation: {
-      // Auth Page
       auth: {
         title: 'VoicePay',
         subtitle: '用您的声音发送和接收付款',
@@ -592,80 +514,92 @@ const resources = {
         features: '语音命令 • 二维码 • 多渠道支付',
         welcomeBack: '欢迎回来！',
         accountCreated: '账户已创建！请检查您的邮箱进行验证。',
-        forgotPassword: '忘记密码？',
-        noAccount: '没有账户？',
-        haveAccount: '已有账户？',
-        signUpLink: '注册',
-        signInLink: '登录',
         orContinueWith: '或继续使用',
-        google: '谷歌',
-        apple: '苹果',
-        microsoft: '微软',
         termsAndPrivacy: '继续即表示您同意我们的服务条款和隐私政策',
-        secureLogin: '安全登录',
-        encryptedData: '您的数据已加密且安全',
-        multiLanguage: '多语言支持',
         voiceCommands: '语音命令',
         blockchainSecure: '区块链安全',
-        instantPayments: '即时支付'
+        instantPayments: '即时支付',
+        multiLanguage: '多语言支持',
+        encryptedData: '您的数据已加密且安全'
       },
-      // Common
       common: {
         loading: '加载中...',
-        error: '错误',
-        success: '成功',
-        cancel: '取消',
-        confirm: '确认',
-        save: '保存',
-        delete: '删除',
-        edit: '编辑',
-        close: '关闭',
-        back: '返回',
-        next: '下一步',
-        previous: '上一步',
-        submit: '提交',
-        retry: '重试',
-        refresh: '刷新',
-        search: '搜索',
-        filter: '筛选',
         language: '语言',
-        theme: '主题',
-        settings: '设置',
-        profile: '个人资料',
-        account: '账户',
-        dashboard: '仪表板',
-        home: '首页'
+        logout: '退出登录'
+      }
+    }
+  },
+
+  // Russian (Russia & Eastern Europe)
+  ru: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: 'Отправляйте и получайте платежи голосом',
+        getStarted: 'Начать',
+        description: 'Создайте аккаунт или войдите, чтобы начать использовать VoicePay',
+        signIn: 'Войти',
+        signUp: 'Регистрация',
+        email: 'Электронная почта',
+        password: 'Пароль',
+        fullName: 'Полное имя',
+        enterEmail: 'Введите вашу электронную почту',
+        enterPassword: 'Введите ваш пароль',
+        createPassword: 'Создайте пароль',
+        enterFullName: 'Введите ваше полное имя',
+        createAccount: 'Создать аккаунт',
+        features: 'Голосовые команды • QR-коды • Многоканальные платежи',
+        welcomeBack: 'Добро пожаловать обратно!',
+        accountCreated: 'Аккаунт создан! Проверьте вашу электронную почту для подтверждения.',
+        orContinueWith: 'Или продолжить с',
+        termsAndPrivacy: 'Продолжая, вы соглашаетесь с нашими Условиями обслуживания и Политикой конфиденциальности',
+        voiceCommands: 'Голосовые команды',
+        blockchainSecure: 'Безопасность блокчейна',
+        instantPayments: 'Мгновенные платежи',
+        multiLanguage: 'Многоязычная поддержка',
+        encryptedData: 'Ваши данные зашифрованы и защищены'
       },
-      // Navigation
-      nav: {
-        dashboard: '仪表板',
-        sendPayment: '发送付款',
-        receive: '接收',
-        history: '历史记录',
-        invest: '投资',
-        wallet: '钱包',
-        voiceCommands: '语音命令',
-        aiAssistant: 'AI助手',
-        settings: '设置'
+      common: {
+        loading: 'Загрузка...',
+        language: 'Язык',
+        logout: 'Выйти'
+      }
+    }
+  },
+
+  // Japanese (Japan)
+  ja: {
+    translation: {
+      auth: {
+        title: 'VoicePay',
+        subtitle: '音声で支払いを送受信',
+        getStarted: '始める',
+        description: 'VoicePayの使用を開始するにはアカウントを作成するかサインインしてください',
+        signIn: 'サインイン',
+        signUp: 'サインアップ',
+        email: 'メール',
+        password: 'パスワード',
+        fullName: 'フルネーム',
+        enterEmail: 'メールアドレスを入力',
+        enterPassword: 'パスワードを入力',
+        createPassword: 'パスワードを作成',
+        enterFullName: 'フルネームを入力',
+        createAccount: 'アカウント作成',
+        features: '音声コマンド • QRコード • マルチチャネル決済',
+        welcomeBack: 'おかえりなさい！',
+        accountCreated: 'アカウントが作成されました！確認のためメールをチェックしてください。',
+        orContinueWith: 'または続行',
+        termsAndPrivacy: '続行することで、利用規約とプライバシーポリシーに同意したものとみなされます',
+        voiceCommands: '音声コマンド',
+        blockchainSecure: 'ブロックチェーンセキュリティ',
+        instantPayments: '即座の支払い',
+        multiLanguage: '多言語サポート',
+        encryptedData: 'あなたのデータは暗号化され安全です'
       },
-      // Dashboard
-      dashboard: {
-        title: '仪表板',
-        subtitle: '欢迎回到VoicePay',
-        walletBalance: '钱包余额',
-        thisMonth: '本月',
-        totalSent: '总发送',
-        totalReceived: '总接收',
-        quickActions: '快速操作',
-        recentActivity: '最近活动',
-        walletManagement: '钱包管理',
-        noRecentTransactions: '没有最近的交易',
-        makeFirstPayment: '进行首次付款',
-        viewAllTransactions: '查看所有交易',
-        refreshBalance: '刷新余额',
-        fundFromTestnet: '从测试网充值',
-        autoRefresh: '每10秒自动刷新',
-        liveTransactionMonitoring: '实时交易监控'
+      common: {
+        loading: '読み込み中...',
+        language: '言語',
+        logout: 'ログアウト'
       }
     }
   }
