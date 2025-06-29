@@ -1,0 +1,371 @@
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Send, QrCode, Mic, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/authStore'
+import { useWalletStore } from '@/stores/walletStore'
+import { paymentService } from '@/services/paymentService'
+import { VoiceCommandButton } from '@/components/ui/voice-command-button'
+import { voiceService } from '@/services/voiceService'
+
+// Simple QR Scanner component since react-qr-reader has compatibility issues
+function SimpleQRScanner({ onScan, onClose }: { onScan: (result: string) => void, onClose: () => void }) {
+  return (
+    <div className="space-y-4">
+      <div className="bg-muted rounded-lg p-8 text-center">
+        <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+        <h3 className="text-lg font-semibold mb-2">QR Scanner</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          QR scanning requires camera access. For demo purposes, you can paste an address below.
+        </p>
+        <Input
+          placeholder="Paste Algorand address here..."
+          onPaste={(e) => {
+            const pastedText = e.clipboardData.getData('text')
+            if (pastedText) {
+              onScan(pastedText)
+            }
+          }}
+        />
+      </div>
+      <Button variant="outline" onClick={onClose} className="w-full">
+        Cancel Scanner
+      </Button>
+    </div>
+  )
+}
+
+export function SendPayment() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuthStore()
+  const { wallet } = useWalletStore()
+  
+  const [isLoading, setIsLoading] = useState(false)
+  const [showQrScanner, setShowQrScanner] = useState(false)
+  const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
+  const [txId, setTxId] = useState<string>('')
+  const [formData, setFormData] = useState({
+    amount: '',
+    recipient: '',
+    channel: 'algorand' as 'algorand' | 'mobile_money' | 'bank',
+    currency: 'ALGO',
+  })
+
+  // Handle voice command from navigation
+  useEffect(() => {
+    const command = location.state?.command
+    if (command && command.action === 'send') {
+      setFormData(prev => ({
+        ...prev,
+        amount: command.amount?.toString() || '',
+        recipient: command.recipient || '',
+        channel: command.channel || 'algorand',
+      }))
+    }
+  }, [location.state])
+
+  const handleVoiceCommand = async (transcript: string) => {
+    const command = voiceService.parseVoiceCommand(transcript)
+    if (command && command.action === 'send') {
+      setFormData(prev => ({
+        ...prev,
+        amount: command.amount?.toString() || prev.amount,
+        recipient: command.recipient || prev.recipient,
+        channel: command.channel || prev.channel,
+      }))
+      await voiceService.speak(`Set amount to ${command.amount} and recipient to ${command.recipient}`)
+    }
+  }
+
+  const handleQrScan = (result: string) => {
+    setFormData(prev => ({ ...prev, recipient: result }))
+    setShowQrScanner(false)
+    toast.success('Address scanned successfully!')
+  }
+
+  const handleSendPayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    setIsLoading(true)
+    setTxStatus('pending')
+
+    try {
+      // Check daily limits
+      const limitCheck = await paymentService.checkDailyLimits(user.id, parseFloat(formData.amount))
+      if (!limitCheck.canSend) {
+        toast.error(limitCheck.reason)
+        setTxStatus('error')
+        return
+      }
+
+      const txId = await paymentService.sendPayment(user.id, {
+        amount: parseFloat(formData.amount),
+        recipient: formData.recipient,
+        channel: formData.channel,
+        currency: formData.currency,
+      })
+
+      await paymentService.updateDailySpent(user.id, parseFloat(formData.amount))
+      
+      setTxId(txId)
+      setTxStatus('success')
+      await voiceService.speak(`Payment of ${formData.amount} ${formData.currency} sent successfully!`)
+      toast.success('Payment sent successfully!')
+
+      // Reset form
+      setFormData({
+        amount: '',
+        recipient: '',
+        channel: 'algorand',
+        currency: 'ALGO',
+      })
+
+    } catch (error: any) {
+      console.error('Payment failed:', error)
+      setTxStatus('error')
+      toast.error(error.message || 'Payment failed')
+      await voiceService.speak('Payment failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const getChannelDisplay = (channel: string) => {
+    switch (channel) {
+      case 'algorand': return 'Algorand Blockchain'
+      case 'mobile_money': return 'Mobile Money'
+      case 'bank': return 'Bank Transfer'
+      default: return channel
+    }
+  }
+
+  return (
+    <div className="p-6 max-w-2xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Send Payment</h1>
+          <p className="text-muted-foreground">Send money via voice, QR code, or manual entry</p>
+        </div>
+        <VoiceCommandButton onCommand={handleVoiceCommand} />
+      </div>
+
+      <AnimatePresence mode="wait">
+        {txStatus === 'success' ? (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <Card className="border-green-500/20 bg-green-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <CheckCircle className="h-12 w-12 text-green-500" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-green-500">Payment Sent!</h3>
+                    <p className="text-muted-foreground">Transaction ID: {txId}</p>
+                    <div className="flex space-x-2 mt-4">
+                      <Button 
+                        onClick={() => setTxStatus('idle')}
+                        variant="outline"
+                      >
+                        Send Another
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/history')}
+                        variant="default"
+                      >
+                        View History
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : txStatus === 'error' ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <Card className="border-red-500/20 bg-red-500/5">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <AlertCircle className="h-12 w-12 text-red-500" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-red-500">Payment Failed</h3>
+                    <p className="text-muted-foreground">Please check your details and try again</p>
+                    <Button 
+                      onClick={() => setTxStatus('idle')}
+                      variant="outline"
+                      className="mt-4"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="manual" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                    <TabsTrigger value="qr">QR Scanner</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="manual">
+                    <form onSubmit={handleSendPayment} className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="amount">Amount</Label>
+                          <Input
+                            id="amount"
+                            type="number"
+                            step="0.01"
+                            value={formData.amount}
+                            onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                            placeholder="0.00"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="currency">Currency</Label>
+                          <Select 
+                            value={formData.currency} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ALGO">ALGO</SelectItem>
+                              <SelectItem value="USD">USD</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="recipient">Recipient</Label>
+                        <Input
+                          id="recipient"
+                          value={formData.recipient}
+                          onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
+                          placeholder="Address, phone number, or account number"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="channel">Payment Channel</Label>
+                        <Select 
+                          value={formData.channel} 
+                          onValueChange={(value: any) => setFormData(prev => ({ ...prev, channel: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="algorand">Algorand Blockchain</SelectItem>
+                            <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                            <SelectItem value="bank">Bank Transfer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <h4 className="font-semibold mb-2">Payment Summary</h4>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>Amount:</span>
+                            <span>{formData.amount} {formData.currency}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>To:</span>
+                            <span className="truncate ml-2">{formData.recipient || 'Not specified'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Via:</span>
+                            <span>{getChannelDisplay(formData.channel)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Balance:</span>
+                            <span>{wallet?.balance?.toFixed(4) || '0'} ALGO</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading || !formData.amount || !formData.recipient}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {txStatus === 'pending' ? 'Sending Payment...' : 'Processing...'}
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send Payment
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="qr">
+                    <div className="space-y-6">
+                      {!showQrScanner ? (
+                        <div className="text-center">
+                          <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                          <h3 className="text-lg font-semibold mb-2">Scan QR Code</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Scan a QR code to automatically fill the recipient address
+                          </p>
+                          <Button onClick={() => setShowQrScanner(true)}>
+                            <QrCode className="mr-2 h-4 w-4" />
+                            Start Scanner
+                          </Button>
+                        </div>
+                      ) : (
+                        <SimpleQRScanner 
+                          onScan={handleQrScan}
+                          onClose={() => setShowQrScanner(false)}
+                        />
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}

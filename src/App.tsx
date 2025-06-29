@@ -1,0 +1,88 @@
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from 'next-themes'
+import { Layout } from '@/components/layout/layout'
+import { AuthPage } from '@/pages/auth'
+import { Dashboard } from '@/pages/dashboard'
+import { SendPayment } from '@/pages/send-payment'
+import { ReceivePayment } from '@/pages/receive-payment'
+import { TransactionHistory } from '@/pages/history'
+import { Investment } from '@/pages/investment'
+import { WalletPage } from '@/pages/wallet'
+import { VoiceCommands } from '@/pages/voice'
+import { AIAssistant } from '@/pages/assistant'
+import { Settings } from '@/pages/settings'
+import { useAuthStore } from '@/stores/authStore'
+import { supabase } from '@/lib/supabase'
+import './App.css'
+
+const queryClient = new QueryClient()
+
+function AppRoutes() {
+  const { user, refreshUser } = useAuthStore()
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        refreshUser()
+      }
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        refreshUser()
+      } else if (event === 'SIGNED_OUT') {
+        useAuthStore.setState({ user: null, profile: null })
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [refreshUser])
+
+  if (!user) {
+    return <AuthPage />
+  }
+
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/send" element={<SendPayment />} />
+        <Route path="/receive" element={<ReceivePayment />} />
+        <Route path="/history" element={<TransactionHistory />} />
+        <Route path="/invest" element={<Investment />} />
+        <Route path="/wallet" element={<WalletPage />} />
+        <Route path="/voice" element={<VoiceCommands />} />
+        <Route path="/assistant" element={<AIAssistant />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
+  )
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <Router>
+          <AppRoutes />
+          <Toaster richColors />
+          
+          {/* Built on Bolt Badge */}
+          <div className="fixed bottom-4 right-4 z-50">
+            <div className="bg-black/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
+              Built on <span className="text-purple-400">Bolt</span>
+            </div>
+          </div>
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
+  )
+}
+
+export default App
