@@ -9,12 +9,16 @@ import {
 import { Bell, Menu, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
+import { LanguageSelector } from '@/components/ui/language-selector'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useTranslation } from 'react-i18next'
 
 interface HeaderProps {
   onMenuClick: () => void
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { t } = useTranslation()
   const { user, profile, signOut } = useAuthStore()
   const { wallet } = useWalletStore()
 
@@ -35,7 +39,10 @@ export function Header({ onMenuClick }: HeaderProps) {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
+        <LanguageSelector />
+        <ThemeToggle />
+        
         <Button variant="ghost" size="sm">
           <Bell className="h-5 w-5" />
         </Button>
@@ -54,7 +61,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuItem onClick={() => signOut()}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>{t('common.logout')}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

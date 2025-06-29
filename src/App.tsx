@@ -17,6 +17,7 @@ import { Settings } from '@/pages/settings'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { notificationService } from '@/components/ui/notification-service'
+import './lib/i18n' // Initialize i18n
 import './App.css'
 
 const queryClient = new QueryClient()
@@ -80,7 +81,12 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <ThemeProvider 
+        attribute="class" 
+        defaultTheme="system" 
+        enableSystem
+        disableTransitionOnChange
+      >
         <Router>
           <AppRoutes />
           <Toaster richColors />

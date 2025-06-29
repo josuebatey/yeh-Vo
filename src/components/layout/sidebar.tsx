@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { 
   Home, 
   Send, 
@@ -14,18 +15,20 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Send Payment', href: '/send', icon: Send },
-  { name: 'Receive', href: '/receive', icon: QrCode },
-  { name: 'History', href: '/history', icon: History },
-  { name: 'Invest', href: '/invest', icon: TrendingUp },
-  { name: 'Wallet', href: '/wallet', icon: Wallet },
-  { name: 'Voice Commands', href: '/voice', icon: Mic },
-  { name: 'AI Assistant', href: '/assistant', icon: Bot },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'dashboard', href: '/', icon: Home },
+  { name: 'sendPayment', href: '/send', icon: Send },
+  { name: 'receive', href: '/receive', icon: QrCode },
+  { name: 'history', href: '/history', icon: History },
+  { name: 'invest', href: '/invest', icon: TrendingUp },
+  { name: 'wallet', href: '/wallet', icon: Wallet },
+  { name: 'voiceCommands', href: '/voice', icon: Mic },
+  { name: 'aiAssistant', href: '/assistant', icon: Bot },
+  { name: 'settings', href: '/settings', icon: Settings },
 ]
 
 export function Sidebar() {
+  const { t } = useTranslation()
+
   return (
     <div className="flex h-full w-64 flex-col bg-card border-r">
       <div className="flex h-16 items-center px-6">
@@ -59,7 +62,7 @@ export function Sidebar() {
               }
             >
               <item.icon className="mr-3 h-5 w-5" />
-              {item.name}
+              {t(`nav.${item.name}`)}
             </NavLink>
           </motion.div>
         ))}
