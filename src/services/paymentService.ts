@@ -70,14 +70,19 @@ export const paymentService = {
   },
 
   async sendAlgorandPayment(userId: string, request: PaymentRequest): Promise<string> {
-    // Get user's wallet
-    const { data: wallet, error } = await supabase
+    // Get user's wallet - handle potential multiple rows by taking the first one
+    const { data: wallets, error } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .limit(1)
 
     if (error) throw error
+    if (!wallets || wallets.length === 0) {
+      throw new Error('No wallet found for user')
+    }
+
+    const wallet = wallets[0]
 
     // Check if recipient address is valid
     if (!this.isValidAlgorandAddress(request.recipient)) {
@@ -179,14 +184,15 @@ export const paymentService = {
 
     if (error) throw error
 
-    // Update wallet balance
-    const { data: wallet } = await supabase
+    // Update wallet balance - handle potential multiple wallets
+    const { data: wallets } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .limit(1)
 
-    if (wallet) {
+    if (wallets && wallets.length > 0) {
+      const wallet = wallets[0]
       await supabase
         .from('wallets')
         .update({ 
@@ -213,15 +219,18 @@ export const paymentService = {
   },
 
   async checkDailyLimits(userId: string, amount: number): Promise<{ canSend: boolean; reason?: string }> {
-    const { data: limits, error } = await supabase
+    // Handle potential multiple rows by taking the first one
+    const { data: limitsArray, error } = await supabase
       .from('user_limits')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .limit(1)
 
     if (error && error.code !== 'PGRST116') {
       throw error
     }
+
+    const limits = limitsArray && limitsArray.length > 0 ? limitsArray[0] : null
 
     if (!limits) {
       // Create default limits for new user
