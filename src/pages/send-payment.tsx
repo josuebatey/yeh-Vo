@@ -345,7 +345,7 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
       </div>
 
       {/* Add CSS for scanning animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes scan {
           0% { transform: translateY(0); }
           100% { transform: translateY(192px); }
