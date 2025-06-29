@@ -236,3 +236,93 @@ button:focus-visible {
 .dark .card-hover:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
+
+/* Beautiful input styling */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon input {
+  padding-left: 2.5rem;
+  height: 3rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.dark .input-with-icon input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-with-icon input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(var(--primary), 0.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .input-with-icon input:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+}
+
+/* Enhanced form styling */
+.auth-form {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.dark .auth-form {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient buttons */
+.gradient-button {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) 50%, #3b82f6);
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.gradient-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
+}
+
+/* Feature cards */
+.feature-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.dark .feature-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark .feature-card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { Loader2, Wallet, Mic, Shield, Globe, Zap, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Wallet, Mic, Shield, Globe, Zap, Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/stores/authStore'
 import { toast } from 'sonner'
@@ -186,28 +186,39 @@ export function AuthPage() {
                       onSubmit={handleSignIn}
                       className="space-y-4"
                     >
+                      {/* Email Input */}
                       <div className="space-y-2">
-                        <Label htmlFor="signin-email">{t('auth.email')}</Label>
-                        <Input
-                          id="signin-email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => updateFormData('email', e.target.value)}
-                          placeholder={t('auth.enterEmail')}
-                          className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signin-password">{t('auth.password')}</Label>
+                        <Label htmlFor="signin-email" className="text-sm font-medium">
+                          {t('auth.email')}
+                        </Label>
                         <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signin-email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => updateFormData('email', e.target.value)}
+                            placeholder={t('auth.enterEmail')}
+                            className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Password Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password" className="text-sm font-medium">
+                          {t('auth.password')}
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="signin-password"
                             type={showPassword ? "text" : "password"}
                             value={formData.password}
                             onChange={(e) => updateFormData('password', e.target.value)}
                             placeholder={t('auth.enterPassword')}
-                            className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 pr-10"
+                            className="pl-10 pr-10 h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
                             required
                           />
                           <Button
@@ -225,7 +236,8 @@ export function AuthPage() {
                           </Button>
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+
+                      <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" disabled={isLoading}>
                         {isLoading ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
@@ -244,40 +256,58 @@ export function AuthPage() {
                       onSubmit={handleSignUp}
                       className="space-y-4"
                     >
+                      {/* Full Name Input */}
                       <div className="space-y-2">
-                        <Label htmlFor="signup-name">{t('auth.fullName')}</Label>
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          value={formData.fullName}
-                          onChange={(e) => updateFormData('fullName', e.target.value)}
-                          placeholder={t('auth.enterFullName')}
-                          className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email">{t('auth.email')}</Label>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => updateFormData('email', e.target.value)}
-                          placeholder={t('auth.enterEmail')}
-                          className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">{t('auth.password')}</Label>
+                        <Label htmlFor="signup-name" className="text-sm font-medium">
+                          {t('auth.fullName')}
+                        </Label>
                         <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signup-name"
+                            type="text"
+                            value={formData.fullName}
+                            onChange={(e) => updateFormData('fullName', e.target.value)}
+                            placeholder={t('auth.enterFullName')}
+                            className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email" className="text-sm font-medium">
+                          {t('auth.email')}
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="signup-email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => updateFormData('email', e.target.value)}
+                            placeholder={t('auth.enterEmail')}
+                            className="pl-10 h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Password Input */}
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password" className="text-sm font-medium">
+                          {t('auth.password')}
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="signup-password"
                             type={showPassword ? "text" : "password"}
                             value={formData.password}
                             onChange={(e) => updateFormData('password', e.target.value)}
                             placeholder={t('auth.createPassword')}
-                            className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 pr-10"
+                            className="pl-10 pr-10 h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
                             required
                           />
                           <Button
@@ -295,7 +325,8 @@ export function AuthPage() {
                           </Button>
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+
+                      <Button type="submit" className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" disabled={isLoading}>
                         {isLoading ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
@@ -328,7 +359,7 @@ export function AuthPage() {
                     <Button
                       key={provider.name}
                       variant="outline"
-                      className="bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10"
+                      className="h-12 bg-white/50 dark:bg-white/5 border-white/20 dark:border-white/10 hover:bg-white/70 dark:hover:bg-white/10"
                       onClick={() => toast.info(`${provider.name} login coming soon!`)}
                     >
                       <span className="text-lg">{provider.icon}</span>
