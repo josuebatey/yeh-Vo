@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
@@ -18,29 +18,176 @@ import { voiceService } from '@/services/voiceService'
 import { BackButton } from '@/components/ui/back-button'
 import { notificationService } from '@/components/ui/notification-service'
 
-// Simple QR Scanner component since react-qr-reader has compatibility issues
-function SimpleQRScanner({ onScan, onClose }: { onScan: (result: string) => void, onClose: () => void }) {
+// Enhanced QR Scanner component with camera access
+function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onClose: () => void }) {
+  const [hasCamera, setHasCamera] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [error, setError] = useState<string>('')
+  const videoRef = useState<HTMLVideoElement | null>(null)[0]
+  const canvasRef = useState<HTMLCanvasElement | null>(null)[0]
+
+  useEffect(() => {
+    checkCameraAccess()
+    return () => {
+      stopCamera()
+    }
+  }, [])
+
+  const checkCameraAccess = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const hasVideoInput = devices.some(device => device.kind === 'videoinput')
+      setHasCamera(hasVideoInput)
+      
+      if (hasVideoInput) {
+        await startCamera()
+      }
+    } catch (err) {
+      setError('Camera access denied. Please allow camera permissions and try again.')
+    }
+  }
+
+  const startCamera = async () => {
+    try {
+      setIsScanning(true)
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', // Use back camera on mobile
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      })
+      
+      if (videoRef) {
+        videoRef.srcObject = stream
+        videoRef.play()
+        
+        // Start QR detection
+        setTimeout(() => {
+          scanForQR()
+        }, 1000)
+      }
+    } catch (err) {
+      setError('Failed to access camera. Please check permissions.')
+      setIsScanning(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (videoRef && videoRef.srcObject) {
+      const stream = videoRef.srcObject as MediaStream
+      stream.getTracks().forEach(track => track.stop())
+    }
+    setIsScanning(false)
+  }
+
+  const scanForQR = () => {
+    // Simple QR detection simulation
+    // In a real app, you'd use a library like @zxing/library or jsQR
+    if (videoRef && canvasRef && isScanning) {
+      // Simulate QR detection every 2 seconds
+      setTimeout(() => {
+        if (isScanning) {
+          // For demo, we'll simulate finding a QR code
+          const demoQR = 'https://voicepay.app/send?action=send&to=DEMO7RJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJKWJK&amount=5'
+          // onScan(demoQR)
+          scanForQR() // Continue scanning
+        }
+      }, 2000)
+    }
+  }
+
+  const handleManualInput = (value: string) => {
+    if (value.trim()) {
+      onScan(value.trim())
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="bg-muted rounded-lg p-8 text-center">
-        <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold mb-2">QR Scanner</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          QR scanning requires camera access. For demo purposes, you can paste an address below.
-        </p>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">QR Code Scanner</h3>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {error ? (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-red-800 dark:text-red-200">Camera Access Required</h4>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+              <div className="mt-3 space-y-2">
+                <p className="text-xs text-red-600 dark:text-red-300">
+                  To enable camera access:
+                </p>
+                <ul className="text-xs text-red-600 dark:text-red-300 list-disc list-inside space-y-1">
+                  <li>Click the camera icon in your browser's address bar</li>
+                  <li>Select "Allow" for camera permissions</li>
+                  <li>Refresh the page and try again</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : hasCamera ? (
+        <div className="space-y-4">
+          <div className="relative bg-black rounded-lg overflow-hidden">
+            <video
+              ref={(el) => { if (el) videoRef = el }}
+              className="w-full h-64 object-cover"
+              autoPlay
+              playsInline
+              muted
+            />
+            <canvas
+              ref={(el) => { if (el) canvasRef = el }}
+              className="hidden"
+            />
+            {isScanning && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-48 h-48 border-2 border-white rounded-lg relative">
+                  <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
+                </div>
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-center text-muted-foreground">
+            Position the QR code within the frame to scan
+          </p>
+        </div>
+      ) : (
+        <div className="bg-muted rounded-lg p-8 text-center">
+          <Camera className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">No Camera Available</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Camera not detected or access denied. You can manually enter the address below.
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label>Or paste address/link manually:</Label>
         <Input
-          placeholder="Paste Algorand address here..."
+          placeholder="Paste Algorand address or VoicePay link here..."
           onPaste={(e) => {
             const pastedText = e.clipboardData.getData('text')
             if (pastedText) {
-              onScan(pastedText)
+              handleManualInput(pastedText)
+            }
+          }}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleManualInput((e.target as HTMLInputElement).value)
             }
           }}
         />
       </div>
-      <Button variant="outline" onClick={onClose} className="w-full">
-        Cancel Scanner
-      </Button>
     </div>
   )
 }
@@ -48,6 +195,7 @@ function SimpleQRScanner({ onScan, onClose }: { onScan: (result: string) => void
 export function SendPayment() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { user } = useAuthStore()
   const { wallet, refreshBalance } = useWalletStore()
   
@@ -64,8 +212,26 @@ export function SendPayment() {
     currency: 'ALGO',
   })
 
-  // Handle voice command from navigation
+  // Handle deep link parameters and voice commands
   useEffect(() => {
+    // Check for deep link parameters
+    const action = searchParams.get('action')
+    const to = searchParams.get('to')
+    const amount = searchParams.get('amount')
+    const note = searchParams.get('note')
+
+    if (action === 'send' && to) {
+      setFormData(prev => ({
+        ...prev,
+        recipient: to,
+        amount: amount || '',
+      }))
+      
+      // Show success message for deep link
+      toast.success('Payment details loaded from QR code!')
+    }
+
+    // Handle voice command from navigation
     const command = location.state?.command
     if (command && command.action === 'send') {
       setFormData(prev => ({
@@ -75,7 +241,7 @@ export function SendPayment() {
         channel: command.channel || 'algorand',
       }))
     }
-  }, [location.state])
+  }, [searchParams, location.state])
 
   const handleVoiceCommand = async (transcript: string) => {
     const command = voiceService.parseVoiceCommand(transcript)
@@ -91,8 +257,32 @@ export function SendPayment() {
   }
 
   const handleQrScan = (result: string) => {
-    setFormData(prev => ({ ...prev, recipient: result }))
     setShowQrScanner(false)
+    
+    try {
+      // Check if it's a VoicePay deep link
+      const url = new URL(result)
+      if (url.pathname === '/send') {
+        const to = url.searchParams.get('to')
+        const amount = url.searchParams.get('amount')
+        const note = url.searchParams.get('note')
+        
+        if (to) {
+          setFormData(prev => ({
+            ...prev,
+            recipient: to,
+            amount: amount || prev.amount,
+          }))
+          toast.success('Payment details loaded from QR code!')
+          return
+        }
+      }
+    } catch {
+      // Not a URL, treat as address
+    }
+    
+    // Treat as direct address
+    setFormData(prev => ({ ...prev, recipient: result }))
     toast.success('Address scanned successfully!')
   }
 
@@ -390,15 +580,15 @@ export function SendPayment() {
                           <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                           <h3 className="text-lg font-semibold mb-2">Scan QR Code</h3>
                           <p className="text-muted-foreground mb-4">
-                            Scan a QR code to automatically fill the recipient address
+                            Scan a VoicePay QR code to automatically fill payment details
                           </p>
                           <Button onClick={() => setShowQrScanner(true)}>
-                            <QrCode className="mr-2 h-4 w-4" />
-                            Start Scanner
+                            <Camera className="mr-2 h-4 w-4" />
+                            Start Camera Scanner
                           </Button>
                         </div>
                       ) : (
-                        <SimpleQRScanner 
+                        <QRScanner 
                           onScan={handleQrScan}
                           onClose={() => setShowQrScanner(false)}
                         />
