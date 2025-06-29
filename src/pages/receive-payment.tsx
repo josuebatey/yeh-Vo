@@ -19,6 +19,7 @@ export function ReceivePayment() {
   const [isMobile, setIsMobile] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
   const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
+  const isCleaningUpRef = useRef(false)
 
   // Detect mobile device
   useEffect(() => {
@@ -34,88 +35,133 @@ export function ReceivePayment() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const generateQRCode = useCallback(() => {
-    if (!wallet?.address || !qrCodeRef.current) return
+  // Safe DOM cleanup function
+  const safeCleanupQRCode = useCallback(() => {
+    if (isCleaningUpRef.current) return
+    isCleaningUpRef.current = true
 
     try {
-      // Get current domain - works for both localhost and production
-      const protocol = window.location.protocol
-      const host = window.location.host
-      const baseUrl = `${protocol}//${host}`
-      
-      // Create comprehensive deep link URL
-      const params = new URLSearchParams()
-      params.set('action', 'send')
-      params.set('to', wallet.address)
-      if (amount && parseFloat(amount) > 0) {
-        params.set('amount', amount)
-      }
-      if (note.trim()) {
-        params.set('note', note.trim())
-      }
-      
-      // Create the full deep link URL
-      const deepLinkUrl = `${baseUrl}/send?${params.toString()}`
-      
-      console.log('Generated QR Code URL:', deepLinkUrl)
-
-      // Adjust QR code size for mobile
-      const qrSize = isMobile ? 240 : 280
-
-      const qrOptions = {
-        width: qrSize,
-        height: qrSize,
-        type: 'svg' as const,
-        data: deepLinkUrl,
-        margin: 8,
-        qrOptions: {
-          mode: 'Byte' as const,
-          errorCorrectionLevel: 'M' as const
-        },
-        imageOptions: {
-          hideBackgroundDots: true,
-          imageSize: 0.4,
-          margin: 0,
-          crossOrigin: 'anonymous' as const
-        },
-        dotsOptions: {
-          color: '#7c3aed',
-          type: 'rounded' as const
-        },
-        backgroundOptions: {
-          color: '#ffffff',
-        },
-        cornersSquareOptions: {
-          color: '#7c3aed',
-          type: 'extra-rounded' as const
-        },
-        cornersDotOptions: {
-          color: '#7c3aed',
-          type: 'dot' as const
+      const container = qrCodeRef.current
+      if (container) {
+        // Clear all children safely
+        while (container.firstChild) {
+          try {
+            container.removeChild(container.firstChild)
+          } catch (error) {
+            // If removeChild fails, try alternative cleanup
+            try {
+              container.innerHTML = ''
+              break
+            } catch (innerError) {
+              console.debug('QR cleanup handled:', innerError)
+              break
+            }
+          }
         }
       }
-
-      // Check if we already have a QR code instance
+      
+      // Reset QR instance
       if (qrCodeInstanceRef.current) {
-        // Update existing QR code
-        qrCodeInstanceRef.current.update(qrOptions)
-        setQrGenerated(true)
-        toast.success('QR code updated with payment link!')
-      } else {
-        // Create new QR code instance
-        const qrCode = new QRCodeStyling(qrOptions)
-        qrCodeInstanceRef.current = qrCode
-        
-        // Append to container
-        qrCode.append(qrCodeRef.current)
-        setQrGenerated(true)
-        toast.success('QR code generated with payment link!')
+        qrCodeInstanceRef.current = null
       }
+      
+      setQrGenerated(false)
     } catch (error) {
-      console.error('QR code generation failed:', error)
+      console.debug('QR cleanup completed with fallback:', error)
+    } finally {
+      isCleaningUpRef.current = false
+    }
+  }, [])
+
+  const generateQRCode = useCallback(() => {
+    if (!wallet?.address || !qrCodeRef.current || isCleaningUpRef.current) return
+
+    try {
+      // Clean up any existing QR code first
+      safeCleanupQRCode()
+
+      // Wait a tick for cleanup to complete
+      setTimeout(() => {
+        if (!qrCodeRef.current || isCleaningUpRef.current) return
+
+        try {
+          // Get current domain - works for both localhost and production
+          const protocol = window.location.protocol
+          const host = window.location.host
+          const baseUrl = `${protocol}//${host}`
+          
+          // Create comprehensive deep link URL
+          const params = new URLSearchParams()
+          params.set('action', 'send')
+          params.set('to', wallet.address)
+          if (amount && parseFloat(amount) > 0) {
+            params.set('amount', amount)
+          }
+          if (note.trim()) {
+            params.set('note', note.trim())
+          }
+          
+          // Create the full deep link URL
+          const deepLinkUrl = `${baseUrl}/send?${params.toString()}`
+          
+          console.log('Generated QR Code URL:', deepLinkUrl)
+
+          // Adjust QR code size for mobile
+          const qrSize = isMobile ? 240 : 280
+
+          const qrOptions = {
+            width: qrSize,
+            height: qrSize,
+            type: 'svg' as const,
+            data: deepLinkUrl,
+            margin: 8,
+            qrOptions: {
+              mode: 'Byte' as const,
+              errorCorrectionLevel: 'M' as const
+            },
+            imageOptions: {
+              hideBackgroundDots: true,
+              imageSize: 0.4,
+              margin: 0,
+              crossOrigin: 'anonymous' as const
+            },
+            dotsOptions: {
+              color: '#7c3aed',
+              type: 'rounded' as const
+            },
+            backgroundOptions: {
+              color: '#ffffff',
+            },
+            cornersSquareOptions: {
+              color: '#7c3aed',
+              type: 'extra-rounded' as const
+            },
+            cornersDotOptions: {
+              color: '#7c3aed',
+              type: 'dot' as const
+            }
+          }
+
+          // Create new QR code instance
+          const qrCode = new QRCodeStyling(qrOptions)
+          qrCodeInstanceRef.current = qrCode
+          
+          // Append to container safely
+          if (qrCodeRef.current && !isCleaningUpRef.current) {
+            qrCode.append(qrCodeRef.current)
+            setQrGenerated(true)
+            toast.success('QR code generated with payment link!')
+          }
+        } catch (error) {
+          console.error('QR code generation failed:', error)
+          toast.error('Failed to generate QR code')
+        }
+      }, 100)
+    } catch (error) {
+      console.error('QR code generation setup failed:', error)
       toast.error('Failed to generate QR code')
     }
-  }, [wallet?.address, amount, note, isMobile])
+  }, [wallet?.address, amount, note, isMobile, safeCleanupQRCode])
 
   // Generate QR code when dependencies change
   useEffect(() => {
@@ -127,29 +173,9 @@ export function ReceivePayment() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Clean up QR code instance
-      if (qrCodeInstanceRef.current) {
-        qrCodeInstanceRef.current = null
-      }
-      
-      // Clean up DOM elements safely
-      const container = qrCodeRef.current
-      if (container) {
-        // Remove only the SVG element that QRCodeStyling creates
-        const svgElement = container.querySelector('svg')
-        if (svgElement && svgElement.parentNode === container) {
-          try {
-            container.removeChild(svgElement)
-          } catch (error) {
-            // Silently handle if already removed
-            console.debug('SVG element already removed:', error)
-          }
-        }
-      }
-      
-      setQrGenerated(false)
+      safeCleanupQRCode()
     }
-  }, [])
+  }, [safeCleanupQRCode])
 
   const copyAddress = async () => {
     if (!wallet?.address) return
@@ -301,11 +327,14 @@ export function ReceivePayment() {
   }
 
   const downloadQRCode = async () => {
-    if (!qrCodeRef.current) return
+    if (!qrCodeRef.current || !qrGenerated) return
 
     try {
       const svgElement = qrCodeRef.current.querySelector('svg')
-      if (!svgElement) return
+      if (!svgElement) {
+        toast.error('QR code not ready for download')
+        return
+      }
 
       // Convert SVG to canvas for mobile compatibility
       const canvas = document.createElement('canvas')
@@ -438,7 +467,7 @@ export function ReceivePayment() {
                     <Share className="mr-1 h-3 w-3 flex-shrink-0" />
                     <span className="truncate">Share</span>
                   </Button>
-                  <Button onClick={downloadQRCode} variant="outline" size="sm" className="w-full text-xs">
+                  <Button onClick={downloadQRCode} variant="outline" size="sm" className="w-full text-xs" disabled={!qrGenerated}>
                     <Download className="mr-1 h-3 w-3 flex-shrink-0" />
                     <span className="truncate">Download</span>
                   </Button>
