@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, CreditCard, Building, Shield } from 'lucide-react'
+import { CreditCard, Loader2, CheckCircle, Building } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { paymentService } from '@/services/paymentService'
@@ -17,44 +17,56 @@ interface BankLinkingDialogProps {
 
 export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingDialogProps) {
   const { user } = useAuthStore()
-  const [isLoading, setIsLoading] = useState(false)
-  const [bankData, setBankData] = useState({
-    bankName: '',
-    accountType: '',
+  const [step, setStep] = useState<'bank' | 'account' | 'success'>('bank')
+  const [selectedBank, setSelectedBank] = useState('')
+  const [accountInfo, setAccountInfo] = useState({
     accountNumber: '',
     routingNumber: '',
-    accountHolderName: '',
+    accountType: 'checking'
   })
+  const [isLoading, setIsLoading] = useState(false)
+
+  const popularBanks = [
+    { id: 'chase', name: 'Chase Bank', logo: '🏦' },
+    { id: 'bofa', name: 'Bank of America', logo: '🏛️' },
+    { id: 'wells', name: 'Wells Fargo', logo: '🏪' },
+    { id: 'citi', name: 'Citibank', logo: '🏢' },
+    { id: 'usbank', name: 'US Bank', logo: '🏦' },
+    { id: 'pnc', name: 'PNC Bank', logo: '🏛️' },
+    { id: 'other', name: 'Other Bank', logo: '🏦' },
+  ]
+
+  const handleBankSelection = (bankId: string) => {
+    setSelectedBank(bankId)
+    setStep('account')
+  }
 
   const handleLinkAccount = async () => {
-    if (!bankData.bankName || !bankData.accountType || !bankData.accountNumber || !bankData.routingNumber || !bankData.accountHolderName) {
+    if (!user || !accountInfo.accountNumber || !accountInfo.routingNumber) {
       toast.error('Please fill in all required fields')
       return
     }
 
     setIsLoading(true)
     try {
-      const accountInfo = {
-        bank_name: bankData.bankName,
-        account_type: bankData.accountType,
-        account_number: bankData.accountNumber.slice(-4), // Only store last 4 digits for security
-        routing_number: bankData.routingNumber,
-        account_holder_name: bankData.accountHolderName,
-        linked_at: new Date().toISOString(),
-        status: 'verified',
-        // In a real app, you'd integrate with Plaid, Yodlee, or similar
-        verification_method: 'demo_simulation'
+      const bankData = {
+        bank_name: popularBanks.find(b => b.id === selectedBank)?.name || 'Unknown Bank',
+        account_type: accountInfo.accountType,
+        account_number_last4: accountInfo.accountNumber.slice(-4),
+        routing_number: accountInfo.routingNumber,
+        verified: true, // In demo mode, auto-verify
+        linked_at: new Date().toISOString()
       }
 
-      const success = await paymentService.linkBankAccount(user?.id || '', accountInfo)
-      if (success) {
-        toast.success('Bank account linked successfully!', {
-          description: 'You can now receive bank transfers',
-        })
+      await paymentService.linkBankAccount(user.id, bankData)
+      setStep('success')
+      toast.success('Bank account linked successfully!')
+      
+      setTimeout(() => {
         onLinked()
         onOpenChange(false)
-        resetForm()
-      }
+        resetDialog()
+      }, 2000)
     } catch (error: any) {
       toast.error(error.message || 'Failed to link bank account')
     } finally {
@@ -62,152 +74,143 @@ export function BankLinkingDialog({ open, onOpenChange, onLinked }: BankLinkingD
     }
   }
 
-  const resetForm = () => {
-    setBankData({
-      bankName: '',
-      accountType: '',
+  const resetDialog = () => {
+    setStep('bank')
+    setSelectedBank('')
+    setAccountInfo({
       accountNumber: '',
       routingNumber: '',
-      accountHolderName: '',
+      accountType: 'checking'
     })
   }
 
   const handleClose = () => {
     onOpenChange(false)
-    resetForm()
+    resetDialog()
   }
-
-  const popularBanks = [
-    'Chase Bank',
-    'Bank of America',
-    'Wells Fargo',
-    'Citibank',
-    'Capital One',
-    'US Bank',
-    'PNC Bank',
-    'TD Bank',
-    'Other'
-  ]
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Building className="h-5 w-5" />
+            <CreditCard className="h-5 w-5" />
             <span>Link Bank Account</span>
           </DialogTitle>
           <DialogDescription>
-            Connect your bank account to receive payments via bank transfer
+            {step === 'bank' && 'Select your bank to get started'}
+            {step === 'account' && 'Enter your account details securely'}
+            {step === 'success' && 'Your bank account has been linked successfully!'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Security Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-start space-x-2">
-              <Shield className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">Demo Mode</p>
-                <p>This is a simulation. In production, we'd use secure banking APIs like Plaid for account verification.</p>
+        <div className="space-y-6">
+          {step === 'bank' && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  <strong>Demo Mode:</strong> This simulates Plaid/Yodlee integration. No real bank data is stored.
+                </p>
+              </div>
+              
+              <div className="grid gap-2">
+                {popularBanks.map((bank) => (
+                  <Button
+                    key={bank.id}
+                    variant="outline"
+                    onClick={() => handleBankSelection(bank.id)}
+                    className="justify-start h-12"
+                  >
+                    <span className="text-lg mr-3">{bank.logo}</span>
+                    <span>{bank.name}</span>
+                  </Button>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankName">Bank Name</Label>
-              <Select 
-                value={bankData.bankName} 
-                onValueChange={(value) => setBankData(prev => ({ ...prev, bankName: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your bank" />
-                </SelectTrigger>
-                <SelectContent>
-                  {popularBanks.map((bank) => (
-                    <SelectItem key={bank} value={bank}>
-                      {bank}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="accountType">Account Type</Label>
-              <Select 
-                value={bankData.accountType} 
-                onValueChange={(value) => setBankData(prev => ({ ...prev, accountType: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="routingNumber">Routing Number</Label>
-                <Input
-                  id="routingNumber"
-                  type="text"
-                  value={bankData.routingNumber}
-                  onChange={(e) => setBankData(prev => ({ ...prev, routingNumber: e.target.value }))}
-                  placeholder="123456789"
-                  maxLength={9}
-                />
+          {step === 'account' && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Building className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">
+                  {popularBanks.find(b => b.id === selectedBank)?.name}
+                </span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="accountNumber">Account Number</Label>
-                <Input
-                  id="accountNumber"
-                  type="text"
-                  value={bankData.accountNumber}
-                  onChange={(e) => setBankData(prev => ({ ...prev, accountNumber: e.target.value }))}
-                  placeholder="1234567890"
-                />
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="account-type">Account Type</Label>
+                  <Select 
+                    value={accountInfo.accountType} 
+                    onValueChange={(value) => setAccountInfo(prev => ({ ...prev, accountType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="checking">Checking</SelectItem>
+                      <SelectItem value="savings">Savings</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="routing">Routing Number</Label>
+                  <Input
+                    id="routing"
+                    value={accountInfo.routingNumber}
+                    onChange={(e) => setAccountInfo(prev => ({ ...prev, routingNumber: e.target.value }))}
+                    placeholder="123456789"
+                    maxLength={9}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="account">Account Number</Label>
+                  <Input
+                    id="account"
+                    value={accountInfo.accountNumber}
+                    onChange={(e) => setAccountInfo(prev => ({ ...prev, accountNumber: e.target.value }))}
+                    placeholder="1234567890"
+                    type="password"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={() => setStep('bank')} className="flex-1">
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleLinkAccount} 
+                  disabled={isLoading || !accountInfo.accountNumber || !accountInfo.routingNumber}
+                  className="flex-1"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Linking...
+                    </>
+                  ) : (
+                    'Link Account'
+                  )}
+                </Button>
               </div>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <Label htmlFor="accountHolderName">Account Holder Name</Label>
-              <Input
-                id="accountHolderName"
-                type="text"
-                value={bankData.accountHolderName}
-                onChange={(e) => setBankData(prev => ({ ...prev, accountHolderName: e.target.value }))}
-                placeholder="John Doe"
-              />
+          {step === 'success' && (
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-green-600">Account Linked!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your bank account has been successfully linked and verified.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={handleLinkAccount} disabled={isLoading} className="flex-1">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Linking...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Link Account
-                </>
-              )}
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Your banking information is encrypted and secure. We never store your full account number.
-          </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

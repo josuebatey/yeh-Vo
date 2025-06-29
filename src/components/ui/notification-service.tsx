@@ -1,112 +1,89 @@
 import { toast } from 'sonner'
 
-export const notificationService = {
+class NotificationService {
+  private permission: NotificationPermission = 'default'
+
+  constructor() {
+    if (this.isSupported()) {
+      this.permission = Notification.permission
+    }
+  }
+
   isSupported(): boolean {
     return 'Notification' in window
-  },
+  }
 
   async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
       return false
     }
 
-    if (Notification.permission === 'granted') {
+    if (this.permission === 'granted') {
       return true
     }
 
-    if (Notification.permission === 'denied') {
-      return false
-    }
-
     const permission = await Notification.requestPermission()
+    this.permission = permission
     return permission === 'granted'
-  },
+  }
 
-  showPaymentSent(amount: number, currency: string, recipient: string): void {
-    const message = `Payment sent: ${amount} ${currency} to ${recipient.slice(0, 20)}...`
-    
-    toast.success(message, {
-      description: 'Your payment has been processed successfully',
-      duration: 5000,
-    })
-
-    if (this.isSupported() && Notification.permission === 'granted') {
-      new Notification('VoicePay - Payment Sent', {
-        body: message,
+  private showBrowserNotification(title: string, options?: NotificationOptions) {
+    if (this.permission === 'granted') {
+      new Notification(title, {
         icon: '/favicon.ico',
-        tag: 'payment-sent'
+        badge: '/favicon.ico',
+        ...options,
       })
     }
-  },
+  }
 
-  showPaymentReceived(amount: number, currency: string, sender: string): void {
-    const message = `Payment received: ${amount} ${currency} from ${sender.slice(0, 20)}...`
+  showPaymentSent(amount: number, currency: string, recipient: string) {
+    const message = `Sent ${amount} ${currency} to ${recipient.slice(0, 20)}...`
+    toast.success(message)
     
-    toast.success(message, {
-      description: 'A new payment has been received',
-      duration: 8000,
+    this.showBrowserNotification('Payment Sent', {
+      body: message,
+      tag: 'payment-sent',
     })
+  }
 
-    if (this.isSupported() && Notification.permission === 'granted') {
-      new Notification('VoicePay - Payment Received', {
-        body: message,
-        icon: '/favicon.ico',
-        tag: 'payment-received'
-      })
-    }
-  },
-
-  showBalanceUpdate(newBalance: number, currency: string): void {
-    const message = `Balance updated: ${newBalance.toFixed(4)} ${currency}`
+  showPaymentReceived(amount: number, currency: string, sender: string) {
+    const message = `Received ${amount} ${currency} from ${sender.slice(0, 20)}...`
+    toast.success(message)
     
-    toast.info(message, {
-      description: 'Your wallet balance has been refreshed',
-      duration: 3000,
+    this.showBrowserNotification('Payment Received', {
+      body: message,
+      tag: 'payment-received',
     })
-  },
+  }
 
-  showInvestmentUpdate(message: string): void {
-    toast.success(message, {
-      description: 'Investment portfolio updated',
-      duration: 5000,
-    })
-
-    if (this.isSupported() && Notification.permission === 'granted') {
-      new Notification('VoicePay - Investment Update', {
-        body: message,
-        icon: '/favicon.ico',
-        tag: 'investment-update'
-      })
-    }
-  },
-
-  showTransactionUpdate(type: 'sent' | 'received', amount: number, currency: string): void {
-    const message = `Transaction ${type}: ${amount} ${currency}`
+  showBalanceUpdate(balance: number, currency: string) {
+    const message = `Balance updated: ${balance.toFixed(4)} ${currency}`
+    toast.info(message)
     
-    toast.info(message, {
-      description: `Your transaction has been ${type}`,
-      duration: 4000,
+    this.showBrowserNotification('Balance Updated', {
+      body: message,
+      tag: 'balance-update',
     })
-  },
+  }
 
-  showError(message: string, description?: string): void {
-    toast.error(message, {
-      description: description || 'Please try again',
-      duration: 6000,
+  showInvestmentUpdate(message: string) {
+    toast.success(message)
+    
+    this.showBrowserNotification('Investment Update', {
+      body: message,
+      tag: 'investment-update',
     })
-  },
+  }
 
-  showSuccess(message: string, description?: string): void {
-    toast.success(message, {
-      description,
-      duration: 4000,
-    })
-  },
-
-  showInfo(message: string, description?: string): void {
-    toast.info(message, {
-      description,
-      duration: 4000,
+  showTransactionUpdate(message: string) {
+    toast.info(message)
+    
+    this.showBrowserNotification('Transaction Update', {
+      body: message,
+      tag: 'transaction-update',
     })
   }
 }
+
+export const notificationService = new NotificationService()

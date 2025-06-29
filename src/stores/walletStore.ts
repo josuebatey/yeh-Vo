@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { generateAccount, secretKeyToMnemonic, mnemonicToSecretKey } from 'algosdk'
+import { generateAccount, secretKeyToMnemonic } from 'algosdk'
 import { supabase } from '@/lib/supabase'
 import { algorandService } from '@/services/algorandService'
 import { notificationService } from '@/components/ui/notification-service'
