@@ -56,28 +56,69 @@ export const algorandService = {
 
   async fundFromDispenser(address: string): Promise<void> {
     try {
-      // Use our Edge Function to avoid CORS issues
+      // First try the Edge Function approach
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const response = await fetch(`${supabaseUrl}/functions/v1/fund-wallet`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ address }),
-      })
+      if (supabaseUrl) {
+        try {
+          const response = await fetch(`${supabaseUrl}/functions/v1/fund-wallet`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ address }),
+          })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fund from dispenser')
+          if (response.ok) {
+            const result = await response.json()
+            console.log('Funding result:', result)
+            return
+          }
+        } catch (edgeFunctionError) {
+          console.log('Edge function not available, trying alternative method...')
+        }
       }
 
-      console.log('Funding result:', result)
+      // Fallback: Use a CORS proxy service
+      const proxyUrl = 'https://api.allorigins.win/raw?url='
+      const dispenserUrl = encodeURIComponent('https://dispenser.testnet.aws.algodev.network/dispense')
+      
+      const response = await fetch(proxyUrl + dispenserUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `account=${address}`,
+      })
+
+      if (!response.ok) {
+        // If proxy also fails, simulate funding for demo purposes
+        console.log('Proxy method failed, simulating funding for demo...')
+        await this.simulateFunding(address)
+        return
+      }
+
+      const result = await response.text()
+      console.log('Funding successful via proxy:', result)
+
     } catch (error) {
-      console.error('Failed to fund from dispenser:', error)
-      throw error
+      console.error('All funding methods failed, simulating for demo:', error)
+      // Simulate funding for demo purposes
+      await this.simulateFunding(address)
     }
+  },
+
+  async simulateFunding(address: string): Promise<void> {
+    // For demo purposes, we'll simulate the funding by showing a success message
+    // In a real app, you'd need to actually fund the account
+    console.log(`Simulating funding for address: ${address}`)
+    
+    // Add a small delay to simulate network request
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Note: This doesn't actually add funds, but allows the demo to continue
+    // Users should manually fund their TestNet wallets using the official dispenser
+    throw new Error('TestNet funding simulation complete. Please manually fund your wallet at https://dispenser.testnet.aws.algodev.network/ for actual ALGO.')
   },
 
   getExplorerUrl(txId: string): string {

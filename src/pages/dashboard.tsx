@@ -8,7 +8,8 @@ import {
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useWalletStore } from '@/stores/walletStore'
@@ -108,7 +109,16 @@ export function Dashboard() {
       }, 3000)
     } catch (error: any) {
       console.error('Fund wallet error:', error)
-      toast.error(error.message || 'Failed to fund wallet')
+      
+      // Check if it's the simulation error
+      if (error.message.includes('TestNet funding simulation complete')) {
+        toast.info('Demo Mode: Please manually fund your TestNet wallet', {
+          description: 'Visit https://dispenser.testnet.aws.algodev.network/ to get free TestNet ALGO',
+          duration: 8000,
+        })
+      } else {
+        toast.error(error.message || 'Failed to fund wallet')
+      }
     }
   }
 
@@ -123,6 +133,10 @@ export function Dashboard() {
     } finally {
       setIsRefreshing(false)
     }
+  }
+
+  const openDispenser = () => {
+    window.open('https://dispenser.testnet.aws.algodev.network/', '_blank')
   }
 
   const dashboardStats = [
@@ -253,24 +267,37 @@ export function Dashboard() {
                   <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                   {isRefreshing ? 'Refreshing...' : 'Refresh Balance'}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleFundWallet}
-                  disabled={isFunding}
-                >
-                  {isFunding ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Funding...
-                    </>
-                  ) : (
-                    <>
-                      <Wallet className="mr-2 h-4 w-4" />
-                      Fund from TestNet
-                    </>
-                  )}
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleFundWallet}
+                    disabled={isFunding}
+                  >
+                    {isFunding ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Funding...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Auto Fund
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={openDispenser}
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Manual Fund
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Get free TestNet ALGO for testing
+                </p>
               </div>
             </CardContent>
           </Card>
