@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Copy, QrCode, Volume2, Share, ExternalLink, Camera, CheckCircle, Smartphone, Download } from 'lucide-react'
+import { Copy, QrCode, Volume2, Share, ExternalLink, CheckCircle, Smartphone, Download } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
@@ -593,7 +593,7 @@ export function ReceivePayment() {
                 </div>
                 <div className="text-center space-y-3">
                   <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
-                    <Camera className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    <Smartphone className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <h4 className="font-semibold text-sm md:text-base">Universal Scanning</h4>
                   <p className="text-xs md:text-sm text-muted-foreground">
