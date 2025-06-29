@@ -17,9 +17,8 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
   const [open, setOpen] = useState(false)
   const [settings, setSettings] = useState({
     language: 'en-US',
-    voiceRate: [1],
+    voiceSpeed: [1],
     voicePitch: [1],
-    voiceVolume: [1],
     autoSpeak: true,
     continuousListening: false,
     noiseReduction: true,
@@ -27,16 +26,10 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
 
   const handleTestVoice = async () => {
     try {
-      const utterance = new SpeechSynthesisUtterance('This is a test of your voice settings.')
-      utterance.rate = settings.voiceRate[0]
-      utterance.pitch = settings.voicePitch[0]
-      utterance.volume = settings.voiceVolume[0]
-      utterance.lang = settings.language
-      
-      speechSynthesis.speak(utterance)
+      await voiceService.speak('This is a test of your voice settings. How does this sound?')
       toast.success('Voice test completed!')
     } catch (error) {
-      toast.error('Failed to test voice settings')
+      toast.error('Voice test failed')
     }
   }
 
@@ -54,10 +47,10 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
     { code: 'fr-FR', name: 'French' },
     { code: 'de-DE', name: 'German' },
     { code: 'it-IT', name: 'Italian' },
-    { code: 'pt-BR', name: 'Portuguese' },
+    { code: 'pt-BR', name: 'Portuguese (Brazil)' },
     { code: 'ja-JP', name: 'Japanese' },
     { code: 'ko-KR', name: 'Korean' },
-    { code: 'zh-CN', name: 'Chinese' },
+    { code: 'zh-CN', name: 'Chinese (Simplified)' },
   ]
 
   return (
@@ -79,7 +72,7 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
         <div className="space-y-6">
           {/* Language Selection */}
           <div className="space-y-2">
-            <Label>Language</Label>
+            <Label>Recognition Language</Label>
             <Select 
               value={settings.language} 
               onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
@@ -97,50 +90,51 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
             </Select>
           </div>
 
-          {/* Voice Rate */}
-          <div className="space-y-2">
-            <Label>Speech Rate: {settings.voiceRate[0].toFixed(1)}x</Label>
-            <Slider
-              value={settings.voiceRate}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, voiceRate: value }))}
-              min={0.5}
-              max={2}
-              step={0.1}
-              className="w-full"
-            />
+          {/* Voice Speed */}
+          <div className="space-y-3">
+            <Label>Speech Speed</Label>
+            <div className="px-2">
+              <Slider
+                value={settings.voiceSpeed}
+                onValueChange={(value) => setSettings(prev => ({ ...prev, voiceSpeed: value }))}
+                max={2}
+                min={0.5}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Slow</span>
+                <span>Normal</span>
+                <span>Fast</span>
+              </div>
+            </div>
           </div>
 
           {/* Voice Pitch */}
-          <div className="space-y-2">
-            <Label>Speech Pitch: {settings.voicePitch[0].toFixed(1)}</Label>
-            <Slider
-              value={settings.voicePitch}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, voicePitch: value }))}
-              min={0.5}
-              max={2}
-              step={0.1}
-              className="w-full"
-            />
-          </div>
-
-          {/* Voice Volume */}
-          <div className="space-y-2">
-            <Label>Speech Volume: {Math.round(settings.voiceVolume[0] * 100)}%</Label>
-            <Slider
-              value={settings.voiceVolume}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, voiceVolume: value }))}
-              min={0.1}
-              max={1}
-              step={0.1}
-              className="w-full"
-            />
+          <div className="space-y-3">
+            <Label>Speech Pitch</Label>
+            <div className="px-2">
+              <Slider
+                value={settings.voicePitch}
+                onValueChange={(value) => setSettings(prev => ({ ...prev, voicePitch: value }))}
+                max={2}
+                min={0.5}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Low</span>
+                <span>Normal</span>
+                <span>High</span>
+              </div>
+            </div>
           </div>
 
           {/* Toggle Settings */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label>Auto-speak responses</Label>
+                <Label>Auto-speak Responses</Label>
                 <p className="text-sm text-muted-foreground">Automatically speak AI responses</p>
               </div>
               <Switch
@@ -151,7 +145,7 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label>Continuous listening</Label>
+                <Label>Continuous Listening</Label>
                 <p className="text-sm text-muted-foreground">Keep microphone active</p>
               </div>
               <Switch
@@ -162,7 +156,7 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label>Noise reduction</Label>
+                <Label>Noise Reduction</Label>
                 <p className="text-sm text-muted-foreground">Filter background noise</p>
               </div>
               <Switch
@@ -172,20 +166,18 @@ export function VoiceSettingsDialog({ children }: VoiceSettingsDialogProps) {
             </div>
           </div>
 
+          {/* Test Button */}
+          <Button onClick={handleTestVoice} variant="outline" className="w-full">
+            <Volume2 className="mr-2 h-4 w-4" />
+            Test Voice Settings
+          </Button>
+
           {/* Action Buttons */}
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline"
-              onClick={handleTestVoice}
-              className="flex-1"
-            >
-              <Volume2 className="mr-2 h-4 w-4" />
-              Test Voice
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
+              Cancel
             </Button>
-            <Button 
-              onClick={handleSaveSettings}
-              className="flex-1"
-            >
+            <Button onClick={handleSaveSettings} className="flex-1">
               Save Settings
             </Button>
           </div>

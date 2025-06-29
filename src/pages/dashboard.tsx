@@ -9,7 +9,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Activity
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useWalletStore } from '@/stores/walletStore'
@@ -19,8 +20,8 @@ import { voiceService } from '@/services/voiceService'
 import { paymentService } from '@/services/paymentService'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
-import { BackButton } from '@/components/ui/back-button'
 import { useAutoRefresh } from '@/hooks/useAutoRefresh'
+import { format } from 'date-fns'
 
 export function Dashboard() {
   const { user } = useAuthStore()
@@ -34,14 +35,21 @@ export function Dashboard() {
   })
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date())
 
-  // Auto refresh every 10 seconds
+  // Auto refresh every 10 seconds with transaction monitoring
   const { forceRefresh } = useAutoRefresh({
     enabled: true,
     interval: 10000,
     onTransactionUpdate: (transactions) => {
-      setRecentTransactions(transactions)
+      console.log('Dashboard: New transactions detected', transactions.length)
+      setRecentTransactions(transactions.slice(0, 5))
       loadStats(transactions)
+      setLastUpdateTime(new Date())
+    },
+    onBalanceUpdate: (balance) => {
+      console.log('Dashboard: Balance updated', balance)
+      setLastUpdateTime(new Date())
     }
   })
 
@@ -57,20 +65,22 @@ export function Dashboard() {
 
     try {
       const txData = transactions || await paymentService.getTransactionHistory(user.id, 100)
-      setRecentTransactions(txData.slice(0, 5)) // Keep recent 5 for display
+      setRecentTransactions(txData.slice(0, 5))
       
-      const sent = txData
-        .filter(tx => tx.type === 'send' && tx.status === 'completed')
+      const completedTxs = txData.filter(tx => tx.status === 'completed')
+      
+      const sent = completedTxs
+        .filter(tx => tx.type === 'send')
         .reduce((sum, tx) => sum + tx.amount, 0)
       
-      const received = txData
-        .filter(tx => tx.type === 'receive' && tx.status === 'completed')
+      const received = completedTxs
+        .filter(tx => tx.type === 'receive')
         .reduce((sum, tx) => sum + tx.amount, 0)
 
       const thisMonth = new Date()
       thisMonth.setDate(1)
       
-      const monthlyTransactions = txData.filter(tx => 
+      const monthlyTransactions = completedTxs.filter(tx => 
         new Date(tx.created_at) >= thisMonth
       )
       
@@ -80,7 +90,7 @@ export function Dashboard() {
         totalSent: sent,
         totalReceived: received,
         monthlyTotal,
-        transactionCount: txData.length
+        transactionCount: completedTxs.length
       })
     } catch (error) {
       console.error('Failed to load stats:', error)
@@ -141,6 +151,7 @@ export function Dashboard() {
       await refreshBalance()
       await loadStats()
       await forceRefresh()
+      setLastUpdateTime(new Date())
       toast.success('Balance refreshed!')
     } catch (error) {
       toast.error('Failed to refresh balance')
@@ -167,14 +178,14 @@ export function Dashboard() {
       color: 'text-green-600',
     },
     {
-      title: 'Sent',
-      value: stats.totalSent.toFixed(2),
+      title: 'Total Sent',
+      value: `${stats.totalSent.toFixed(2)} ALGO`,
       icon: ArrowUpRight,
       color: 'text-red-600',
     },
     {
-      title: 'Received',
-      value: stats.totalReceived.toFixed(2),
+      title: 'Total Received',
+      value: `${stats.totalReceived.toFixed(2)} ALGO`,
       icon: ArrowDownRight,
       color: 'text-green-600',
     },
@@ -184,7 +195,6 @@ export function Dashboard() {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <BackButton />
           <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back to VoicePay</p>
         </div>
@@ -256,8 +266,12 @@ export function Dashboard() {
           transition={{ delay: 0.5 }}
         >
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Recent Activity</CardTitle>
+              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                <Activity className="h-3 w-3" />
+                <span>Live</span>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentTransactions.length > 0 ? (
@@ -270,14 +284,24 @@ export function Dashboard() {
                         ) : (
                           <ArrowDownRight className="h-4 w-4 text-green-500" />
                         )}
-                        <span className="text-sm">
-                          {tx.type === 'send' ? 'Sent' : 'Received'}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {tx.type === 'send' ? 'Sent' : 'Received'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(tx.created_at), 'MMM dd, HH:mm')}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium">
-                        {tx.type === 'send' ? '-' : '+'}
-                        {tx.amount.toFixed(2)} {tx.currency}
-                      </span>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {tx.type === 'send' ? '-' : '+'}
+                          {tx.amount.toFixed(2)} {tx.currency}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {tx.channel}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   <Button 
@@ -333,8 +357,8 @@ export function Dashboard() {
                 <p className="font-semibold">{stats.transactionCount}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">Auto-refresh:</span>
-                <p className="font-semibold text-green-500">Active</p>
+                <span className="text-muted-foreground">Last Update:</span>
+                <p className="font-semibold text-green-500">{format(lastUpdateTime, 'HH:mm:ss')}</p>
               </div>
             </div>
             
@@ -376,7 +400,7 @@ export function Dashboard() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Get free TestNet ALGO for testing • Auto-refresh every 10 seconds
+              Get free TestNet ALGO for testing • Auto-refresh every 10 seconds • Live transaction monitoring
             </p>
           </CardContent>
         </Card>

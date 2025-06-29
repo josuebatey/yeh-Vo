@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Phone, CheckCircle } from 'lucide-react'
+import { Loader2, Phone, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { paymentService } from '@/services/paymentService'
@@ -24,7 +24,7 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
 
   const handleSendCode = async () => {
     if (!phoneNumber.trim()) {
-      toast.error('Please enter a phone number')
+      toast.error('Please enter a valid phone number')
       return
     }
 
@@ -34,9 +34,8 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
       if (result.success) {
         setSentCode(result.code || '123456') // For demo, show the code
         setStep('code')
-        toast.success(`Verification code sent to ${phoneNumber}`)
-        toast.info(`Demo code: ${result.code || '123456'}`, {
-          description: 'In production, this would be sent via SMS',
+        toast.success(`Verification code sent to ${phoneNumber}`, {
+          description: `Demo code: ${result.code || '123456'}`,
           duration: 10000,
         })
       }
@@ -53,26 +52,23 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
       return
     }
 
-    if (verificationCode !== sentCode) {
-      toast.error('Invalid verification code')
-      return
-    }
-
     setIsLoading(true)
     try {
-      await paymentService.verifyPhoneNumber(user?.id || '', phoneNumber, verificationCode)
-      toast.success('Phone number verified successfully!')
-      onVerified()
-      onOpenChange(false)
-      resetDialog()
+      const success = await paymentService.verifyPhoneNumber(user?.id || '', phoneNumber, verificationCode)
+      if (success) {
+        toast.success('Phone number verified successfully!')
+        onVerified()
+        onOpenChange(false)
+        resetForm()
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to verify phone number')
+      toast.error(error.message || 'Invalid verification code')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const resetDialog = () => {
+  const resetForm = () => {
     setStep('phone')
     setPhoneNumber('')
     setVerificationCode('')
@@ -81,7 +77,7 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
 
   const handleClose = () => {
     onOpenChange(false)
-    resetDialog()
+    resetForm()
   }
 
   return (
@@ -110,23 +106,32 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1234567890"
+                  placeholder="+1 (555) 123-4567"
+                  disabled={isLoading}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Include country code (e.g., +1 for US)
+                </p>
               </div>
-              <Button 
-                onClick={handleSendCode}
-                disabled={isLoading || !phoneNumber.trim()}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending Code...
-                  </>
-                ) : (
-                  'Send Verification Code'
-                )}
-              </Button>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={handleClose} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleSendCode} disabled={isLoading} className="flex-1">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Send Code
+                    </>
+                  )}
+                </Button>
+              </div>
             </>
           ) : (
             <>
@@ -139,37 +144,51 @@ export function PhoneVerificationDialog({ open, onOpenChange, onVerified }: Phon
                   onChange={(e) => setVerificationCode(e.target.value)}
                   placeholder="123456"
                   maxLength={6}
+                  disabled={isLoading}
+                  className="text-center text-lg tracking-widest"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Code sent to {phoneNumber}
                 </p>
+                {sentCode && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Demo Mode:</strong> Use code <code className="bg-blue-100 px-1 rounded">{sentCode}</code>
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="flex space-x-2">
+
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
-                  variant="outline"
-                  onClick={() => setStep('phone')}
+                  variant="outline" 
+                  onClick={() => setStep('phone')} 
                   className="flex-1"
+                  disabled={isLoading}
                 >
-                  Change Number
+                  Back
                 </Button>
-                <Button 
-                  onClick={handleVerifyCode}
-                  disabled={isLoading || !verificationCode.trim()}
-                  className="flex-1"
-                >
+                <Button onClick={handleVerifyCode} disabled={isLoading} className="flex-1">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Verifying...
                     </>
                   ) : (
-                    <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Verify
-                    </>
+                    'Verify Code'
                   )}
                 </Button>
               </div>
+
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleSendCode}
+                disabled={isLoading}
+                className="w-full"
+              >
+                Resend Code
+              </Button>
             </>
           )}
         </div>

@@ -1,138 +1,112 @@
 import { toast } from 'sonner'
 
-class NotificationService {
-  private permission: NotificationPermission = 'default'
-
-  constructor() {
-    this.permission = Notification.permission
-  }
+export const notificationService = {
+  isSupported(): boolean {
+    return 'Notification' in window
+  },
 
   async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
       return false
     }
 
-    if (this.permission === 'granted') {
+    if (Notification.permission === 'granted') {
       return true
     }
 
-    const permission = await Notification.requestPermission()
-    this.permission = permission
-    return permission === 'granted'
-  }
+    if (Notification.permission === 'denied') {
+      return false
+    }
 
-  isSupported(): boolean {
-    return 'Notification' in window
-  }
+    const permission = await Notification.requestPermission()
+    return permission === 'granted'
+  },
 
   showPaymentSent(amount: number, currency: string, recipient: string): void {
-    const message = `Sent ${amount} ${currency} to ${recipient.slice(0, 20)}...`
+    const message = `Payment sent: ${amount} ${currency} to ${recipient.slice(0, 20)}...`
     
     toast.success(message, {
-      description: 'Payment completed successfully',
+      description: 'Your payment has been processed successfully',
       duration: 5000,
     })
 
-    if (this.permission === 'granted') {
+    if (this.isSupported() && Notification.permission === 'granted') {
       new Notification('VoicePay - Payment Sent', {
         body: message,
         icon: '/favicon.ico',
-        tag: 'payment-sent',
+        tag: 'payment-sent'
       })
     }
-  }
+  },
 
-  showPaymentReceived(amount: number, currency: string, fromAddress: string): void {
-    const message = `Received ${amount} ${currency} from ${fromAddress.slice(0, 20)}...`
+  showPaymentReceived(amount: number, currency: string, sender: string): void {
+    const message = `Payment received: ${amount} ${currency} from ${sender.slice(0, 20)}...`
     
     toast.success(message, {
-      description: 'Payment received successfully',
+      description: 'A new payment has been received',
       duration: 8000,
     })
 
-    if (this.permission === 'granted') {
+    if (this.isSupported() && Notification.permission === 'granted') {
       new Notification('VoicePay - Payment Received', {
         body: message,
         icon: '/favicon.ico',
-        tag: 'payment-received',
+        tag: 'payment-received'
       })
     }
-  }
+  },
 
   showBalanceUpdate(newBalance: number, currency: string): void {
     const message = `Balance updated: ${newBalance.toFixed(4)} ${currency}`
     
     toast.info(message, {
       description: 'Your wallet balance has been refreshed',
-      duration: 4000,
+      duration: 3000,
     })
-  }
+  },
 
   showInvestmentUpdate(message: string): void {
     toast.success(message, {
       description: 'Investment portfolio updated',
-      duration: 6000,
+      duration: 5000,
     })
 
-    if (this.permission === 'granted') {
+    if (this.isSupported() && Notification.permission === 'granted') {
       new Notification('VoicePay - Investment Update', {
         body: message,
         icon: '/favicon.ico',
-        tag: 'investment-update',
+        tag: 'investment-update'
       })
     }
-  }
+  },
 
-  showTransactionUpdate(type: 'completed' | 'failed', amount: number, currency: string): void {
+  showTransactionUpdate(type: 'sent' | 'received', amount: number, currency: string): void {
     const message = `Transaction ${type}: ${amount} ${currency}`
-    const isSuccess = type === 'completed'
     
-    if (isSuccess) {
-      toast.success(message, {
-        description: 'Transaction processed successfully',
-        duration: 5000,
-      })
-    } else {
-      toast.error(message, {
-        description: 'Transaction failed to process',
-        duration: 6000,
-      })
-    }
-
-    if (this.permission === 'granted') {
-      new Notification(`VoicePay - Transaction ${type}`, {
-        body: message,
-        icon: '/favicon.ico',
-        tag: 'transaction-update',
-      })
-    }
-  }
-
-  showDailyLimitWarning(remaining: number, currency: string): void {
-    const message = `Daily limit warning: ${remaining.toFixed(2)} ${currency} remaining`
-    
-    toast.warning(message, {
-      description: 'Consider upgrading to Pro for unlimited transfers',
-      duration: 8000,
+    toast.info(message, {
+      description: `Your transaction has been ${type}`,
+      duration: 4000,
     })
-  }
+  },
 
-  showSystemNotification(title: string, message: string, type: 'info' | 'warning' | 'error' = 'info'): void {
-    const toastFn = type === 'error' ? toast.error : type === 'warning' ? toast.warning : toast.info
-    
-    toastFn(title, {
-      description: message,
+  showError(message: string, description?: string): void {
+    toast.error(message, {
+      description: description || 'Please try again',
       duration: 6000,
     })
+  },
 
-    if (this.permission === 'granted') {
-      new Notification(`VoicePay - ${title}`, {
-        body: message,
-        icon: '/favicon.ico',
-        tag: 'system-notification',
-      })
-    }
+  showSuccess(message: string, description?: string): void {
+    toast.success(message, {
+      description,
+      duration: 4000,
+    })
+  },
+
+  showInfo(message: string, description?: string): void {
+    toast.info(message, {
+      description,
+      duration: 4000,
+    })
   }
 }
-
-export const notificationService = new NotificationService()
