@@ -21,39 +21,62 @@ export const voiceService = {
         return
       }
 
-      // Cancel any ongoing speech
-      speechSynthesis.cancel()
+      try {
+        // Cancel any ongoing speech
+        speechSynthesis.cancel()
 
-      const utterance = new SpeechSynthesisUtterance(text)
-      
-      // Configure for better mobile support
-      utterance.rate = 0.9
-      utterance.pitch = 1
-      utterance.volume = 0.8
-      
-      // Try to use a more natural voice
-      const voices = speechSynthesis.getVoices()
-      if (voices.length > 0) {
-        // Prefer English voices
-        const englishVoice = voices.find(voice => 
-          voice.lang.startsWith('en') && !voice.name.includes('Google')
-        ) || voices[0]
-        utterance.voice = englishVoice
-      }
+        const utterance = new SpeechSynthesisUtterance(text)
+        
+        // Configure for better mobile support
+        utterance.rate = 0.9
+        utterance.pitch = 1
+        utterance.volume = 0.8
+        
+        // Try to use a more natural voice
+        const voices = speechSynthesis.getVoices()
+        if (voices.length > 0) {
+          // Prefer English voices
+          const englishVoice = voices.find(voice => 
+            voice.lang.startsWith('en') && !voice.name.includes('Google')
+          ) || voices[0]
+          utterance.voice = englishVoice
+        }
 
-      utterance.onend = () => resolve()
-      utterance.onerror = (error) => {
-        console.error('Speech synthesis error:', error)
-        reject(error)
-      }
-      
-      // Ensure voices are loaded (important for mobile)
-      if (speechSynthesis.getVoices().length === 0) {
-        speechSynthesis.addEventListener('voiceschanged', () => {
+        let resolved = false
+        
+        utterance.onend = () => {
+          if (!resolved) {
+            resolved = true
+            resolve()
+          }
+        }
+        
+        utterance.onerror = (error) => {
+          if (!resolved) {
+            resolved = true
+            console.error('Speech synthesis error:', error)
+            reject(error)
+          }
+        }
+        
+        // Timeout fallback
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true
+            resolve()
+          }
+        }, 5000)
+        
+        // Ensure voices are loaded (important for mobile)
+        if (speechSynthesis.getVoices().length === 0) {
+          speechSynthesis.addEventListener('voiceschanged', () => {
+            speechSynthesis.speak(utterance)
+          }, { once: true })
+        } else {
           speechSynthesis.speak(utterance)
-        }, { once: true })
-      } else {
-        speechSynthesis.speak(utterance)
+        }
+      } catch (error) {
+        reject(error)
       }
     })
   },
@@ -68,80 +91,113 @@ export const voiceService = {
         return
       }
 
-      const recognition = new SpeechRecognition()
+      let recognition: any = null
       
-      // Configure for better mobile support
-      recognition.continuous = false
-      recognition.interimResults = false
-      recognition.lang = 'en-US'
-      recognition.maxAlternatives = 1
-      
-      // Mobile-specific settings
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        recognition.continuous = false // Important for mobile
-        recognition.interimResults = false
-      }
-
-      let hasResult = false
-
-      recognition.onstart = () => {
-        console.log('Voice recognition started')
-      }
-
-      recognition.onresult = (event: any) => {
-        if (hasResult) return // Prevent multiple results
-        hasResult = true
-        
-        const transcript = event.results[0][0].transcript
-        console.log('Voice recognition result:', transcript)
-        recognition.stop()
-        resolve(transcript)
-      }
-
-      recognition.onerror = (event: any) => {
-        console.error('Voice recognition error:', event.error)
-        recognition.stop()
-        
-        let errorMessage = 'Voice recognition failed'
-        switch (event.error) {
-          case 'no-speech':
-            errorMessage = 'No speech detected. Please try again.'
-            break
-          case 'audio-capture':
-            errorMessage = 'Microphone not accessible. Please check permissions.'
-            break
-          case 'not-allowed':
-            errorMessage = 'Microphone permission denied. Please allow microphone access.'
-            break
-          case 'network':
-            errorMessage = 'Network error. Please check your connection.'
-            break
-          case 'service-not-allowed':
-            errorMessage = 'Speech service not available. Please try again later.'
-            break
-        }
-        
-        reject(new Error(errorMessage))
-      }
-
-      recognition.onend = () => {
-        if (!hasResult) {
-          reject(new Error('No speech detected. Please try again.'))
-        }
-      }
-
       try {
+        recognition = new SpeechRecognition()
+        
+        // Configure for better mobile support
+        recognition.continuous = false
+        recognition.interimResults = false
+        recognition.lang = 'en-US'
+        recognition.maxAlternatives = 1
+        
+        // Mobile-specific settings
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          recognition.continuous = false // Important for mobile
+          recognition.interimResults = false
+        }
+
+        let hasResult = false
+        let isStarted = false
+
+        recognition.onstart = () => {
+          isStarted = true
+          console.log('Voice recognition started')
+        }
+
+        recognition.onresult = (event: any) => {
+          if (hasResult) return // Prevent multiple results
+          hasResult = true
+          
+          try {
+            const transcript = event.results[0][0].transcript
+            console.log('Voice recognition result:', transcript)
+            
+            // Clean up
+            if (recognition && isStarted) {
+              recognition.stop()
+            }
+            
+            resolve(transcript)
+          } catch (error) {
+            console.error('Error processing speech result:', error)
+            reject(new Error('Failed to process speech result'))
+          }
+        }
+
+        recognition.onerror = (event: any) => {
+          console.error('Voice recognition error:', event.error)
+          
+          // Clean up
+          if (recognition && isStarted) {
+            try {
+              recognition.stop()
+            } catch (stopError) {
+              console.warn('Error stopping recognition:', stopError)
+            }
+          }
+          
+          let errorMessage = 'Voice recognition failed'
+          switch (event.error) {
+            case 'no-speech':
+              errorMessage = 'No speech detected. Please try again.'
+              break
+            case 'audio-capture':
+              errorMessage = 'Microphone not accessible. Please check permissions.'
+              break
+            case 'not-allowed':
+              errorMessage = 'Microphone permission denied. Please allow microphone access.'
+              break
+            case 'network':
+              errorMessage = 'Network error. Please check your connection.'
+              break
+            case 'service-not-allowed':
+              errorMessage = 'Speech service not available. Please try again later.'
+              break
+            case 'aborted':
+              errorMessage = 'Voice recognition was cancelled.'
+              break
+          }
+          
+          reject(new Error(errorMessage))
+        }
+
+        recognition.onend = () => {
+          isStarted = false
+          if (!hasResult) {
+            reject(new Error('No speech detected. Please try again.'))
+          }
+        }
+
+        // Start recognition
         recognition.start()
         
         // Auto-stop after 10 seconds to prevent hanging
         setTimeout(() => {
-          if (!hasResult) {
-            recognition.stop()
+          if (!hasResult && recognition && isStarted) {
+            hasResult = true
+            try {
+              recognition.stop()
+            } catch (error) {
+              console.warn('Timeout stop error:', error)
+            }
             reject(new Error('Voice recognition timeout. Please try again.'))
           }
         }, 10000)
         
       } catch (error) {
+        console.error('Failed to create speech recognition:', error)
         reject(new Error('Failed to start voice recognition'))
       }
     })

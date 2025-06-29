@@ -18,6 +18,7 @@ export function ReceivePayment() {
   const [qrGenerated, setQrGenerated] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
+  const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
 
   // Detect mobile device
   useEffect(() => {
@@ -36,76 +37,121 @@ export function ReceivePayment() {
   const generateQRCode = React.useCallback(() => {
     if (!wallet?.address || !qrCodeRef.current) return
 
-    // Get current domain - works for both localhost and production
-    const protocol = window.location.protocol
-    const host = window.location.host
-    const baseUrl = `${protocol}//${host}`
-    
-    // Create comprehensive deep link URL
-    const params = new URLSearchParams()
-    params.set('action', 'send')
-    params.set('to', wallet.address)
-    if (amount && parseFloat(amount) > 0) {
-      params.set('amount', amount)
-    }
-    if (note.trim()) {
-      params.set('note', note.trim())
-    }
-    
-    // Create the full deep link URL
-    const deepLinkUrl = `${baseUrl}/send?${params.toString()}`
-    
-    console.log('Generated QR Code URL:', deepLinkUrl) // Debug log
-
-    // Adjust QR code size for mobile
-    const qrSize = isMobile ? 240 : 280
-
-    const qrCode = new QRCodeStyling({
-      width: qrSize,
-      height: qrSize,
-      type: 'svg',
-      data: deepLinkUrl, // Full deep link with domain
-      margin: 8,
-      qrOptions: {
-        typeNumber: 0,
-        mode: 'Byte',
-        errorCorrectionLevel: 'M'
-      },
-      imageOptions: {
-        hideBackgroundDots: true,
-        imageSize: 0.4,
-        margin: 0,
-        crossOrigin: 'anonymous'
-      },
-      dotsOptions: {
-        color: '#7c3aed',
-        type: 'rounded'
-      },
-      backgroundOptions: {
-        color: '#ffffff',
-      },
-      cornersSquareOptions: {
-        color: '#7c3aed',
-        type: 'extra-rounded'
-      },
-      cornersDotOptions: {
-        color: '#7c3aed',
-        type: 'dot'
+    try {
+      // Clean up previous QR code instance
+      if (qrCodeInstanceRef.current) {
+        // Safely clear the container
+        const container = qrCodeRef.current
+        if (container) {
+          // Remove all child nodes safely
+          while (container.firstChild) {
+            container.removeChild(container.firstChild)
+          }
+        }
+        qrCodeInstanceRef.current = null
       }
-    })
 
-    // Clear previous QR code and generate new one
-    qrCodeRef.current.innerHTML = ''
-    qrCode.append(qrCodeRef.current)
-    setQrGenerated(true)
-    
-    // Show success message
-    toast.success('QR code generated with payment link!')
+      // Get current domain - works for both localhost and production
+      const protocol = window.location.protocol
+      const host = window.location.host
+      const baseUrl = `${protocol}//${host}`
+      
+      // Create comprehensive deep link URL
+      const params = new URLSearchParams()
+      params.set('action', 'send')
+      params.set('to', wallet.address)
+      if (amount && parseFloat(amount) > 0) {
+        params.set('amount', amount)
+      }
+      if (note.trim()) {
+        params.set('note', note.trim())
+      }
+      
+      // Create the full deep link URL
+      const deepLinkUrl = `${baseUrl}/send?${params.toString()}`
+      
+      console.log('Generated QR Code URL:', deepLinkUrl) // Debug log
+
+      // Adjust QR code size for mobile
+      const qrSize = isMobile ? 240 : 280
+
+      const qrCode = new QRCodeStyling({
+        width: qrSize,
+        height: qrSize,
+        type: 'svg',
+        data: deepLinkUrl, // Full deep link with domain
+        margin: 8,
+        qrOptions: {
+          typeNumber: 0,
+          mode: 'Byte',
+          errorCorrectionLevel: 'M'
+        },
+        imageOptions: {
+          hideBackgroundDots: true,
+          imageSize: 0.4,
+          margin: 0,
+          crossOrigin: 'anonymous'
+        },
+        dotsOptions: {
+          color: '#7c3aed',
+          type: 'rounded'
+        },
+        backgroundOptions: {
+          color: '#ffffff',
+        },
+        cornersSquareOptions: {
+          color: '#7c3aed',
+          type: 'extra-rounded'
+        },
+        cornersDotOptions: {
+          color: '#7c3aed',
+          type: 'dot'
+        }
+      })
+
+      // Store the QR code instance for cleanup
+      qrCodeInstanceRef.current = qrCode
+
+      // Generate QR code safely
+      if (qrCodeRef.current) {
+        qrCode.append(qrCodeRef.current)
+        setQrGenerated(true)
+        
+        // Show success message
+        toast.success('QR code generated with payment link!')
+      }
+    } catch (error) {
+      console.error('QR code generation failed:', error)
+      toast.error('Failed to generate QR code')
+    }
   }, [wallet?.address, amount, note, isMobile])
 
+  // Generate QR code when dependencies change
   React.useEffect(() => {
-    generateQRCode()
+    const timeoutId = setTimeout(() => {
+      generateQRCode()
+    }, 100) // Small delay to ensure DOM is ready
+
+    return () => clearTimeout(timeoutId)
   }, [generateQRCode])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (qrCodeInstanceRef.current && qrCodeRef.current) {
+        try {
+          // Safely clear the container
+          const container = qrCodeRef.current
+          while (container.firstChild) {
+            container.removeChild(container.firstChild)
+          }
+        } catch (error) {
+          console.warn('QR code cleanup warning:', error)
+        }
+        qrCodeInstanceRef.current = null
+      }
+    }
+  }, [])
 
   const copyAddress = async () => {
     if (!wallet?.address) return
@@ -130,9 +176,12 @@ export function ReceivePayment() {
           toast.success('Address copied to clipboard!')
         } catch (err) {
           toast.error('Failed to copy address')
+        } finally {
+          // Ensure cleanup
+          if (document.body.contains(textArea)) {
+            document.body.removeChild(textArea)
+          }
         }
-        
-        document.body.removeChild(textArea)
       }
     } catch (error) {
       toast.error('Failed to copy address')
@@ -178,9 +227,12 @@ export function ReceivePayment() {
           toast.success('Payment link copied to clipboard!')
         } catch (err) {
           toast.error('Failed to copy payment link')
+        } finally {
+          // Ensure cleanup
+          if (document.body.contains(textArea)) {
+            document.body.removeChild(textArea)
+          }
         }
-        
-        document.body.removeChild(textArea)
       }
     } catch (error) {
       toast.error('Failed to copy payment link')
@@ -281,12 +333,21 @@ export function ReceivePayment() {
           a.download = `voicepay-qr-${Date.now()}.png`
           document.body.appendChild(a)
           a.click()
-          document.body.removeChild(a)
+          
+          // Cleanup
+          if (document.body.contains(a)) {
+            document.body.removeChild(a)
+          }
           URL.revokeObjectURL(downloadUrl)
           toast.success('QR code downloaded!')
         }, 'image/png')
         
         URL.revokeObjectURL(url)
+      }
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        toast.error('Failed to process QR code for download')
       }
       
       img.src = url
