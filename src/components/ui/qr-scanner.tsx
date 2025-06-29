@@ -189,3 +189,5 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
     </div>
   )
 }
+
+export { QRScanner }
