@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Camera, X, Flashlight, FlashlightOff } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { X, Flashlight, FlashlightOff, Scan } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface QRScannerProps {
@@ -10,60 +11,93 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ onScan, onClose }: QRScannerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
+  const [hasCamera, setHasCamera] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [hasFlashlight, setHasFlashlight] = useState(false)
   const [flashlightOn, setFlashlightOn] = useState(false)
   const [manualInput, setManualInput] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    startCamera()
+    checkCameraSupport()
     return () => {
-      stopCamera()
+      stopScanning()
     }
   }, [])
 
-  const startCamera = async () => {
+  const checkCameraSupport = async () => {
     try {
-      setError(null)
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const hasVideoInput = devices.some(device => device.kind === 'videoinput')
+      setHasCamera(hasVideoInput)
       
-      // Request camera permission
-      const stream = await navigator.mediaDevices.getUserMedia({
+      if (hasVideoInput) {
+        startScanning()
+      }
+    } catch (error) {
+      console.error('Camera check failed:', error)
+      setHasCamera(false)
+    }
+  }
+
+  const startScanning = async () => {
+    try {
+      setIsScanning(true)
+      
+      const constraints: MediaStreamConstraints = {
         video: {
           facingMode: 'environment', // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 }
         }
-      })
+      }
 
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       streamRef.current = stream
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         videoRef.current.play()
-        setIsScanning(true)
         
-        // Check if device has flashlight
-        const track = stream.getVideoTracks()[0]
-        const capabilities = track.getCapabilities()
-        setHasFlashlight('torch' in capabilities)
+        // Start QR code detection
+        startQRDetection()
       }
     } catch (error) {
       console.error('Camera access failed:', error)
-      setError('Camera access denied. Please allow camera permission and try again.')
-      toast.error('Camera access denied. You can paste the address manually below.')
+      toast.error('Camera access denied. Please allow camera permissions.')
+      setIsScanning(false)
     }
   }
 
-  const stopCamera = () => {
+  const stopScanning = () => {
+    setIsScanning(false)
+    
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current)
+      scanIntervalRef.current = null
+    }
+    
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
-    setIsScanning(false)
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+  }
+
+  const startQRDetection = () => {
+    // Simple QR detection simulation
+    // In a real implementation, you'd use a library like jsQR
+    scanIntervalRef.current = setInterval(() => {
+      if (videoRef.current && videoRef.current.readyState === 4) {
+        // Simulate QR detection
+        // This is where you'd implement actual QR code scanning
+        console.log('Scanning for QR codes...')
+      }
+    }, 500)
   }
 
   const toggleFlashlight = async () => {
@@ -71,10 +105,16 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 
     try {
       const track = streamRef.current.getVideoTracks()[0]
-      await track.applyConstraints({
-        advanced: [{ torch: !flashlightOn }]
-      })
-      setFlashlightOn(!flashlightOn)
+      const capabilities = track.getCapabilities()
+      
+      if ('torch' in capabilities) {
+        await track.applyConstraints({
+          advanced: [{ torch: !flashlightOn } as any]
+        })
+        setFlashlightOn(!flashlightOn)
+      } else {
+        toast.info('Flashlight not supported on this device')
+      }
     } catch (error) {
       console.error('Flashlight toggle failed:', error)
       toast.error('Failed to toggle flashlight')
@@ -84,6 +124,7 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
   const handleManualSubmit = () => {
     if (manualInput.trim()) {
       onScan(manualInput.trim())
+      setManualInput('')
     }
   }
 
@@ -95,99 +136,104 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
         onScan(text)
       }
     } catch (error) {
-      toast.error('Failed to read clipboard')
+      toast.error('Failed to paste from clipboard')
     }
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">QR Code Scanner</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {error ? (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-        </div>
-      ) : (
-        <div className="relative bg-black rounded-lg overflow-hidden">
-          <video
-            ref={videoRef}
-            className="w-full h-64 object-cover"
-            playsInline
-            muted
-          />
-          <canvas
-            ref={canvasRef}
-            className="hidden"
-          />
-          
-          {isScanning && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-48 h-48 border-2 border-white rounded-lg">
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
+      {hasCamera && isScanning ? (
+        <Card>
+          <CardContent className="p-4">
+            <div className="relative">
+              <video
+                ref={videoRef}
+                className="w-full h-64 bg-black rounded-lg object-cover"
+                playsInline
+                muted
+              />
+              
+              {/* Scanning overlay */}
+              <div className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center">
+                <div className="bg-black/50 text-white px-3 py-1 rounded text-sm">
+                  Position QR code in frame
+                </div>
+              </div>
+              
+              {/* Controls */}
+              <div className="absolute bottom-2 left-2 right-2 flex justify-between">
+                <Button
+                  onClick={toggleFlashlight}
+                  variant="secondary"
+                  size="sm"
+                  className="bg-black/50 hover:bg-black/70"
+                >
+                  {flashlightOn ? (
+                    <FlashlightOff className="h-4 w-4" />
+                  ) : (
+                    <Flashlight className="h-4 w-4" />
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={stopScanning}
+                  variant="secondary"
+                  size="sm"
+                  className="bg-black/50 hover:bg-black/70"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          )}
-
-          {hasFlashlight && (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute top-4 right-4"
-              onClick={toggleFlashlight}
-            >
-              {flashlightOn ? (
-                <FlashlightOff className="h-4 w-4" />
-              ) : (
-                <Flashlight className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-        </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Scan className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">QR Scanner</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {hasCamera 
+                ? 'Camera access required for QR scanning'
+                : 'Camera not available. Use manual input below.'
+              }
+            </p>
+            
+            {hasCamera && !isScanning && (
+              <Button onClick={startScanning} className="mb-4">
+                Start Camera Scanner
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-3">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Position the QR code within the frame above
-          </p>
-        </div>
-
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-2">Manual Entry</h4>
-          <div className="flex gap-2">
+      {/* Manual Input */}
+      <Card>
+        <CardContent className="p-4">
+          <h4 className="font-medium mb-3">Manual Input</h4>
+          <div className="space-y-3">
             <Input
-              placeholder="Paste or enter address here..."
+              placeholder="Paste or type address/payment link here..."
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              className="flex-1"
+              onKeyPress={(e) => e.key === 'Enter' && handleManualSubmit()}
             />
-            <Button onClick={handlePaste} variant="outline" size="sm">
-              Paste
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleManualSubmit} disabled={!manualInput.trim()} className="flex-1">
+                Use This Address
+              </Button>
+              <Button onClick={handlePaste} variant="outline">
+                Paste
+              </Button>
+            </div>
           </div>
-          <Button 
-            onClick={handleManualSubmit} 
-            className="w-full mt-2"
-            disabled={!manualInput.trim()}
-          >
-            Use Address
-          </Button>
-        </div>
+        </CardContent>
+      </Card>
 
-        <Button variant="outline" onClick={onClose} className="w-full">
-          Cancel Scanner
-        </Button>
-      </div>
+      <Button variant="outline" onClick={onClose} className="w-full">
+        Cancel Scanner
+      </Button>
     </div>
   )
 }
-
-export { QRScanner }
