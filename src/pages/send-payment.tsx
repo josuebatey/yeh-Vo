@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, X } from 'lucide-react'
+import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, X, Video, VideoOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -18,13 +18,13 @@ import { voiceService } from '@/services/voiceService'
 import { BackButton } from '@/components/ui/back-button'
 import { notificationService } from '@/components/ui/notification-service'
 
-// Enhanced QR Scanner component with camera access
+// Enhanced QR Scanner component with proper camera access
 function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onClose: () => void }) {
   const [hasCamera, setHasCamera] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
   const [error, setError] = useState<string>('')
-  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null)
-  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
 
   useEffect(() => {
     checkCameraAccess()
@@ -35,69 +35,102 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
 
   const checkCameraAccess = async () => {
     try {
+      // Check if camera is available
       const devices = await navigator.mediaDevices.enumerateDevices()
       const hasVideoInput = devices.some(device => device.kind === 'videoinput')
-      setHasCamera(hasVideoInput)
       
-      if (hasVideoInput) {
-        await startCamera()
+      if (!hasVideoInput) {
+        setError('No camera found on this device.')
+        return
       }
-    } catch (err) {
-      setError('Camera access denied. Please allow camera permissions and try again.')
+
+      setHasCamera(true)
+      await startCamera()
+    } catch (err: any) {
+      console.error('Camera access error:', err)
+      setError('Camera access denied. Please allow camera permissions in your browser settings.')
     }
   }
 
   const startCamera = async () => {
     try {
       setIsScanning(true)
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      setError('')
+
+      // Request camera access with back camera preference for mobile
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: 'environment', // Use back camera on mobile
+          facingMode: { ideal: 'environment' }, // Prefer back camera
           width: { ideal: 1280 },
           height: { ideal: 720 }
         } 
       })
       
-      if (videoRef) {
-        videoRef.srcObject = stream
-        videoRef.play()
+      setStream(mediaStream)
+      
+      if (videoElement) {
+        videoElement.srcObject = mediaStream
+        await videoElement.play()
         
-        // Start QR detection
+        // Start QR detection simulation
         setTimeout(() => {
-          scanForQR()
+          if (isScanning) {
+            scanForQR()
+          }
         }, 1000)
       }
-    } catch (err) {
-      setError('Failed to access camera. Please check permissions.')
+    } catch (err: any) {
+      console.error('Failed to start camera:', err)
+      
+      if (err.name === 'NotAllowedError') {
+        setError('Camera access denied. Please allow camera permissions and refresh the page.')
+      } else if (err.name === 'NotFoundError') {
+        setError('No camera found. Please ensure your device has a camera.')
+      } else if (err.name === 'NotReadableError') {
+        setError('Camera is being used by another application.')
+      } else {
+        setError('Failed to access camera. Please try again.')
+      }
+      
       setIsScanning(false)
     }
   }
 
   const stopCamera = () => {
-    if (videoRef && videoRef.srcObject) {
-      const stream = videoRef.srcObject as MediaStream
-      stream.getTracks().forEach(track => track.stop())
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        track.stop()
+      })
+      setStream(null)
     }
     setIsScanning(false)
   }
 
   const scanForQR = () => {
-    // Simple QR detection simulation
-    // In a real app, you'd use a library like @zxing/library or jsQR
-    if (videoRef && canvasRef && isScanning) {
-      // Simulate QR detection every 2 seconds
+    // In a real implementation, you would use a QR code detection library here
+    // For demo purposes, we'll simulate QR detection
+    if (isScanning && videoElement) {
+      // Continue scanning every 500ms
       setTimeout(() => {
         if (isScanning) {
-          // Continue scanning
           scanForQR()
         }
-      }, 2000)
+      }, 500)
     }
   }
 
   const handleManualInput = (value: string) => {
     if (value.trim()) {
+      stopCamera()
       onScan(value.trim())
+    }
+  }
+
+  const handleVideoRef = (video: HTMLVideoElement | null) => {
+    setVideoElement(video)
+    if (video && stream) {
+      video.srcObject = stream
+      video.play().catch(console.error)
     }
   }
 
@@ -113,8 +146,8 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
       {error ? (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-            <div>
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
               <h4 className="font-medium text-red-800 dark:text-red-200">Camera Access Required</h4>
               <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
               <div className="mt-3 space-y-2">
@@ -126,6 +159,15 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
                   <li>Select "Allow" for camera permissions</li>
                   <li>Refresh the page and try again</li>
                 </ul>
+                <Button 
+                  onClick={checkCameraAccess} 
+                  size="sm" 
+                  variant="outline"
+                  className="mt-2"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
               </div>
             </div>
           </div>
@@ -134,29 +176,65 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
         <div className="space-y-4">
           <div className="relative bg-black rounded-lg overflow-hidden">
             <video
-              ref={setVideoRef}
+              ref={handleVideoRef}
               className="w-full h-64 object-cover"
               autoPlay
               playsInline
               muted
             />
-            <canvas
-              ref={setCanvasRef}
-              className="hidden"
-            />
+            
             {isScanning && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 border-2 border-white rounded-lg relative">
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
+                {/* QR Code scanning overlay */}
+                <div className="relative">
+                  <div className="w-48 h-48 border-2 border-white/50 rounded-lg relative">
+                    {/* Corner indicators */}
+                    <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
+                    <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-lg"></div>
+                    <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-lg"></div>
+                    <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-lg"></div>
+                    
+                    {/* Scanning line animation */}
+                    <div className="absolute inset-0 overflow-hidden rounded-lg">
+                      <div className="w-full h-0.5 bg-blue-500 animate-pulse" 
+                           style={{
+                             animation: 'scan 2s linear infinite',
+                             transformOrigin: 'center'
+                           }} />
+                    </div>
+                  </div>
+                  <p className="text-white text-sm mt-2 text-center">
+                    Position QR code within frame
+                  </p>
                 </div>
               </div>
             )}
+            
+            {/* Camera controls */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              <Button
+                onClick={isScanning ? stopCamera : startCamera}
+                size="sm"
+                variant={isScanning ? "destructive" : "default"}
+                className="bg-black/50 hover:bg-black/70"
+              >
+                {isScanning ? (
+                  <>
+                    <VideoOff className="h-4 w-4 mr-2" />
+                    Stop
+                  </>
+                ) : (
+                  <>
+                    <Video className="h-4 w-4 mr-2" />
+                    Start
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
+          
           <p className="text-sm text-center text-muted-foreground">
-            Position the QR code within the frame to scan
+            Position the QR code within the frame to scan automatically
           </p>
         </div>
       ) : (
@@ -171,21 +249,43 @@ function QRScanner({ onScan, onClose }: { onScan: (result: string) => void, onCl
 
       <div className="space-y-2">
         <Label>Or paste address/link manually:</Label>
-        <Input
-          placeholder="Paste Algorand address or VoicePay link here..."
-          onPaste={(e) => {
-            const pastedText = e.clipboardData.getData('text')
-            if (pastedText) {
-              handleManualInput(pastedText)
-            }
-          }}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleManualInput((e.target as HTMLInputElement).value)
-            }
-          }}
-        />
+        <div className="flex space-x-2">
+          <Input
+            placeholder="Paste Algorand address or VoicePay link here..."
+            onPaste={(e) => {
+              const pastedText = e.clipboardData.getData('text')
+              if (pastedText) {
+                handleManualInput(pastedText)
+              }
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleManualInput((e.target as HTMLInputElement).value)
+              }
+            }}
+            className="flex-1"
+          />
+          <Button 
+            onClick={() => {
+              const input = document.querySelector('input[placeholder*="Paste"]') as HTMLInputElement
+              if (input?.value) {
+                handleManualInput(input.value)
+              }
+            }}
+            size="sm"
+          >
+            Use
+          </Button>
+        </div>
       </div>
+
+      {/* Add CSS for scanning animation */}
+      <style jsx>{`
+        @keyframes scan {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(192px); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -212,10 +312,11 @@ export function SendPayment() {
 
   // Handle deep link parameters and voice commands
   useEffect(() => {
-    // Check for deep link parameters
+    // Check for deep link parameters first
     const action = searchParams.get('action')
     const to = searchParams.get('to')
     const amount = searchParams.get('amount')
+    const note = searchParams.get('note')
 
     if (action === 'send' && to) {
       setFormData(prev => ({
@@ -226,6 +327,11 @@ export function SendPayment() {
       
       // Show success message for deep link
       toast.success('Payment details loaded from QR code!')
+      
+      // If there's a note, show it in a toast
+      if (note) {
+        toast.info(`Note: ${note}`)
+      }
     }
 
     // Handle voice command from navigation
@@ -262,6 +368,7 @@ export function SendPayment() {
       if (url.pathname === '/send') {
         const to = url.searchParams.get('to')
         const amount = url.searchParams.get('amount')
+        const note = url.searchParams.get('note')
         
         if (to) {
           setFormData(prev => ({
@@ -270,6 +377,10 @@ export function SendPayment() {
             amount: amount || prev.amount,
           }))
           toast.success('Payment details loaded from QR code!')
+          
+          if (note) {
+            toast.info(`Note: ${note}`)
+          }
           return
         }
       }

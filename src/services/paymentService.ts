@@ -18,6 +18,13 @@ export const paymentService = {
       throw new Error(validation.error)
     }
 
+    // Get sender's profile for from_address
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single()
+
     // Create transaction record
     const { data: transaction, error } = await supabase
       .from('transactions')
@@ -28,6 +35,7 @@ export const paymentService = {
         currency: request.currency || 'ALGO',
         channel: request.channel,
         to_address: request.recipient,
+        from_address: senderProfile?.email || 'unknown', // Add from_address
         status: 'pending',
         metadata: request.metadata,
       })
@@ -44,10 +52,10 @@ export const paymentService = {
           txId = await this.sendAlgorandPayment(userId, request)
           break
         case 'mobile_money':
-          txId = await this.sendMobileMoneyPayment(userId, request)
+          txId = await this.sendMobileMoneyPayment(userId, request, senderProfile?.email || 'unknown')
           break
         case 'bank':
-          txId = await this.sendBankTransfer(userId, request)
+          txId = await this.sendBankTransfer(userId, request, senderProfile?.email || 'unknown')
           break
         default:
           throw new Error('Unsupported payment channel')
@@ -118,14 +126,7 @@ export const paymentService = {
     return txId
   },
 
-  async sendMobileMoneyPayment(userId: string, request: PaymentRequest): Promise<string> {
-    // Get user's profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
+  async sendMobileMoneyPayment(userId: string, request: PaymentRequest, fromEmail: string): Promise<string> {
     // Find recipient by email or phone
     const { data: recipientProfile } = await supabase
       .from('profiles')
@@ -161,21 +162,14 @@ export const paymentService = {
     await this.simulateReceivePayment(
       recipientProfile.id, 
       request.amount, 
-      profile?.email || 'unknown', 
+      fromEmail, // Use sender's email as from_address
       'mobile_money'
     )
 
     return `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
 
-  async sendBankTransfer(userId: string, request: PaymentRequest): Promise<string> {
-    // Get user's profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
+  async sendBankTransfer(userId: string, request: PaymentRequest, fromEmail: string): Promise<string> {
     // Find recipient by email
     const { data: recipientProfile } = await supabase
       .from('profiles')
@@ -211,7 +205,7 @@ export const paymentService = {
     await this.simulateReceivePayment(
       recipientProfile.id, 
       request.amount, 
-      profile?.email || 'unknown', 
+      fromEmail, // Use sender's email as from_address
       'bank'
     )
 
@@ -220,7 +214,7 @@ export const paymentService = {
 
   async simulateReceivePayment(userId: string, amount: number, fromAddress: string, channel: 'algorand' | 'mobile_money' | 'bank' = 'algorand'): Promise<void> {
     try {
-      // Create receive transaction record
+      // Create receive transaction record with proper from_address
       const { error } = await supabase
         .from('transactions')
         .insert({
@@ -229,7 +223,8 @@ export const paymentService = {
           amount: amount,
           currency: 'ALGO',
           channel: channel,
-          from_address: fromAddress,
+          from_address: fromAddress, // Properly set from_address
+          to_address: null, // Receiver doesn't need to_address
           status: 'completed',
           algorand_tx_id: `received_${channel}_${Date.now()}`,
         })
