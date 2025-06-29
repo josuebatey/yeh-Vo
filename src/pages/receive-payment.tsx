@@ -69,7 +69,6 @@ export function ReceivePayment() {
         data: deepLinkUrl,
         margin: 8,
         qrOptions: {
-          typeNumber: 0,
           mode: 'Byte' as const,
           errorCorrectionLevel: 'M' as const
         },
