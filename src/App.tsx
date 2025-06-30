@@ -60,7 +60,7 @@ function AppRoutes() {
     return (
       <>
         <AuthPage className='border border-red-600'  />
-        <span className="object-fill flex justify-end fixed top-8 left-8 z-index-9999">
+        <span className="object-fill flex justify-end fixed top-8 left-10 z-index-9999">
           <img className="h-10 w-20 mt-2" src="../../public/bolt-bagde.svg" />
       </span>
       </>
