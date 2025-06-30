@@ -24,7 +24,7 @@ import { useAutoRefresh } from '@/hooks/useAutoRefresh'
 import { format } from 'date-fns'
 
 export function Dashboard() {
-  const { user } = useAuthStore()
+  const { user, profile } = useAuthStore()
   const { wallet, loadWallet, refreshBalance, fundWallet, isFunding } = useWalletStore()
   const navigate = useNavigate()
   const [stats, setStats] = useState({
@@ -54,11 +54,13 @@ export function Dashboard() {
   })
 
   useEffect(() => {
-    if (user) {
+    // Only load wallet when both user and profile are available
+    // This ensures the profile exists in the database before creating wallet
+    if (user && profile) {
       loadWallet(user.id)
       loadStats()
     }
-  }, [user, loadWallet])
+  }, [user, profile, loadWallet])
 
   const loadStats = async (transactions?: any[]) => {
     if (!user) return
