@@ -14,7 +14,7 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <div className="h-full w-scree flex overflow-hidden border border-red-500 mt-4">
+    <div className="h-full w-full flex overflow-hidden border border-red-500 mt-4">
       {/* Fixed Sidebar - Always positioned fixed on desktop */}
       <div className={cn(
         // Mobile: slide in/out overlay
