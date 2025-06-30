@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
 import { voiceService } from '@/services/voiceService'
-import { BackButton } from '@/components/ui/back-button'
 
 interface Message {
   id: string
