@@ -68,7 +68,12 @@ export function Layout({ children }: LayoutProps) {
         // Mobile: no margin (sidebar is overlay)
         "ml-0"
       )}>
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        {/* Sticky Header - Always visible */}
+        <div className="sticky top-0 z-30 bg-background">
+          <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        </div>
+        
+        {/* Main Content - Scrollable */}
         <main className="flex-1 overflow-auto bg-background">
           <div className="h-full min-h-0 w-full">
             {children}

@@ -429,3 +429,37 @@ html, body {
     height: -webkit-fill-available;
   }
 }
+
+/* CRITICAL: Ensure header stays visible on scroll */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Ensure main content doesn't overlap with sticky header */
+.main-content-with-sticky-header {
+  padding-top: 0;
+  height: calc(100vh - 4rem); /* Subtract header height */
+  overflow-y: auto;
+}
+
+/* Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure proper z-index stacking */
+.header-z-index {
+  z-index: 30;
+}
+
+.sidebar-z-index {
+  z-index: 40;
+}
+
+.overlay-z-index {
+  z-index: 50;
+}

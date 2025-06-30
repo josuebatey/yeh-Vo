@@ -8,12 +8,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Bell, Menu, LogOut, User } from 'lucide-react'
+import { Bell, Menu, LogOut, User, ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { LanguageSelector } from '@/components/ui/language-selector'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useTranslation } from 'react-i18next'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -23,13 +24,39 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { t } = useTranslation()
   const { user, profile, signOut } = useAuthStore()
   const { wallet } = useWalletStore()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // Show back button on all pages except dashboard
+  const showBackButton = location.pathname !== '/'
+
+  const handleBackClick = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-6 flex-shrink-0">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-6 flex-shrink-0 sticky top-0 z-30">
       <div className="flex items-center space-x-4">
         <Button variant="ghost" size="sm" onClick={onMenuClick} className="md:hidden">
           <Menu className="h-5 w-5" />
         </Button>
+        
+        {/* Back Button - shown on non-dashboard pages */}
+        {showBackButton && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBackClick}
+            className="hidden md:flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm">Back</span>
+          </Button>
+        )}
         
         {wallet && (
           <div className="hidden md:flex items-center space-x-4">
