@@ -15,6 +15,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="h-full flex overflow-hidden">
+      <BoltBadge/>
       {/* Fixed Sidebar - Always positioned fixed on desktop */}
       <div className={cn(
         // Mobile: slide in/out overlay
