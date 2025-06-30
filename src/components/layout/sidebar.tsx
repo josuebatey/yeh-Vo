@@ -101,6 +101,9 @@ export function Sidebar({ collapsed }: SidebarProps) {
           collapsed && "hidden"
         )}>
           Built with ❤️ <BoltBadge className='border border-red-400' />
+          <span>
+            <img src="https://github.com/kickiniteasy/bolt-hackathon-badge/blob/main/src/public/bolt-badge/logotext_poweredby_360w/logotext_poweredby_360w.png" />
+          </span>
         </p>
       </div>
     </div>
