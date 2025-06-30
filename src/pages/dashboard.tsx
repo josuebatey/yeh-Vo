@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAutoRefresh } from '@/hooks/useAutoRefresh'
 import { format } from 'date-fns'
+import { BackButton } from '@/components/ui/back-button'
 
 export function Dashboard() {
   const { user, profile } = useAuthStore()
@@ -191,219 +192,235 @@ export function Dashboard() {
   ]
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back to VoicePay</p>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Header Section - Fixed */}
+      <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+              <p className="text-muted-foreground">Welcome back to yehVo</p>
+            </div>
+          </div>
+          <VoiceCommandButton onCommand={handleVoiceCommand} />
         </div>
-        <VoiceCommandButton onCommand={handleVoiceCommand} />
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        {dashboardStats.map((stat, index) => (
+      {/* Content Section - Scrollable */}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Stats Grid */}
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            {dashboardStats.map((stat, index) => (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Quick Actions */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button 
+                    className="w-full" 
+                    onClick={() => navigate('/send')}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Payment
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/receive')}
+                  >
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Receive Payment
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/invest')}
+                  >
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Invest Funds
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Recent Activity</CardTitle>
+                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                    <Activity className="h-3 w-3" />
+                    <span>Live</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {recentTransactions.length > 0 ? (
+                    <div className="space-y-2">
+                      {recentTransactions.slice(0, 3).map((tx) => (
+                        <div key={tx.id} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                          <div className="flex items-center space-x-2">
+                            {tx.type === 'send' ? (
+                              <ArrowUpRight className="h-4 w-4 text-red-500" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 text-green-500" />
+                            )}
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {tx.type === 'send' ? 'Sent' : 'Received'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(tx.created_at), 'MMM dd, HH:mm')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">
+                              {tx.type === 'send' ? '-' : '+'}
+                              {tx.amount.toFixed(2)} {tx.currency}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {tx.channel}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate('/history')}
+                        className="w-full"
+                      >
+                        View All Transactions
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground">No recent transactions</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate('/send')}
+                        className="mt-2"
+                      >
+                        Make Your First Payment
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Wallet Management */}
           <motion.div
-            key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: 0.6 }}
           >
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardHeader>
+                <CardTitle>Wallet Management</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Address:</span>
+                    <p className="font-mono text-xs break-all">
+                      {wallet?.address ? `${wallet.address.slice(0, 8)}...${wallet.address.slice(-8)}` : 'Loading...'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Balance:</span>
+                    <p className="font-semibold">{wallet?.balance?.toFixed(4) || '0'} ALGO</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Transactions:</span>
+                    <p className="font-semibold">{stats.transactionCount}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Last Update:</span>
+                    <p className="font-semibold text-green-500">{format(lastUpdateTime, 'HH:mm:ss')}</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRefreshBalance}
+                    disabled={isRefreshing}
+                    className="flex-1"
+                  >
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleFundWallet}
+                    disabled={isFunding}
+                    className="flex-1"
+                  >
+                    {isFunding ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Funding...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Auto Fund
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={openDispenser}
+                    className="flex-1"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Manual Fund
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Get free TestNet ALGO for testing • Auto-refresh every 10 seconds • Live transaction monitoring
+                </p>
               </CardContent>
             </Card>
           </motion.div>
-        ))}
+        </div>
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                className="w-full" 
-                onClick={() => navigate('/send')}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Send Payment
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => navigate('/receive')}
-              >
-                <Wallet className="mr-2 h-4 w-4" />
-                Receive Payment
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => navigate('/invest')}
-              >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Invest Funds
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Activity</CardTitle>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                <Activity className="h-3 w-3" />
-                <span>Live</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {recentTransactions.length > 0 ? (
-                <div className="space-y-2">
-                  {recentTransactions.slice(0, 3).map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                      <div className="flex items-center space-x-2">
-                        {tx.type === 'send' ? (
-                          <ArrowUpRight className="h-4 w-4 text-red-500" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4 text-green-500" />
-                        )}
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {tx.type === 'send' ? 'Sent' : 'Received'}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(tx.created_at), 'MMM dd, HH:mm')}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {tx.type === 'send' ? '-' : '+'}
-                          {tx.amount.toFixed(2)} {tx.currency}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {tx.channel}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/history')}
-                    className="w-full"
-                  >
-                    View All Transactions
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">No recent transactions</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/send')}
-                    className="mt-2"
-                  >
-                    Make Your First Payment
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>Wallet Management</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Address:</span>
-                <p className="font-mono text-xs break-all">
-                  {wallet?.address ? `${wallet.address.slice(0, 8)}...${wallet.address.slice(-8)}` : 'Loading...'}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Balance:</span>
-                <p className="font-semibold">{wallet?.balance?.toFixed(4) || '0'} ALGO</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Transactions:</span>
-                <p className="font-semibold">{stats.transactionCount}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Last Update:</span>
-                <p className="font-semibold text-green-500">{format(lastUpdateTime, 'HH:mm:ss')}</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                variant="outline" 
-                onClick={handleRefreshBalance}
-                disabled={isRefreshing}
-                className="flex-1"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleFundWallet}
-                disabled={isFunding}
-                className="flex-1"
-              >
-                {isFunding ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Funding...
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="mr-2 h-4 w-4" />
-                    Auto Fund
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={openDispenser}
-                className="flex-1"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Manual Fund
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Get free TestNet ALGO for testing • Auto-refresh every 10 seconds • Live transaction monitoring
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
     </div>
   )
 }
