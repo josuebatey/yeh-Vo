@@ -15,7 +15,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       profile: null,
       isLoading: false,
@@ -73,14 +73,25 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshUser: async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
+        try {
+          const { data: { user }, error } = await supabase.auth.getUser()
+          
+          if (error || !user) {
+            // Session is invalid or doesn't exist, clear local state
+            get().signOut()
+            return
+          }
+
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
             .maybeSingle()
+          
           set({ user, profile })
+        } catch (error) {
+          // If there's any error refreshing the user, sign out
+          get().signOut()
         }
       },
     }),
