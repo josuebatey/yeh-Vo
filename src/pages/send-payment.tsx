@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera } from 'lucide-react'
+import { Send, QrCode, Loader2, CheckCircle, AlertCircle, Info, Camera, Scan } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -92,7 +92,7 @@ export function SendPayment() {
     setShowQrScanner(false)
     
     try {
-      // Check if it's a VoicePay deep link
+      // Check if it's a yehVo deep link
       const url = new URL(result)
       if (url.pathname === '/send') {
         const to = url.searchParams.get('to')
@@ -211,58 +211,78 @@ export function SendPayment() {
       case 'algorand': 
         return 'Direct blockchain transfer using Algorand network'
       case 'mobile_money': 
-        return 'Transfer to another VoicePay user via mobile money'
+        return 'Transfer to another yehVo user via mobile money'
       case 'bank': 
-        return 'Transfer to another VoicePay user via bank transfer'
+        return 'Transfer to another yehVo user via bank transfer'
       default: 
         return ''
     }
   }
 
   return (
-    <div className="p-4 md:p-6 w-full max-w-2xl mx-auto space-y-6 min-h-0">
-      <div className="flex items-center justify-between">
-        <div className="min-w-0 flex-1">
-          <BackButton />
-          <h1 className="text-2xl md:text-3xl font-bold truncate">Send Payment</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Send money via voice, QR code, or manual entry</p>
-        </div>
-        <div className="flex-shrink-0 ml-4">
-          <VoiceCommandButton onCommand={handleVoiceCommand} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Header Section with Improved Spacing */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <BackButton />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                  Send Payment
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                  Send money via voice, QR code, or manual entry
+                </p>
+              </div>
+            </div>
+            <VoiceCommandButton onCommand={handleVoiceCommand} />
+          </div>
         </div>
       </div>
 
-      <div className="w-full min-h-0">
+      {/* Main Content with Better Spacing */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           {txStatus === 'success' ? (
             <motion.div
               key="success"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full"
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
             >
-              <Card className="border-green-500/20 bg-green-500/5 w-full">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <CheckCircle className="h-12 w-12 text-green-500 flex-shrink-0" />
-                    <div className="text-center sm:text-left min-w-0 flex-1">
-                      <h3 className="text-xl font-semibold text-green-500">Payment Sent!</h3>
-                      <p className="text-muted-foreground break-all text-sm">Transaction ID: {txId}</p>
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+              <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-900/20 shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-6">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                    </div>
+                    <div className="text-center sm:text-left flex-1">
+                      <h3 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200 mb-2">
+                        Payment Sent Successfully!
+                      </h3>
+                      <p className="text-emerald-700 dark:text-emerald-300 mb-4">
+                        Your payment has been processed and is on its way.
+                      </p>
+                      <p className="text-sm text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-100 dark:bg-emerald-900/30 px-3 py-2 rounded-lg break-all">
+                        Transaction ID: {txId}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-6">
                         <Button 
                           onClick={() => setTxStatus('idle')}
                           variant="outline"
-                          size="sm"
+                          className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
                         >
-                          Send Another
+                          Send Another Payment
                         </Button>
                         <Button 
                           onClick={() => navigate('/history')}
-                          variant="default"
-                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
-                          View History
+                          View Transaction History
                         </Button>
                       </div>
                     </div>
@@ -273,23 +293,29 @@ export function SendPayment() {
           ) : txStatus === 'error' ? (
             <motion.div
               key="error"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full"
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
             >
-              <Card className="border-red-500/20 bg-red-500/5 w-full">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <AlertCircle className="h-12 w-12 text-red-500 flex-shrink-0" />
-                    <div className="text-center sm:text-left min-w-0 flex-1">
-                      <h3 className="text-xl font-semibold text-red-500">Payment Failed</h3>
-                      <p className="text-muted-foreground break-words text-sm">{errorMessage}</p>
+              <Card className="border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-900/20 shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-6">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                        <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                      </div>
+                    </div>
+                    <div className="text-center sm:text-left flex-1">
+                      <h3 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-2">
+                        Payment Failed
+                      </h3>
+                      <p className="text-red-700 dark:text-red-300 mb-4">
+                        {errorMessage}
+                      </p>
                       <Button 
                         onClick={() => setTxStatus('idle')}
-                        variant="outline"
-                        className="mt-4"
-                        size="sm"
+                        className="bg-red-600 hover:bg-red-700 text-white"
                       >
                         Try Again
                       </Button>
@@ -301,18 +327,26 @@ export function SendPayment() {
           ) : txStatus === 'pending' ? (
             <motion.div
               key="pending"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full"
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
             >
-              <Card className="border-blue-500/20 bg-blue-500/5 w-full">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <Loader2 className="h-12 w-12 text-blue-500 animate-spin flex-shrink-0" />
+              <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-900/20 shadow-lg">
+                <CardContent className="p-8">
+                  <div className="flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-6">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
+                      </div>
+                    </div>
                     <div className="text-center sm:text-left">
-                      <h3 className="text-xl font-semibold text-blue-500">Processing Payment...</h3>
-                      <p className="text-muted-foreground text-sm">Please wait while we process your transaction</p>
+                      <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-2">
+                        Processing Payment...
+                      </h3>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        Please wait while we process your transaction securely.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -324,24 +358,36 @@ export function SendPayment() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="w-full"
+              transition={{ duration: 0.3 }}
             >
-              <Card className="w-full">
-                <CardHeader>
-                  <CardTitle>Payment Details</CardTitle>
+              <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-xl font-semibold">Payment Details</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="manual" className="space-y-6 w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-                      <TabsTrigger value="qr">QR Scanner</TabsTrigger>
+                <CardContent className="p-6">
+                  <Tabs defaultValue="manual" className="space-y-8">
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                      <TabsTrigger 
+                        value="manual" 
+                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700"
+                      >
+                        Manual Entry
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="qr"
+                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-700"
+                      >
+                        QR Scanner
+                      </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="manual" className="w-full">
-                      <form onSubmit={(e) => { e.preventDefault(); handleConfirmPayment(); }} className="space-y-6 w-full">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="amount">Amount</Label>
+                    <TabsContent value="manual" className="space-y-6">
+                      <form onSubmit={(e) => { e.preventDefault(); handleConfirmPayment(); }} className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-3">
+                            <Label htmlFor="amount" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              Amount
+                            </Label>
                             <Input
                               id="amount"
                               type="number"
@@ -350,16 +396,18 @@ export function SendPayment() {
                               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                               placeholder="0.00"
                               required
-                              className="w-full"
+                              className="h-12 text-base border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="currency">Currency</Label>
+                          <div className="space-y-3">
+                            <Label htmlFor="currency" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              Currency
+                            </Label>
                             <Select 
                               value={formData.currency} 
                               onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger className="h-12 border-slate-200 dark:border-slate-700">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -370,13 +418,15 @@ export function SendPayment() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="channel">Payment Channel</Label>
+                        <div className="space-y-3">
+                          <Label htmlFor="channel" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Payment Channel
+                          </Label>
                           <Select 
                             value={formData.channel} 
                             onValueChange={(value: any) => setFormData(prev => ({ ...prev, channel: value, recipient: '' }))}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className="h-12 border-slate-200 dark:border-slate-700">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -385,76 +435,123 @@ export function SendPayment() {
                               <SelectItem value="bank">Bank Transfer</SelectItem>
                             </SelectContent>
                           </Select>
-                          <div className="flex items-start space-x-2 text-sm text-muted-foreground">
-                            <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <div className="flex items-start space-x-2 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                            <Info className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" />
                             <span>{getChannelInfo(formData.channel)}</span>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="recipient">Recipient</Label>
+                        <div className="space-y-3">
+                          <Label htmlFor="recipient" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Recipient
+                          </Label>
                           <Input
                             id="recipient"
                             value={formData.recipient}
                             onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
                             placeholder={getRecipientPlaceholder(formData.channel)}
                             required
-                            className="break-all w-full"
+                            className="h-12 text-base border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
                           />
                         </div>
 
-                        <div className="bg-muted/50 rounded-lg p-4 w-full">
-                          <h4 className="font-semibold mb-2">Payment Summary</h4>
-                          <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                              <span>Amount:</span>
-                              <span>{formData.amount} {formData.currency}</span>
+                        <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                          <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-4">Payment Summary</h4>
+                          <div className="space-y-3 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-600 dark:text-slate-400">Amount:</span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {formData.amount || '0'} {formData.currency}
+                              </span>
                             </div>
-                            <div className="flex justify-between">
-                              <span>To:</span>
-                              <span className="truncate ml-2 max-w-[150px]">{formData.recipient || 'Not specified'}</span>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-600 dark:text-slate-400">To:</span>
+                              <span className="font-mono text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded max-w-[200px] truncate">
+                                {formData.recipient || 'Not specified'}
+                              </span>
                             </div>
-                            <div className="flex justify-between">
-                              <span>Via:</span>
-                              <span>{getChannelDisplay(formData.channel)}</span>
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-600 dark:text-slate-400">Via:</span>
+                              <span className="font-medium text-slate-800 dark:text-slate-200">
+                                {getChannelDisplay(formData.channel)}
+                              </span>
                             </div>
-                            <div className="flex justify-between">
-                              <span>Balance:</span>
-                              <span>{wallet?.balance?.toFixed(4) || '0'} ALGO</span>
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-300 dark:border-slate-600">
+                              <span className="text-slate-600 dark:text-slate-400">Available Balance:</span>
+                              <span className="font-semibold text-green-600 dark:text-green-400">
+                                {wallet?.balance?.toFixed(4) || '0'} ALGO
+                              </span>
                             </div>
                           </div>
                         </div>
 
                         <Button 
                           type="submit" 
-                          className="w-full" 
+                          className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200" 
                           disabled={isLoading || !formData.amount || !formData.recipient}
                         >
-                          <Send className="mr-2 h-4 w-4" />
+                          <Send className="mr-2 h-5 w-5" />
                           Review Payment
                         </Button>
                       </form>
                     </TabsContent>
 
-                    <TabsContent value="qr" className="w-full">
-                      <div className="space-y-6 w-full">
+                    <TabsContent value="qr" className="space-y-6">
+                      <div className="min-h-[400px] flex flex-col">
                         {!showQrScanner ? (
-                          <div className="text-center">
-                            <QrCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-lg font-semibold mb-2">Scan QR Code</h3>
-                            <p className="text-muted-foreground mb-4">
-                              Scan a VoicePay QR code to automatically fill payment details
-                            </p>
-                            <Button onClick={() => setShowQrScanner(true)}>
-                              <Camera className="mr-2 h-4 w-4" />
-                              Start Camera Scanner
-                            </Button>
+                          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 py-12">
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center">
+                              <QrCode className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="space-y-3">
+                              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
+                                Scan QR Code
+                              </h3>
+                              <p className="text-slate-600 dark:text-slate-400 max-w-md">
+                                Scan a yehVo QR code to automatically fill payment details and send money instantly.
+                              </p>
+                            </div>
+                            <div className="space-y-4">
+                              <Button 
+                                onClick={() => setShowQrScanner(true)}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                              >
+                                <Camera className="mr-2 h-5 w-5" />
+                                Start Camera Scanner
+                              </Button>
+                              <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
+                                <Scan className="h-4 w-4" />
+                                <span>Works with any QR code containing payment information</span>
+                              </div>
+                            </div>
                           </div>
                         ) : (
-                          <QRScanner 
-                            onScan={handleQrScan}
-                            onClose={() => setShowQrScanner(false)}
-                          />
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                                Camera Scanner
+                              </h3>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowQrScanner(false)}
+                                className="border-slate-300 dark:border-slate-600"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4">
+                              <QRScanner 
+                                onScan={handleQrScan}
+                                onClose={() => setShowQrScanner(false)}
+                              />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Position the QR code within the camera frame to scan
+                              </p>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </TabsContent>
@@ -468,42 +565,48 @@ export function SendPayment() {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-md mx-4 max-w-[calc(100vw-2rem)]">
-          <DialogHeader>
-            <DialogTitle>Confirm Payment</DialogTitle>
-            <DialogDescription>
-              Please review your payment details before confirming.
+        <DialogContent className="sm:max-w-md mx-4 max-w-[calc(100vw-2rem)] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-0 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-semibold">Confirm Payment</DialogTitle>
+            <DialogDescription className="text-slate-600 dark:text-slate-400">
+              Please review your payment details before confirming the transaction.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-muted/50 rounded-lg p-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium">Amount:</span>
-                  <span>{formData.amount} {formData.currency}</span>
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-xl p-4 border border-slate-200 dark:border-slate-600">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Amount:</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {formData.amount} {formData.currency}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">To:</span>
-                  <span className="truncate ml-2 max-w-[200px]">{formData.recipient}</span>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">To:</span>
+                  <span className="font-mono text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded max-w-[200px] truncate">
+                    {formData.recipient}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Channel:</span>
-                  <span>{getChannelDisplay(formData.channel)}</span>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">Channel:</span>
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    {getChannelDisplay(formData.channel)}
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => setShowConfirmDialog(false)}
-                className="flex-1"
+                className="flex-1 border-slate-300 dark:border-slate-600"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSendPayment}
                 disabled={isLoading}
-                className="flex-1"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
               >
                 {isLoading ? (
                   <>
