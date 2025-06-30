@@ -101,7 +101,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
           collapsed && "hidden"
         )}>
           Built with ❤️ <BoltBadge className='border border-red-400' />
-          <span className="border border-red-500 h-10 w-10 aspect-ration-10">
+          <span className="h-fit border border-red-500 h-10 w-10">
             <img src="../../public/bolt-bagde.svg" />
           </span>
         </p>
