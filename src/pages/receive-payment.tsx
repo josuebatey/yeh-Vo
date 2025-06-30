@@ -83,12 +83,12 @@ export function ReceivePayment() {
       toast.error('Failed to generate QR code')
     }
 
-    // Cleanup function - safely clear the container
+    // Cleanup function - use QRCodeStyling's clear method instead of direct DOM manipulation
     return () => {
-      if (qrCodeRef.current) {
+      if (qrCodeInstanceRef.current) {
         try {
-          // Clear the entire container instead of trying to remove specific children
-          qrCodeRef.current.innerHTML = ''
+          // Use the library's clear method to properly remove elements
+          qrCodeInstanceRef.current.clear()
         } catch (error) {
           // Silently handle cleanup errors
           console.warn('QR code cleanup warning:', error)
