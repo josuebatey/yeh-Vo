@@ -143,7 +143,7 @@ export function AIAssistant() {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-scroll border border-red-500 mt-10">
+    <div className="h-full flex flex-col overflow-scroll">
       {/* Header Section - Fixed with proper spacing */}
       <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
         <div className="flex items-center justify-between">
