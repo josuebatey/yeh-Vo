@@ -10,13 +10,10 @@ import {
   Wallet,
   Mic,
   Bot,
-  PanelLeftClose,
-  PanelLeftOpen,
   Globe2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
 
 const navigation = [
   { name: 'dashboard', href: '/', icon: Home },
@@ -45,9 +42,9 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
     )}>
       <div className={cn(
         "flex h-16 items-center border-b flex-shrink-0",
-        collapsed ? "justify-center px-2" : "justify-between px-6"
+        collapsed ? "justify-center px-2" : "px-6"
       )}>
-        {!collapsed && (
+        {!collapsed ? (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -58,30 +55,11 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
             </div>
             <span className="text-xl font-bold">yehVo</span>
           </motion.div>
-        )}
-        
-        {collapsed && (
+        ) : (
           <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
             <Globe2 className="h-5 w-5 text-white" />
           </div>
         )}
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className={cn(
-            "h-8 w-8 p-0 hidden md:flex",
-            collapsed && "mx-auto mt-2"
-          )}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
       </div>
       
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
