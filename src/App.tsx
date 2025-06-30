@@ -17,7 +17,6 @@ import { Settings } from '@/pages/settings'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { notificationService } from '@/components/ui/notification-service'
-import { BoltBadge } from '@/components/ui/bolt-badge'
 import './lib/i18n' // Initialize i18n
 import './App.css'
 
@@ -82,7 +81,9 @@ function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
-      <BoltBadge variant="black" position="bottom-right" />
+      <span className="object-fill flex justify-end">
+            <img className="h-10 w-20 mt-2" src="../../public/bolt-bagde.svg" />
+          </span>
     </>
   )
 }
