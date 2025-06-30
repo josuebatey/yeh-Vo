@@ -102,7 +102,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
         )}>
           Built with ❤️ <BoltBadge className='border border-red-400' />
           <span className="h-10 w-20 object-fill">
-            <img className="h-10 w-20  " src="../../public/bolt-bagde.svg" />
+            <img className="" src="../../public/bolt-bagde.svg" />
           </span>
         </p>
       </div>
