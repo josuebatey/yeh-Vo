@@ -47,17 +47,6 @@ export function Header({ onMenuClick }: HeaderProps) {
         </Button>
         
         {/* Back Button - shown on non-dashboard pages */}
-        {showBackButton && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleBackClick}
-            className="hidden md:flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back</span>
-          </Button>
-        )}
         
         {wallet && (
           <div className="hidden lg:flex items-center space-x-4">
