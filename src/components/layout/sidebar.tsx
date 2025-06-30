@@ -99,7 +99,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
           "text-xs text-muted-foreground text-center",
           collapsed && "hidden"
         )}>
-          Built with ❤️ on <span className="font-semibold text-purple-500">Bolt.new</span>
+          Built with ❤️ <BoltBadge/>
         </p>
       </div>
     </div>
