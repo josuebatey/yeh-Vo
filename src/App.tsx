@@ -17,6 +17,7 @@ import { Settings } from '@/pages/settings'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
 import { notificationService } from '@/components/ui/notification-service'
+import { BoltBadge } from '@/components/ui/bolt-badge'
 import './lib/i18n' // Initialize i18n
 import './App.css'
 
@@ -57,24 +58,32 @@ function AppRoutes() {
   }, [refreshUser])
 
   if (!user) {
-    return <AuthPage />
+    return (
+      <>
+        <AuthPage />
+        <BoltBadge variant="white" position="top-right" />
+      </>
+    )
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/send" element={<SendPayment />} />
-        <Route path="/receive" element={<ReceivePayment />} />
-        <Route path="/history" element={<TransactionHistory />} />
-        <Route path="/invest" element={<Investment />} />
-        <Route path="/wallet" element={<WalletPage />} />
-        <Route path="/voice" element={<VoiceCommands />} />
-        <Route path="/assistant" element={<AIAssistant />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+    <>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/send" element={<SendPayment />} />
+          <Route path="/receive" element={<ReceivePayment />} />
+          <Route path="/history" element={<TransactionHistory />} />
+          <Route path="/invest" element={<Investment />} />
+          <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/voice" element={<VoiceCommands />} />
+          <Route path="/assistant" element={<AIAssistant />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
+      <BoltBadge variant="black" position="bottom-right" />
+    </>
   )
 }
 
@@ -90,13 +99,6 @@ function App() {
         <Router>
           <AppRoutes />
           <Toaster richColors />
-          
-          {/* Built with ❤️ on Bolt.new Badge */}
-          <div className="fixed bottom-4 right-4 z-50">
-            <div className="bg-black/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
-              Built with <span className="text-red-500">❤️</span> on <span className="text-purple-400">Bolt.new</span>
-            </div>
-          </div>
         </Router>
       </ThemeProvider>
     </QueryClientProvider>
