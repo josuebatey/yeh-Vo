@@ -29,10 +29,9 @@ const navigation = [
 
 interface SidebarProps {
   collapsed: boolean
-  onToggleCollapse: () => void
 }
 
-export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ collapsed }: SidebarProps) {
   const { t } = useTranslation()
 
   return (

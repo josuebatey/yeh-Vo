@@ -28,10 +28,7 @@ export function Layout({ children }: LayoutProps) {
         // Desktop width
         sidebarCollapsed ? "md:w-16" : "md:w-64"
       )}>
-        <Sidebar 
-          collapsed={sidebarCollapsed} 
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
+        <Sidebar collapsed={sidebarCollapsed} />
       </div>
 
       {/* Toggle Button - Positioned at the separator line */}
