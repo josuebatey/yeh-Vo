@@ -19,7 +19,7 @@ export function ReceivePayment() {
   const [isMobile, setIsMobile] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
   const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
-  const isInitializedRef = useRef(false)
+  const mountedRef = useRef(true)
 
   // Detect mobile device
   useEffect(() => {
@@ -32,66 +32,73 @@ export function ReceivePayment() {
 
     checkMobile()
     window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    return () => {
+      mountedRef.current = false
+      window.removeEventListener('resize', checkMobile)
+    }
   }, [])
 
-  // Initialize QR code once
+  // Initialize QR code
   useEffect(() => {
-    if (!wallet?.address || !qrCodeRef.current || isInitializedRef.current) return
+    if (!wallet?.address || !qrCodeRef.current || qrCodeInstanceRef.current) return
 
-    const qrSize = isMobile ? 240 : 280
+    const initQRCode = async () => {
+      try {
+        const qrSize = isMobile ? 240 : 280
 
-    try {
-      const qrCode = new QRCodeStyling({
-        width: qrSize,
-        height: qrSize,
-        type: 'svg' as const,
-        data: 'https://example.com',
-        margin: 8,
-        qrOptions: {
-          mode: 'Byte' as const,
-          errorCorrectionLevel: 'M' as const
-        },
-        imageOptions: {
-          hideBackgroundDots: true,
-          imageSize: 0.4,
-          margin: 0,
-          crossOrigin: 'anonymous' as const
-        },
-        dotsOptions: {
-          color: '#7c3aed',
-          type: 'rounded' as const
-        },
-        backgroundOptions: {
-          color: '#ffffff',
-        },
-        cornersSquareOptions: {
-          color: '#7c3aed',
-          type: 'extra-rounded' as const
-        },
-        cornersDotOptions: {
-          color: '#7c3aed',
-          type: 'dot' as const
+        const qrCode = new QRCodeStyling({
+          width: qrSize,
+          height: qrSize,
+          type: 'svg' as const,
+          data: `${window.location.origin}/send?action=send&to=${wallet.address}`,
+          margin: 8,
+          qrOptions: {
+            mode: 'Byte' as const,
+            errorCorrectionLevel: 'M' as const
+          },
+          imageOptions: {
+            hideBackgroundDots: true,
+            imageSize: 0.4,
+            margin: 0,
+            crossOrigin: 'anonymous' as const
+          },
+          dotsOptions: {
+            color: '#7c3aed',
+            type: 'rounded' as const
+          },
+          backgroundOptions: {
+            color: '#ffffff',
+          },
+          cornersSquareOptions: {
+            color: '#7c3aed',
+            type: 'extra-rounded' as const
+          },
+          cornersDotOptions: {
+            color: '#7c3aed',
+            type: 'dot' as const
+          }
+        })
+
+        qrCodeInstanceRef.current = qrCode
+        
+        if (qrCodeRef.current && mountedRef.current) {
+          qrCode.append(qrCodeRef.current)
+          setQrGenerated(true)
         }
-      })
-
-      qrCodeInstanceRef.current = qrCode
-      
-      // Only append if container is empty
-      if (qrCodeRef.current && qrCodeRef.current.children.length === 0) {
-        qrCode.append(qrCodeRef.current)
-        isInitializedRef.current = true
-        setQrGenerated(true)
+      } catch (error) {
+        console.error('Failed to initialize QR code:', error)
+        if (mountedRef.current) {
+          toast.error('Failed to generate QR code')
+        }
       }
-    } catch (error) {
-      console.error('Failed to initialize QR code:', error)
-      toast.error('Failed to generate QR code')
     }
+
+    initQRCode()
   }, [wallet?.address, isMobile])
 
-  // Update QR code data when dependencies change
+  // Update QR code data when amount or note changes
   const updateQRCode = useCallback(() => {
-    if (!wallet?.address || !qrCodeInstanceRef.current) return
+    if (!wallet?.address || !qrCodeInstanceRef.current || !mountedRef.current) return
 
     try {
       const protocol = window.location.protocol
@@ -114,19 +121,23 @@ export function ReceivePayment() {
         data: deepLinkUrl
       })
       
-      toast.success('QR code updated!')
+      if (mountedRef.current) {
+        toast.success('QR code updated!')
+      }
     } catch (error) {
       console.error('QR code update failed:', error)
-      toast.error('Failed to update QR code')
+      if (mountedRef.current) {
+        toast.error('Failed to update QR code')
+      }
     }
   }, [wallet?.address, amount, note])
 
   // Update QR code when dependencies change
   useEffect(() => {
-    if (isInitializedRef.current) {
+    if (qrGenerated) {
       updateQRCode()
     }
-  }, [updateQRCode])
+  }, [updateQRCode, qrGenerated])
 
   const copyAddress = async () => {
     if (!wallet?.address) return
