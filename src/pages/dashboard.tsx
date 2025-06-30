@@ -23,7 +23,6 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAutoRefresh } from '@/hooks/useAutoRefresh'
 import { format } from 'date-fns'
-import { BackButton } from '@/components/ui/back-button'
 
 export function Dashboard() {
   const { user, profile } = useAuthStore()

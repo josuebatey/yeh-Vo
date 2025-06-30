@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { useWalletStore } from '@/stores/walletStore'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/lib/supabase'
-import { BackButton } from '@/components/ui/back-button'
 import { useNavigate } from 'react-router-dom'
 
 export function WalletPage() {
