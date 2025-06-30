@@ -327,7 +327,7 @@ button:focus-visible {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile-friendly modal and toast positioning */
+/* CRITICAL: Mobile-optimized modal and dialog positioning */
 @media (max-width: 768px) {
   /* Toast positioning for mobile */
   [data-sonner-toaster] {
@@ -342,12 +342,17 @@ button:focus-visible {
     margin: 0 !important;
   }
 
-  /* Dialog positioning for mobile */
+  /* Dialog positioning for mobile - IMPROVED */
   [data-radix-dialog-content] {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     max-width: calc(100vw - 32px) !important;
-    max-height: calc(100vh - 32px) !important;
-    margin: 16px !important;
+    max-height: calc(100vh - 64px) !important;
     width: calc(100vw - 32px) !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
   }
 
   /* Dropdown menu positioning */
@@ -366,6 +371,28 @@ button:focus-visible {
   [data-radix-popover-content] {
     max-width: calc(100vw - 32px) !important;
     margin: 0 16px !important;
+  }
+
+  /* Alert dialog specific improvements */
+  [data-radix-alert-dialog-content] {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 48px) !important;
+    width: calc(100vw - 24px) !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+  }
+
+  /* Ensure dialog overlay covers full screen */
+  [data-radix-dialog-overlay],
+  [data-radix-alert-dialog-overlay] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 50 !important;
   }
 }
 

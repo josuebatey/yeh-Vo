@@ -167,24 +167,28 @@ export function Dashboard() {
     {
       title: 'Wallet Balance',
       value: `${wallet?.balance?.toFixed(4) || '0'} ALGO`,
+      usdValue: `$${algorandService.convertAlgoToUSD(wallet?.balance || 0)} USD`,
       icon: Wallet,
       color: 'text-blue-600',
     },
     {
       title: 'This Month',
       value: `${stats.monthlyTotal.toFixed(2)} ALGO`,
+      usdValue: `$${algorandService.convertAlgoToUSD(stats.monthlyTotal)} USD`,
       icon: DollarSign,
       color: 'text-green-600',
     },
     {
       title: 'Total Sent',
       value: `${stats.totalSent.toFixed(2)} ALGO`,
+      usdValue: `$${algorandService.convertAlgoToUSD(stats.totalSent)} USD`,
       icon: ArrowUpRight,
       color: 'text-red-600',
     },
     {
       title: 'Total Received',
       value: `${stats.totalReceived.toFixed(2)} ALGO`,
+      usdValue: `$${algorandService.convertAlgoToUSD(stats.totalReceived)} USD`,
       icon: ArrowDownRight,
       color: 'text-green-600',
     },
@@ -224,6 +228,7 @@ export function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+                    <div className="text-xs text-muted-foreground">{stat.usdValue}</div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -310,7 +315,7 @@ export function Dashboard() {
                               {tx.amount.toFixed(2)} {tx.currency}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {tx.channel}
+                              ${algorandService.convertAlgoToUSD(tx.amount)} USD
                             </div>
                           </div>
                         </div>
@@ -363,6 +368,7 @@ export function Dashboard() {
                   <div>
                     <span className="text-muted-foreground">Balance:</span>
                     <p className="font-semibold">{wallet?.balance?.toFixed(4) || '0'} ALGO</p>
+                    <p className="text-xs text-muted-foreground">${algorandService.convertAlgoToUSD(wallet?.balance || 0)} USD</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Transactions:</span>

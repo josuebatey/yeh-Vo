@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { LanguageSelector } from '@/components/ui/language-selector'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { algorandService } from '@/services/algorandService'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -39,8 +40,8 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-6 flex-shrink-0 sticky top-0 z-30">
-      <div className="flex items-center space-x-4">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 flex-shrink-0 sticky top-0 z-30">
+      <div className="flex items-center space-x-2 md:space-x-4">
         <Button variant="ghost" size="sm" onClick={onMenuClick} className="md:hidden">
           <Menu className="h-5 w-5" />
         </Button>
@@ -59,16 +60,21 @@ export function Header({ onMenuClick }: HeaderProps) {
         )}
         
         {wallet && (
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4">
             <div className="text-sm">
               <span className="text-muted-foreground">Balance: </span>
-              <span className="font-semibold">{wallet.balance.toFixed(4)} ALGO</span>
+              <div className="font-semibold">
+                <div>{wallet.balance.toFixed(4)} ALGO</div>
+                <div className="text-xs text-muted-foreground">
+                  ${algorandService.convertAlgoToUSD(wallet.balance)} USD
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 md:space-x-2">
         {/* Language Selector with circular background */}
         <div className="p-1 rounded-full bg-muted/50 hover:bg-muted transition-colors">
           <LanguageSelector />
@@ -109,6 +115,12 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email}
                 </p>
+                {wallet && (
+                  <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+                    <div className="font-medium">{wallet.balance.toFixed(4)} ALGO</div>
+                    <div>${algorandService.convertAlgoToUSD(wallet.balance)} USD</div>
+                  </div>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

@@ -6,6 +6,9 @@ const algodPort = parseInt(import.meta.env.VITE_ALGOD_PORT || '443')
 
 const algodClient = new algosdk.Algodv2(algodToken, algodServer, algodPort)
 
+// Approximate ALGO to USD conversion rate (this should come from a real API in production)
+const ALGO_TO_USD_RATE = 0.15 // This is a placeholder - use a real price API
+
 export const algorandService = {
   async getBalance(address: string): Promise<number> {
     try {
@@ -134,4 +137,26 @@ export const algorandService = {
   toMicroAlgos(algos: number): number {
     return Math.round(algos * 1000000)
   },
+
+  // Convert ALGO to USD with 2 decimal precision
+  convertAlgoToUSD(algoAmount: number): string {
+    const usdAmount = algoAmount * ALGO_TO_USD_RATE
+    return usdAmount.toFixed(2)
+  },
+
+  // Get current ALGO price (placeholder - should use real API)
+  async getCurrentAlgoPrice(): Promise<number> {
+    try {
+      // In production, use a real price API like CoinGecko
+      // const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=algorand&vs_currencies=usd')
+      // const data = await response.json()
+      // return data.algorand.usd
+      
+      // For now, return placeholder rate
+      return ALGO_TO_USD_RATE
+    } catch (error) {
+      console.error('Failed to fetch ALGO price:', error)
+      return ALGO_TO_USD_RATE
+    }
+  }
 }
