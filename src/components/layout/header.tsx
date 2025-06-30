@@ -46,7 +46,6 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
         
-        {/* Back Button - shown on non-dashboard pages */}
         
         {wallet && (
           <div className="hidden lg:flex items-center space-x-4">
