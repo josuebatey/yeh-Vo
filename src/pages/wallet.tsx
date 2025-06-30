@@ -101,230 +101,233 @@ export function WalletPage() {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Header Section - Fixed */}
-      <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center space-x-4">
             <BackButton />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Wallet Management</h1>
-              <p className="text-muted-foreground">Manage your Algorand wallet and view transaction details</p>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                Wallet Management
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">
+                Manage your Algorand wallet and view transaction details
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Section - Scrollable */}
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Wallet Overview */}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Wallet Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="shadow-xl border-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 backdrop-blur-xl border-purple-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3 text-xl font-semibold">
+                <WalletIcon className="h-6 w-6" />
+                <span>Your Algorand Wallet</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center">
+                <div className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  {wallet?.balance?.toFixed(4) || '0.0000'} ALGO
+                </div>
+                <div className="text-xl text-slate-600 dark:text-slate-400 mb-3">
+                  ${algorandService.convertAlgoToUSD(wallet?.balance || 0)} USD
+                </div>
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                  TestNet
+                </Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
+                <Button onClick={handleRefreshBalance} disabled={isRefreshing} variant="outline" size="sm" className="h-10 border-slate-300 dark:border-slate-600">
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={handleFundWallet} disabled={isFunding} size="sm" className="h-10">
+                  {isFunding ? (
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <WalletIcon className="mr-2 h-4 w-4" />
+                  )}
+                  Fund from TestNet
+                </Button>
+                <Button onClick={openInExplorer} variant="outline" size="sm" className="h-10 border-slate-300 dark:border-slate-600">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Explorer
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Address Details */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/20">
+            <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <WalletIcon className="h-6 w-6" />
-                  <span>Your Algorand Wallet</span>
-                </CardTitle>
+                <CardTitle className="text-xl font-semibold">Wallet Address</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold mb-2">
-                    {wallet?.balance?.toFixed(4) || '0.0000'} ALGO
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Public Address</div>
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-xl font-mono text-sm break-all border border-slate-200 dark:border-slate-600">
+                    {wallet?.address || 'Loading...'}
                   </div>
-                  <div className="text-lg text-muted-foreground mb-2">
-                    ${algorandService.convertAlgoToUSD(wallet?.balance || 0)} USD
-                  </div>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                    TestNet
-                  </Badge>
+                  <Button onClick={copyAddress} variant="outline" size="sm" className="w-full h-10 border-slate-300 dark:border-slate-600">
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Address
+                  </Button>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-2">
-                  <Button onClick={handleRefreshBalance} disabled={isRefreshing} variant="outline" size="sm">
-                    <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                  <Button onClick={handleFundWallet} disabled={isFunding} size="sm">
-                    {isFunding ? (
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <WalletIcon className="mr-2 h-4 w-4" />
-                    )}
-                    Fund from TestNet
-                  </Button>
-                  <Button onClick={openInExplorer} variant="outline" size="sm">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Explorer
-                  </Button>
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Network Information</div>
+                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                      <div className="flex justify-between">
+                        <span>Network:</span>
+                        <span className="font-medium">Algorand TestNet</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Protocol:</span>
+                        <span className="font-medium">Algorand</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Address Type:</span>
+                        <span className="font-medium">Standard</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Address Details */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Wallet Address</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Public Address</div>
-                    <div className="p-3 bg-muted rounded-lg font-mono text-xs md:text-sm break-all">
-                      {wallet?.address || 'Loading...'}
-                    </div>
-                    <Button onClick={copyAddress} variant="outline" size="sm" className="w-full">
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Address
+          {/* Security & Recovery */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Security & Recovery</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Recovery Phrase</div>
+                    <Button
+                      onClick={handleShowMnemonic}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      {showMnemonic ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
-
-                  <div className="pt-4 border-t">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Network Information</div>
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        <div className="flex justify-between">
-                          <span>Network:</span>
-                          <span>Algorand TestNet</span>
+                  
+                  {showMnemonic ? (
+                    <div className="space-y-3">
+                      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                        <div className="text-sm text-red-500 font-medium mb-3">
+                          ⚠️ Keep this phrase secure and private!
                         </div>
-                        <div className="flex justify-between">
-                          <span>Protocol:</span>
-                          <span>Algorand</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Address Type:</span>
-                          <span>Standard</span>
+                        <div className="font-mono text-sm break-all bg-white dark:bg-slate-800 p-3 rounded-lg border border-red-500/20">
+                          {mnemonic || 'Loading...'}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Security & Recovery */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security & Recovery</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium">Recovery Phrase</div>
-                      <Button
-                        onClick={handleShowMnemonic}
-                        variant="ghost"
-                        size="sm"
-                      >
-                        {showMnemonic ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                      <Button onClick={copyMnemonic} variant="outline" size="sm" className="w-full h-10 border-slate-300 dark:border-slate-600">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy Recovery Phrase
                       </Button>
                     </div>
-                    
-                    {showMnemonic ? (
-                      <div className="space-y-2">
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                          <div className="text-sm text-red-500 font-medium mb-2">
-                            ⚠️ Keep this phrase secure and private!
-                          </div>
-                          <div className="font-mono text-xs md:text-sm break-all">
-                            {mnemonic || 'Loading...'}
-                          </div>
-                        </div>
-                        <Button onClick={copyMnemonic} variant="outline" size="sm" className="w-full">
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy Recovery Phrase
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
-                        Click the eye icon to reveal your recovery phrase
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Security Tips</div>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>• Never share your recovery phrase</li>
-                        <li>• Store it in a secure location</li>
-                        <li>• This is a TestNet wallet for demo purposes</li>
-                        <li>• Don't use real funds on TestNet</li>
-                      </ul>
+                  ) : (
+                    <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-xl text-sm text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
+                      Click the eye icon to reveal your recovery phrase
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
+                  )}
+                </div>
 
-          {/* Wallet Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col"
-                    onClick={() => navigate('/send')}
-                  >
-                    <Send className="h-6 w-6 mb-2" />
-                    <span className="text-xs md:text-sm">Send Payment</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col"
-                    onClick={() => navigate('/receive')}
-                  >
-                    <QrCode className="h-6 w-6 mb-2" />
-                    <span className="text-xs md:text-sm">Receive Payment</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col"
-                    onClick={() => navigate('/history')}
-                  >
-                    <History className="h-6 w-6 mb-2" />
-                    <span className="text-xs md:text-sm">Transaction History</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-20 flex-col"
-                    onClick={openInExplorer}
-                  >
-                    <ExternalLink className="h-6 w-6 mb-2" />
-                    <span className="text-xs md:text-sm">Block Explorer</span>
-                  </Button>
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-300">Security Tips</div>
+                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                      <li>• Never share your recovery phrase</li>
+                      <li>• Store it in a secure location</li>
+                      <li>• This is a TestNet wallet for demo purposes</li>
+                      <li>• Don't use real funds on TestNet</li>
+                    </ul>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         </div>
+
+        {/* Wallet Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                <Button 
+                  variant="outline" 
+                  className="h-24 flex-col space-y-2 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  onClick={() => navigate('/send')}
+                >
+                  <Send className="h-6 w-6" />
+                  <span className="text-sm">Send Payment</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-24 flex-col space-y-2 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  onClick={() => navigate('/receive')}
+                >
+                  <QrCode className="h-6 w-6" />
+                  <span className="text-sm">Receive Payment</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-24 flex-col space-y-2 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  onClick={() => navigate('/history')}
+                >
+                  <History className="h-6 w-6" />
+                  <span className="text-sm">Transaction History</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-24 flex-col space-y-2 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  onClick={openInExplorer}
+                >
+                  <ExternalLink className="h-6 w-6" />
+                  <span className="text-sm">Block Explorer</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   )
