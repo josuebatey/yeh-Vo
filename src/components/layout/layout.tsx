@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { Button } from '@/components/ui/button'
-import { Button } from '@/components/ui/bolt-badge'
+import { BoltBadge } from '@/components/ui/bolt-badge'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
