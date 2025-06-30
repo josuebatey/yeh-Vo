@@ -100,7 +100,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
           "text-xs text-muted-foreground text-center",
           collapsed && "hidden"
         )}>
-          Built with ❤️ <BoltBadge className='border' />
+          Built with ❤️ <BoltBadge className='border border-red-400' />
         </p>
       </div>
     </div>
