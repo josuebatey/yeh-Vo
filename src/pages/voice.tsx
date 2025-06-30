@@ -60,7 +60,7 @@ export function VoiceCommands() {
 
   const testTTS = async () => {
     try {
-      await voiceService.speak('Hello! VoicePay text to speech is working perfectly.')
+      await voiceService.speak('Hello! yehVo text to speech is working perfectly.')
       toast.success('Text-to-speech test completed!')
     } catch (error) {
       toast.error('Text-to-speech test failed')
@@ -96,204 +96,214 @@ export function VoiceCommands() {
   ]
 
   return (
-    <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <BackButton />
-          <h1 className="text-2xl md:text-3xl font-bold">Voice Commands</h1>
-          <p className="text-muted-foreground">Control VoicePay with your voice</p>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Header Section - Fixed */}
+      <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Voice Commands</h1>
+              <p className="text-muted-foreground">Control yehVo with your voice</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Voice Status */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Mic className="h-6 w-6" />
-              <span>Voice Control Status</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Speech Recognition:</span>
-                  <Badge variant={isSupported ? "default" : "destructive"}>
-                    {isSupported ? "Supported" : "Not Supported"}
-                  </Badge>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {isSupported 
-                    ? "Your browser supports voice commands"
-                    : "Voice commands require a modern browser with microphone access"
-                  }
-                </div>
-              </div>
-              {isSupported && (
-                <VoiceCommandButton onCommand={handleVoiceCommand} />
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={testTTS} variant="outline" className="flex-1">
-                <Volume2 className="mr-2 h-4 w-4" />
-                Test Text-to-Speech
-              </Button>
-              <VoiceSettingsDialog>
-                <Button variant="outline" className="flex-1">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Voice Settings
-                </Button>
-              </VoiceSettingsDialog>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Available Commands */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Commands</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {voiceCommands.map((cmd, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="p-4 border rounded-lg space-y-2"
-                  >
-                    <div className="font-mono text-sm bg-muted px-2 py-1 rounded break-words">
-                      {cmd.command}
+      {/* Content Section - Scrollable */}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Voice Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Mic className="h-6 w-6" />
+                  <span>Voice Control Status</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">Speech Recognition:</span>
+                      <Badge variant={isSupported ? "default" : "destructive"}>
+                        {isSupported ? "Supported" : "Not Supported"}
+                      </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {cmd.description}
+                      {isSupported 
+                        ? "Your browser supports voice commands"
+                        : "Voice commands require a modern browser with microphone access"
+                      }
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {cmd.action}
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Command History */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Commands</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {commandHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">No commands yet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Try using the voice command button above
-                  </p>
+                  </div>
+                  {isSupported && (
+                    <VoiceCommandButton onCommand={handleVoiceCommand} />
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <AnimatePresence>
-                    {commandHistory.map((item, index) => (
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={testTTS} variant="outline" className="flex-1">
+                    <Volume2 className="mr-2 h-4 w-4" />
+                    Test Text-to-Speech
+                  </Button>
+                  <VoiceSettingsDialog>
+                    <Button variant="outline" className="flex-1">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Voice Settings
+                    </Button>
+                  </VoiceSettingsDialog>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Available Commands */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Available Commands</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {voiceCommands.map((cmd, index) => (
                       <motion.div
-                        key={`${item.timestamp.getTime()}-${index}`}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className={`p-3 rounded-lg border ${
-                          item.success 
-                            ? 'border-green-500/20 bg-green-500/5' 
-                            : 'border-red-500/20 bg-red-500/5'
-                        }`}
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="p-4 border rounded-lg space-y-2"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium break-words">
-                              "{item.transcript}"
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {item.timestamp.toLocaleTimeString()}
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2 flex-shrink-0">
-                            {item.action && (
-                              <Badge variant="outline" className="text-xs">
-                                {item.action}
-                              </Badge>
-                            )}
-                            <Badge 
-                              variant={item.success ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              {item.success ? "Success" : "Failed"}
-                            </Badge>
-                          </div>
+                        <div className="font-mono text-sm bg-muted px-2 py-1 rounded break-words">
+                          {cmd.command}
                         </div>
+                        <div className="text-sm text-muted-foreground">
+                          {cmd.description}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {cmd.action}
+                        </Badge>
                       </motion.div>
                     ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-      {/* Tips & Help */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>Voice Command Tips</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <h4 className="font-semibold mb-3">Best Practices</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Speak clearly and at a normal pace</li>
-                  <li>• Use specific amounts and recipient names</li>
-                  <li>• Include payment channel if needed</li>
-                  <li>• Wait for the beep before speaking</li>
-                  <li>• Use a quiet environment for better recognition</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-3">Supported Formats</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• "Send [amount] to [recipient]"</li>
-                  <li>• "Send [amount] via [channel]"</li>
-                  <li>• "Check balance" or "How much do I have"</li>
-                  <li>• "Show history" or "View transactions"</li>
-                  <li>• "Invest [amount]"</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            {/* Command History */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Commands</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {commandHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold mb-2">No commands yet</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Try using the voice command button above
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <AnimatePresence>
+                        {commandHistory.map((item, index) => (
+                          <motion.div
+                            key={`${item.timestamp.getTime()}-${index}`}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className={`p-3 rounded-lg border ${
+                              item.success 
+                                ? 'border-green-500/20 bg-green-500/5' 
+                                : 'border-red-500/20 bg-red-500/5'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium break-words">
+                                  "{item.transcript}"
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {item.timestamp.toLocaleTimeString()}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 flex-shrink-0">
+                                {item.action && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {item.action}
+                                  </Badge>
+                                )}
+                                <Badge 
+                                  variant={item.success ? "default" : "destructive"}
+                                  className="text-xs"
+                                >
+                                  {item.success ? "Success" : "Failed"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Tips & Help */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Voice Command Tips</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <h4 className="font-semibold mb-3">Best Practices</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Speak clearly and at a normal pace</li>
+                      <li>• Use specific amounts and recipient names</li>
+                      <li>• Include payment channel if needed</li>
+                      <li>• Wait for the beep before speaking</li>
+                      <li>• Use a quiet environment for better recognition</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-3">Supported Formats</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• "Send [amount] to [recipient]"</li>
+                      <li>• "Send [amount] via [channel]"</li>
+                      <li>• "Check balance" or "How much do I have"</li>
+                      <li>• "Show history" or "View transactions"</li>
+                      <li>• "Invest [amount]"</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
     </div>
   )
 }

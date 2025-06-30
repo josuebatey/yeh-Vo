@@ -4,15 +4,21 @@ import { Mic, MicOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { voiceService } from '@/services/voiceService'
+import { cn } from '@/lib/utils'
 
 interface VoiceCommandButtonProps {
   onCommand: (transcript: string) => void
   className?: string
+  size?: 'sm' | 'default' | 'lg'
 }
 
-export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonProps) {
+export function VoiceCommandButton({ 
+  onCommand, 
+  className,
+  size = 'default'
+}: VoiceCommandButtonProps) {
   const [isListening, setIsListening] = useState(false)
-  const [isSupported] = useState(() => voiceService.isSupported())
+  const [isSupported] = useState(voiceService.isSupported())
 
   const handleVoiceCommand = async () => {
     if (!isSupported) {
@@ -29,11 +35,9 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
       setIsListening(true)
       const transcript = await voiceService.startListening()
       
-      if (transcript.trim()) {
+      if (transcript) {
         onCommand(transcript)
-        toast.success(`Voice command: "${transcript}"`)
-      } else {
-        toast.error('No speech detected. Please try again.')
+        toast.success(`Voice command received: "${transcript}"`)
       }
     } catch (error: any) {
       console.error('Voice command failed:', error)
@@ -47,17 +51,35 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
     return null
   }
 
+  const sizeClasses = {
+    sm: 'h-8 w-8',
+    default: 'h-10 w-10',
+    lg: 'h-12 w-12'
+  }
+
+  const iconSizes = {
+    sm: 'h-4 w-4',
+    default: 'h-5 w-5',
+    lg: 'h-6 w-6'
+  }
+
   return (
     <Button
       onClick={handleVoiceCommand}
-      variant={isListening ? "default" : "outline"}
-      size="sm"
-      className={`relative overflow-hidden transition-all duration-200 ${
-        isListening 
-          ? 'bg-red-500 hover:bg-red-600 text-white border-red-500' 
-          : 'hover:bg-accent'
-      } ${className}`}
       disabled={!isSupported}
+      className={cn(
+        // Circular design with consistent styling
+        "rounded-full flex items-center justify-center transition-all duration-200",
+        sizeClasses[size],
+        // Consistent background and colors for light/dark mode
+        isListening 
+          ? "bg-red-500 hover:bg-red-600 text-white shadow-lg animate-pulse" 
+          : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg",
+        // Mobile-specific adjustments
+        "md:gap-2 md:px-4 md:w-auto md:rounded-lg", // Desktop: pill shape with text
+        className
+      )}
+      title={isListening ? "Stop listening" : "Start voice command"}
     >
       <AnimatePresence mode="wait">
         {isListening ? (
@@ -66,11 +88,9 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="flex items-center space-x-2"
+            transition={{ duration: 0.2 }}
           >
-            <MicOff className="h-4 w-4 animate-pulse" />
-            {/* Hide text on mobile, show on desktop */}
-            <span className="hidden sm:inline">Listening...</span>
+            <MicOff className={iconSizes[size]} />
           </motion.div>
         ) : (
           <motion.div
@@ -78,24 +98,19 @@ export function VoiceCommandButton({ onCommand, className }: VoiceCommandButtonP
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="flex items-center space-x-2"
+            transition={{ duration: 0.2 }}
           >
-            <Mic className="h-4 w-4" />
-            {/* Hide text on mobile, show on desktop */}
-            <span className="hidden sm:inline">Voice Command</span>
+            <Mic className={iconSizes[size]} />
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Pulse animation when listening */}
-      {isListening && (
-        <motion.div
-          className="absolute inset-0 bg-red-400 rounded-md"
-          initial={{ scale: 1, opacity: 0.3 }}
-          animate={{ scale: 1.05, opacity: 0 }}
-          transition={{ duration: 1, repeat: Infinity }}
-        />
-      )}
+      
+      {/* Text only visible on desktop */}
+      <AnimatePresence>
+        <span className="hidden md:inline-block text-sm font-medium ml-1">
+          {isListening ? 'Listening...' : 'Voice Command'}
+        </span>
+      </AnimatePresence>
     </Button>
   )
 }
