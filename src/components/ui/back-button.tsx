@@ -10,7 +10,7 @@ export function BackButton() {
       variant="ghost"
       size="sm"
       onClick={() => navigate(-1)}
-      className="mb-4 h-8 w-8 rounded-full p-0"
+      className="mb-4 h-8 w-8 rounded-full p-0 hover:bg-muted"
     >
       <ArrowLeft className="h-4 w-4" />
     </Button>

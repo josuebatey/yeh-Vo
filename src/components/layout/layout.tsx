@@ -13,10 +13,15 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="h-screen flex overflow-hidden">
-      {/* Fixed Sidebar */}
+      {/* Fixed Sidebar - Always positioned fixed on desktop */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 transform transition-all duration-200 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0",
+        // Mobile: slide in/out overlay
+        "fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out",
+        // Desktop: always visible, fixed position
+        "md:fixed md:z-40",
+        // Mobile visibility
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        // Desktop width
         sidebarCollapsed ? "md:w-16" : "md:w-64"
       )}>
         <Sidebar 
@@ -25,7 +30,7 @@ export function Layout({ children }: LayoutProps) {
         />
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/50 md:hidden" 
@@ -33,17 +38,16 @@ export function Layout({ children }: LayoutProps) {
         />
       )}
 
-      {/* Main content area - fixed width calculation */}
+      {/* Main content area - with proper margin for fixed sidebar */}
       <div className={cn(
-        "flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-200",
-        "md:ml-0" // Remove any margin-left since sidebar is positioned
-      )} style={{
-        // Ensure main content takes remaining space after sidebar
-        width: `calc(100% - ${sidebarCollapsed ? '4rem' : '16rem'})`,
-        marginLeft: 0
-      }}>
+        "flex-1 flex flex-col min-w-0 overflow-hidden",
+        // Desktop: add left margin to account for fixed sidebar
+        sidebarCollapsed ? "md:ml-16" : "md:ml-64",
+        // Mobile: no margin (sidebar is overlay)
+        "ml-0"
+      )}>
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-background">
           <div className="h-full min-h-0 w-full">
             {children}
           </div>

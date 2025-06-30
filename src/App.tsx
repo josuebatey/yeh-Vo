@@ -91,10 +91,10 @@ function App() {
           <AppRoutes />
           <Toaster richColors />
           
-          {/* Built on Bolt Badge */}
+          {/* Built with ❤️ on Bolt.new Badge */}
           <div className="fixed bottom-4 right-4 z-50">
             <div className="bg-black/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium">
-              Built on <span className="text-purple-400">Bolt</span>
+              Built with <span className="text-red-500">❤️</span> on <span className="text-purple-400">Bolt.new</span>
             </div>
           </div>
         </Router>

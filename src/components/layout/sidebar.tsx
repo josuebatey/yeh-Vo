@@ -122,7 +122,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           "text-xs text-muted-foreground text-center",
           collapsed && "hidden"
         )}>
-          Built on <span className="font-semibold">Bolt</span>
+          Built with ❤️ on <span className="font-semibold text-purple-500">Bolt.new</span>
         </p>
       </div>
     </div>

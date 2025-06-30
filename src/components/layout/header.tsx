@@ -5,8 +5,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Bell, Menu, LogOut } from 'lucide-react'
+import { Bell, Menu, LogOut, User } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useWalletStore } from '@/stores/walletStore'
 import { LanguageSelector } from '@/components/ui/language-selector'
@@ -23,7 +25,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { wallet } = useWalletStore()
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-6 flex-shrink-0">
       <div className="flex items-center space-x-4">
         <Button variant="ghost" size="sm" onClick={onMenuClick} className="md:hidden">
           <Menu className="h-5 w-5" />
@@ -59,6 +61,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Bell className="h-4 w-4" />
         </Button>
 
+        {/* Profile Dropdown with Name and Email */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -70,7 +73,23 @@ export function Header({ onMenuClick }: HeaderProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
+          <DropdownMenuContent className="w-64" align="end">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {profile?.full_name || 'User'}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t('common.logout')}</span>

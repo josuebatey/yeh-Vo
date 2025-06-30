@@ -369,11 +369,25 @@ button:focus-visible {
   }
 }
 
+/* Prevent layout shifting - CRITICAL FIX */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* Ensure all pages maintain consistent sizing */
 .page-container {
   min-height: 0;
   height: 100%;
   overflow: auto;
+  width: 100%;
 }
 
 /* Prevent horizontal overflow */
@@ -381,48 +395,12 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
-html, body {
-  overflow-x: hidden;
-}
-
-/* Fixed layout to prevent sidebar movement */
+/* Fixed layout to prevent sidebar movement - CRITICAL */
 .layout-container {
   display: flex;
   height: 100vh;
   overflow: hidden;
-}
-
-.sidebar-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 50;
-  transition: width 0.2s ease;
-}
-
-.main-content-fixed {
-  flex: 1;
-  margin-left: 16rem; /* 64 * 0.25rem = 16rem for w-64 */
-  transition: margin-left 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.main-content-fixed.collapsed {
-  margin-left: 4rem; /* 16 * 0.25rem = 4rem for w-16 */
-}
-
-@media (max-width: 768px) {
-  .main-content-fixed {
-    margin-left: 0;
-  }
-  
-  .main-content-fixed.collapsed {
-    margin-left: 0;
-  }
+  width: 100%;
 }
 
 /* Responsive text sizing */
@@ -435,5 +413,19 @@ html, body {
 @media (min-width: 641px) {
   .text-responsive {
     font-size: 1rem;
+  }
+}
+
+/* Ensure proper spacing and prevent content overflow */
+.main-content {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Fix for mobile viewport issues */
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
   }
 }
