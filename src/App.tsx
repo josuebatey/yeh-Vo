@@ -81,7 +81,7 @@ function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
-      <span className="object-fill flex justify-end fixed bottom-2 right-2 z-index-9999 backgrond-black">
+      <span className="object-fill flex justify-end fixed bottom-2 right-2 z-index-9999">
           <img className="h-10 w-20 mt-2" src="../../public/bolt-bagde.svg" />
       </span>
     </>
