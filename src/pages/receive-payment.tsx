@@ -34,14 +34,9 @@ export function ReceivePayment() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initialize QR code
+  // Initialize QR code only once when component mounts
   useEffect(() => {
-    if (!wallet?.address || !qrCodeRef.current) return
-
-    // Clear any existing QR code
-    if (qrCodeRef.current) {
-      qrCodeRef.current.innerHTML = ''
-    }
+    if (!wallet?.address || !qrCodeRef.current || qrCodeInstanceRef.current) return
 
     const qrSize = isMobile ? 240 : 280
 
@@ -81,24 +76,47 @@ export function ReceivePayment() {
 
       qrCodeInstanceRef.current = qrCode
       qrCode.append(qrCodeRef.current)
-      
-      // Update with actual data
-      updateQRCodeData()
+      setQrGenerated(true)
       
     } catch (error) {
       console.error('Failed to initialize QR code:', error)
       toast.error('Failed to generate QR code')
     }
 
-    // Cleanup function
+    // Cleanup function - only runs when component unmounts
     return () => {
-      if (qrCodeRef.current) {
-        qrCodeRef.current.innerHTML = ''
+      if (qrCodeInstanceRef.current && qrCodeRef.current) {
+        try {
+          // Safely remove the QR code element if it exists
+          const qrElement = qrCodeRef.current.firstChild
+          if (qrElement && qrCodeRef.current.contains(qrElement)) {
+            qrCodeRef.current.removeChild(qrElement)
+          }
+        } catch (error) {
+          // Silently handle removal errors
+          console.warn('QR code cleanup warning:', error)
+        }
+        qrCodeInstanceRef.current = null
+        setQrGenerated(false)
       }
-      qrCodeInstanceRef.current = null
-      setQrGenerated(false)
     }
-  }, [wallet?.address, isMobile])
+  }, [wallet?.address]) // Only depend on wallet address, not isMobile
+
+  // Update QR code size when mobile state changes
+  useEffect(() => {
+    if (!qrCodeInstanceRef.current) return
+
+    const qrSize = isMobile ? 240 : 280
+    
+    try {
+      qrCodeInstanceRef.current.update({
+        width: qrSize,
+        height: qrSize
+      })
+    } catch (error) {
+      console.error('Failed to update QR code size:', error)
+    }
+  }, [isMobile])
 
   // Update QR code data when dependencies change
   const updateQRCodeData = useCallback(() => {
@@ -124,8 +142,6 @@ export function ReceivePayment() {
       qrCodeInstanceRef.current.update({
         data: deepLinkUrl
       })
-      
-      setQrGenerated(true)
       
     } catch (error) {
       console.error('QR code update failed:', error)
