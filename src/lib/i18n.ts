@@ -9,14 +9,14 @@ const resources = {
     translation: {
       // Auth Page
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'Send and receive payments with your voice',
-        tagline: 'The future of voice-powered payments',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'Cross-border payments powered by blockchain',
+        tagline: 'The future of global money transfers',
         getStarted: 'Get Started',
-        description: 'Create an account or sign in to start using VoicePay',
+        description: 'Create an account or sign in to start using yehVo',
         loginDescription: 'Welcome back! Please sign in to your account.',
-        signupDescription: 'Create your account to get started with VoicePay.',
+        signupDescription: 'Create your account to get started with yehVo.',
         signIn: 'Sign In',
         signUp: 'Sign Up',
         email: 'Email',
@@ -107,7 +107,7 @@ const resources = {
       // Dashboard
       dashboard: {
         title: 'Dashboard',
-        subtitle: 'Welcome back to VoicePay',
+        subtitle: 'Welcome back to yehVo',
         walletBalance: 'Wallet Balance',
         thisMonth: 'This Month',
         totalSent: 'Total Sent',
@@ -130,14 +130,14 @@ const resources = {
   es: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'Envía y recibe pagos con tu voz',
-        tagline: 'El futuro de los pagos por voz',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'Pagos transfronterizos impulsados por blockchain',
+        tagline: 'El futuro de las transferencias de dinero globales',
         getStarted: 'Comenzar',
-        description: 'Crea una cuenta o inicia sesión para comenzar a usar VoicePay',
+        description: 'Crea una cuenta o inicia sesión para comenzar a usar yehVo',
         loginDescription: '¡Bienvenido de vuelta! Por favor inicia sesión en tu cuenta.',
-        signupDescription: 'Crea tu cuenta para comenzar con VoicePay.',
+        signupDescription: 'Crea tu cuenta para comenzar con yehVo.',
         signIn: 'Iniciar Sesión',
         signUp: 'Registrarse',
         email: 'Correo Electrónico',
@@ -208,14 +208,14 @@ const resources = {
   fr: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'Envoyez et recevez des paiements avec votre voix',
-        tagline: 'L\'avenir des paiements vocaux',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'Paiements transfrontaliers alimentés par la blockchain',
+        tagline: 'L\'avenir des transferts d\'argent mondiaux',
         getStarted: 'Commencer',
-        description: 'Créez un compte ou connectez-vous pour commencer à utiliser VoicePay',
+        description: 'Créez un compte ou connectez-vous pour commencer à utiliser yehVo',
         loginDescription: 'Bon retour ! Veuillez vous connecter à votre compte.',
-        signupDescription: 'Créez votre compte pour commencer avec VoicePay.',
+        signupDescription: 'Créez votre compte pour commencer avec yehVo.',
         signIn: 'Se Connecter',
         signUp: "S'inscrire",
         email: 'Email',
@@ -286,14 +286,14 @@ const resources = {
   pt: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'Envie e receba pagamentos com sua voz',
-        tagline: 'O futuro dos pagamentos por voz',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'Pagamentos transfronteiriços alimentados por blockchain',
+        tagline: 'O futuro das transferências de dinheiro globais',
         getStarted: 'Começar',
-        description: 'Crie uma conta ou faça login para começar a usar o VoicePay',
+        description: 'Crie uma conta ou faça login para começar a usar o yehVo',
         loginDescription: 'Bem-vindo de volta! Por favor, faça login em sua conta.',
-        signupDescription: 'Crie sua conta para começar com o VoicePay.',
+        signupDescription: 'Crie sua conta para começar com o yehVo.',
         signIn: 'Entrar',
         signUp: 'Cadastrar',
         email: 'Email',
@@ -364,14 +364,14 @@ const resources = {
   ar: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'أرسل واستقبل المدفوعات بصوتك',
-        tagline: 'مستقبل المدفوعات الصوتية',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'المدفوعات عبر الحدود مدعومة بالبلوك تشين',
+        tagline: 'مستقبل التحويلات المالية العالمية',
         getStarted: 'ابدأ',
-        description: 'أنشئ حساباً أو سجل دخولك لبدء استخدام VoicePay',
+        description: 'أنشئ حساباً أو سجل دخولك لبدء استخدام yehVo',
         loginDescription: 'مرحباً بعودتك! يرجى تسجيل الدخول إلى حسابك.',
-        signupDescription: 'أنشئ حسابك للبدء مع VoicePay.',
+        signupDescription: 'أنشئ حسابك للبدء مع yehVo.',
         signIn: 'تسجيل الدخول',
         signUp: 'إنشاء حساب',
         email: 'البريد الإلكتروني',
@@ -431,14 +431,14 @@ const resources = {
   sw: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: 'Tuma na pokea malipo kwa sauti yako',
-        tagline: 'Mustakabali wa malipo ya sauti',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: 'Malipo ya kimataifa yanayoendeshwa na blockchain',
+        tagline: 'Mustakabali wa uhamisho wa fedha duniani',
         getStarted: 'Anza',
-        description: 'Fungua akaunti au ingia ili kuanza kutumia VoicePay',
+        description: 'Fungua akaunti au ingia ili kuanza kutumia yehVo',
         loginDescription: 'Karibu tena! Tafadhali ingia kwenye akaunti yako.',
-        signupDescription: 'Fungua akaunti yako ili kuanza na VoicePay.',
+        signupDescription: 'Fungua akaunti yako ili kuanza na yehVo.',
         signIn: 'Ingia',
         signUp: 'Jisajili',
         email: 'Barua pepe',
@@ -498,14 +498,14 @@ const resources = {
   zh: {
     translation: {
       auth: {
-        appName: 'VoicePay',
-        title: 'VoicePay',
-        subtitle: '用您的声音发送和接收付款',
-        tagline: '语音支付的未来',
+        appName: 'yehVo',
+        title: 'yehVo',
+        subtitle: '区块链驱动的跨境支付',
+        tagline: '全球资金转移的未来',
         getStarted: '开始使用',
-        description: '创建账户或登录以开始使用VoicePay',
+        description: '创建账户或登录以开始使用yehVo',
         loginDescription: '欢迎回来！请登录您的账户。',
-        signupDescription: '创建您的账户以开始使用VoicePay。',
+        signupDescription: '创建您的账户以开始使用yehVo。',
         signIn: '登录',
         signUp: '注册',
         email: '邮箱',

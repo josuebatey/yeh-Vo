@@ -10,8 +10,9 @@ import {
   Wallet,
   Mic,
   Bot,
-  ChevronLeft,
-  ChevronRight
+  PanelLeftClose,
+  PanelLeftOpen,
+  Globe2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -39,11 +40,11 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
 
   return (
     <div className={cn(
-      "flex h-full flex-col bg-card border-r transition-all duration-200",
+      "flex h-full flex-col bg-card border-r transition-all duration-200 flex-shrink-0",
       collapsed ? "w-16" : "w-64"
     )}>
       <div className={cn(
-        "flex h-16 items-center border-b",
+        "flex h-16 items-center border-b flex-shrink-0",
         collapsed ? "justify-center px-2" : "justify-between px-6"
       )}>
         {!collapsed && (
@@ -52,9 +53,17 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center space-x-2"
           >
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600" />
-            <span className="text-xl font-bold">VoicePay</span>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+              <Globe2 className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-bold">yehVo</span>
           </motion.div>
+        )}
+        
+        {collapsed && (
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+            <Globe2 className="h-5 w-5 text-white" />
+          </div>
         )}
         
         <Button
@@ -63,13 +72,14 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
           onClick={onToggleCollapse}
           className={cn(
             "h-8 w-8 p-0 hidden md:flex",
-            collapsed && "mx-auto"
+            collapsed && "mx-auto mt-2"
           )}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <PanelLeftOpen className="h-4 w-4" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <PanelLeftClose className="h-4 w-4" />
           )}
         </Button>
       </div>
@@ -105,7 +115,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       </nav>
 
       <div className={cn(
-        "p-4 border-t",
+        "p-4 border-t flex-shrink-0",
         collapsed && "px-2"
       )}>
         <p className={cn(

@@ -91,7 +91,7 @@ export function TransactionHistory() {
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6 w-full max-w-6xl mx-auto">
         <BackButton />
         <h1 className="text-2xl md:text-3xl font-bold">Transaction History</h1>
         <div className="space-y-4">
@@ -112,7 +112,7 @@ export function TransactionHistory() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 w-full max-w-6xl mx-auto min-h-0">
       <div>
         <BackButton />
         <h1 className="text-2xl md:text-3xl font-bold">Transaction History</h1>
