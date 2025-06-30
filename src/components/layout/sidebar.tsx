@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import {BoltBadge} from '@components/ui/bolt-badge'
+import {BoltBadge} from '../ui/bolt-badge'
 
 const navigation = [
   { name: 'dashboard', href: '/', icon: Home },
