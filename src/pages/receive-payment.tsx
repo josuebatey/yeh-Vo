@@ -19,7 +19,6 @@ export function ReceivePayment() {
   const [isMobile, setIsMobile] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
   const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
-  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Detect mobile device
   useEffect(() => {
@@ -35,56 +34,23 @@ export function ReceivePayment() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Safe DOM cleanup function
-  const safeCleanupQRCode = useCallback(() => {
-    if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current)
-      cleanupTimeoutRef.current = null
+  // Initialize QR code
+  useEffect(() => {
+    if (!wallet?.address || !qrCodeRef.current) return
+
+    // Clear any existing QR code
+    if (qrCodeRef.current) {
+      qrCodeRef.current.innerHTML = ''
     }
 
-    // Use a timeout to ensure React has finished its reconciliation
-    cleanupTimeoutRef.current = setTimeout(() => {
-      try {
-        if (qrCodeRef.current) {
-          // Create a new container to replace the old one
-          const parent = qrCodeRef.current.parentNode
-          if (parent) {
-            const newContainer = document.createElement('div')
-            newContainer.className = qrCodeRef.current.className
-            newContainer.style.cssText = qrCodeRef.current.style.cssText
-            
-            // Replace the old container with the new one
-            parent.replaceChild(newContainer, qrCodeRef.current)
-            
-            // Update the ref to point to the new container
-            if (qrCodeRef.current) {
-              Object.defineProperty(qrCodeRef, 'current', {
-                value: newContainer,
-                writable: true
-              })
-            }
-          }
-        }
-        
-        // Reset state
-        qrCodeInstanceRef.current = null
-        setQrGenerated(false)
-      } catch (error) {
-        console.warn('QR cleanup warning (non-critical):', error)
-      }
-    }, 100)
-  }, [])
+    const qrSize = isMobile ? 240 : 280
 
-  // Initialize QR code instance once
-  useEffect(() => {
-    if (!qrCodeInstanceRef.current && qrCodeRef.current && wallet?.address) {
-      const qrSize = isMobile ? 240 : 280
-
-      const qrOptions = {
+    try {
+      const qrCode = new QRCodeStyling({
         width: qrSize,
         height: qrSize,
         type: 'svg' as const,
-        data: 'https://example.com', // Initial placeholder data
+        data: 'https://example.com', // Initial placeholder
         margin: 8,
         qrOptions: {
           mode: 'Byte' as const,
@@ -111,38 +77,38 @@ export function ReceivePayment() {
           color: '#7c3aed',
           type: 'dot' as const
         }
-      }
+      })
 
-      try {
-        const qrCode = new QRCodeStyling(qrOptions)
-        qrCodeInstanceRef.current = qrCode
-        
-        // Only append if the container is still valid and empty
-        if (qrCodeRef.current && qrCodeRef.current.children.length === 0) {
-          qrCode.append(qrCodeRef.current)
-        }
-      } catch (error) {
-        console.error('Failed to initialize QR code:', error)
-      }
+      qrCodeInstanceRef.current = qrCode
+      qrCode.append(qrCodeRef.current)
+      
+      // Update with actual data
+      updateQRCodeData()
+      
+    } catch (error) {
+      console.error('Failed to initialize QR code:', error)
+      toast.error('Failed to generate QR code')
     }
 
-    // Cleanup function with safe DOM manipulation
+    // Cleanup function
     return () => {
-      safeCleanupQRCode()
+      if (qrCodeRef.current) {
+        qrCodeRef.current.innerHTML = ''
+      }
+      qrCodeInstanceRef.current = null
+      setQrGenerated(false)
     }
-  }, [isMobile, wallet?.address, safeCleanupQRCode])
+  }, [wallet?.address, isMobile])
 
   // Update QR code data when dependencies change
-  const updateQRCode = useCallback(() => {
+  const updateQRCodeData = useCallback(() => {
     if (!wallet?.address || !qrCodeInstanceRef.current) return
 
     try {
-      // Get current domain - works for both localhost and production
       const protocol = window.location.protocol
       const host = window.location.host
       const baseUrl = `${protocol}//${host}`
       
-      // Create comprehensive deep link URL
       const params = new URLSearchParams()
       params.set('action', 'send')
       params.set('to', wallet.address)
@@ -153,30 +119,26 @@ export function ReceivePayment() {
         params.set('note', note.trim())
       }
       
-      // Create the full deep link URL
       const deepLinkUrl = `${baseUrl}/send?${params.toString()}`
       
-      console.log('Updated QR Code URL:', deepLinkUrl)
-
-      // Update the existing QR code instance
       qrCodeInstanceRef.current.update({
         data: deepLinkUrl
       })
       
       setQrGenerated(true)
-      toast.success('QR code updated with payment link!')
+      
     } catch (error) {
       console.error('QR code update failed:', error)
       toast.error('Failed to update QR code')
     }
   }, [wallet?.address, amount, note])
 
-  // Update QR code when dependencies change
+  // Update QR code when amount or note changes
   useEffect(() => {
-    if (wallet?.address && qrCodeInstanceRef.current) {
-      updateQRCode()
+    if (qrCodeInstanceRef.current && wallet?.address) {
+      updateQRCodeData()
     }
-  }, [updateQRCode, wallet?.address])
+  }, [amount, note, updateQRCodeData])
 
   const copyAddress = async () => {
     if (!wallet?.address) return
@@ -202,10 +164,7 @@ export function ReceivePayment() {
         } catch (err) {
           toast.error('Failed to copy address')
         } finally {
-          // Ensure cleanup
-          if (document.body.contains(textArea)) {
-            document.body.removeChild(textArea)
-          }
+          document.body.removeChild(textArea)
         }
       }
     } catch (error) {
@@ -253,10 +212,7 @@ export function ReceivePayment() {
         } catch (err) {
           toast.error('Failed to copy payment link')
         } finally {
-          // Ensure cleanup
-          if (document.body.contains(textArea)) {
-            document.body.removeChild(textArea)
-          }
+          document.body.removeChild(textArea)
         }
       }
     } catch (error) {
@@ -334,7 +290,6 @@ export function ReceivePayment() {
     }
 
     try {
-      // Use QRCodeStyling's built-in download method
       qrCodeInstanceRef.current.download({
         name: `voicepay-qr-${Date.now()}`,
         extension: 'png'
@@ -347,7 +302,8 @@ export function ReceivePayment() {
   }
 
   const refreshQRCode = () => {
-    updateQRCode()
+    updateQRCodeData()
+    toast.success('QR code refreshed!')
   }
 
   const openInNewTab = () => {
@@ -399,10 +355,11 @@ export function ReceivePayment() {
               <div className="flex justify-center w-full">
                 <div 
                   ref={qrCodeRef}
-                  className="bg-white p-3 rounded-lg shadow-sm border flex items-center justify-center flex-shrink-0"
+                  className="bg-white p-3 rounded-lg shadow-sm border flex items-center justify-center"
                   style={{ 
                     width: isMobile ? '240px' : '280px', 
-                    height: isMobile ? '240px' : '280px' 
+                    height: isMobile ? '240px' : '280px',
+                    minHeight: isMobile ? '240px' : '280px'
                   }}
                 >
                   {!qrGenerated && (
