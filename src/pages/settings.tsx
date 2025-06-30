@@ -208,411 +208,416 @@ export function Settings() {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Header Section - Fixed */}
-      <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center space-x-4">
             <BackButton />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
-              <p className="text-muted-foreground">Manage your account and preferences</p>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                Settings
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">
+                Manage your account and preferences
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Section - Scrollable */}
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Profile Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="lg:col-span-2"
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <User className="h-5 w-5" />
-                    <span>Profile Information</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={profileData.avatar_url} />
-                      <AvatarFallback className="text-lg">
-                        {profileData.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-2 text-center sm:text-left">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                        id="avatar-upload"
-                      />
-                      <Button variant="outline" size="sm" asChild>
-                        <label htmlFor="avatar-upload" className="cursor-pointer">
-                          <Upload className="mr-2 h-4 w-4" />
-                          Change Photo
-                        </label>
-                      </Button>
-                      <div className="text-sm text-muted-foreground">
-                        JPG, GIF or PNG. 1MB max.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="full-name">Full Name</Label>
-                      <Input
-                        id="full-name"
-                        value={profileData.full_name}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        value={user?.email || ''}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Phone Verification */}
-                  <div className="space-y-2">
-                    <Label>Phone Number</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        value={profileData.phone_number || 'Not verified'}
-                        disabled
-                        className="bg-muted flex-1"
-                      />
-                      {profileData.phone_verified ? (
-                        <Badge variant="default" className="bg-green-500">
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Verified
-                        </Badge>
-                      ) : (
-                        <Button 
-                          onClick={() => setShowPhoneDialog(true)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Phone className="mr-2 h-4 w-4" />
-                          Verify Phone
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Bank Account */}
-                  <div className="space-y-2">
-                    <Label>Bank Account</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        value={profileData.bank_account_info ? 'Bank account linked' : 'Not linked'}
-                        disabled
-                        className="bg-muted flex-1"
-                      />
-                      {profileData.bank_account_info ? (
-                        <Badge variant="default" className="bg-green-500">
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Linked
-                        </Badge>
-                      ) : (
-                        <Button 
-                          onClick={() => setShowBankDialog(true)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          Link Bank
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <Button onClick={handleUpdateProfile} disabled={isLoading}>
-                    {isLoading ? 'Updating...' : 'Update Profile'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Account Status */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <CreditCard className="h-5 w-5" />
-                    <span>Account Status</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <Badge variant="secondary" className="mb-2">
-                      Free Plan
-                    </Badge>
-                    <div className="text-sm text-muted-foreground">
-                      10 ALGO/day sending limit
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Daily Limit:</span>
-                      <span>10 ALGO</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Used Today:</span>
-                      <span>0 ALGO</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Phone Verified:</span>
-                      <span>{profileData.phone_verified ? '✅' : '❌'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Bank Linked:</span>
-                      <span>{profileData.bank_account_info ? '✅' : '❌'}</span>
-                    </div>
-                  </div>
-
-                  <Button onClick={upgradeToProPLAN} className="w-full">
-                    Upgrade to Pro
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Notifications */}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Profile Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            className="lg:col-span-2"
           >
-            <Card>
+            <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Bell className="h-5 w-5" />
-                  <span>Notifications</span>
+                <CardTitle className="flex items-center space-x-3 text-xl font-semibold">
+                  <User className="h-6 w-6" />
+                  <span>Profile Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Email Notifications</div>
-                      <div className="text-sm text-muted-foreground">
-                        Receive transaction updates via email
-                      </div>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.email_notifications}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings(prev => ({ ...prev, email_notifications: checked }))
-                      }
+              <CardContent className="space-y-6">
+                <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={profileData.avatar_url} />
+                    <AvatarFallback className="text-xl">
+                      {profileData.full_name?.[0] || user?.email?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-3 text-center sm:text-left">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      id="avatar-upload"
                     />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Push Notifications</div>
-                      <div className="text-sm text-muted-foreground">
-                        Get instant payment alerts
-                      </div>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.push_notifications}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings(prev => ({ ...prev, push_notifications: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Voice Feedback</div>
-                      <div className="text-sm text-muted-foreground">
-                        Hear spoken confirmations
-                      </div>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.voice_feedback}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings(prev => ({ ...prev, voice_feedback: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Transaction Alerts</div>
-                      <div className="text-sm text-muted-foreground">
-                        Notifications for all transactions
-                      </div>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.transaction_alerts}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings(prev => ({ ...prev, transaction_alerts: checked }))
-                      }
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Security */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5" />
-                  <span>Security & Privacy</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Two-Factor Authentication</div>
-                      <div className="text-sm text-muted-foreground">
-                        Add an extra layer of security
-                      </div>
-                    </div>
-                    <Switch
-                      checked={securitySettings.two_factor_auth}
-                      onCheckedChange={(checked) => 
-                        setSecuritySettings(prev => ({ ...prev, two_factor_auth: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Biometric Authentication</div>
-                      <div className="text-sm text-muted-foreground">
-                        Use fingerprint or face unlock
-                      </div>
-                    </div>
-                    <Switch
-                      checked={securitySettings.biometric_auth}
-                      onCheckedChange={(checked) => 
-                        setSecuritySettings(prev => ({ ...prev, biometric_auth: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Auto-Lock</div>
-                      <div className="text-sm text-muted-foreground">
-                        Lock app when inactive
-                      </div>
-                    </div>
-                    <Switch
-                      checked={securitySettings.auto_lock}
-                      onCheckedChange={(checked) => 
-                        setSecuritySettings(prev => ({ ...prev, auto_lock: checked }))
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full">
-                      Change Password
+                    <Button variant="outline" size="sm" asChild className="border-slate-300 dark:border-slate-600">
+                      <label htmlFor="avatar-upload" className="cursor-pointer">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Change Photo
+                      </label>
                     </Button>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      JPG, GIF or PNG. 1MB max.
+                    </div>
                   </div>
                 </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="full-name" className="text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</Label>
+                    <Input
+                      id="full-name"
+                      value={profileData.full_name}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, full_name: e.target.value }))}
+                      placeholder="Enter your full name"
+                      className="h-12 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</Label>
+                    <Input
+                      id="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Verification */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Phone Number</Label>
+                  <div className="flex items-center space-x-3">
+                    <Input
+                      value={profileData.phone_number || 'Not verified'}
+                      disabled
+                      className="flex-1 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                    />
+                    {profileData.phone_verified ? (
+                      <Badge variant="default" className="bg-green-500 text-white">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Button 
+                        onClick={() => setShowPhoneDialog(true)}
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-300 dark:border-slate-600"
+                      >
+                        <Phone className="mr-2 h-4 w-4" />
+                        Verify Phone
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bank Account */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Bank Account</Label>
+                  <div className="flex items-center space-x-3">
+                    <Input
+                      value={profileData.bank_account_info ? 'Bank account linked' : 'Not linked'}
+                      disabled
+                      className="flex-1 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                    />
+                    {profileData.bank_account_info ? (
+                      <Badge variant="default" className="bg-green-500 text-white">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Linked
+                      </Badge>
+                    ) : (
+                      <Button 
+                        onClick={() => setShowBankDialog(true)}
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-300 dark:border-slate-600"
+                      >
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Link Bank
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <Button onClick={handleUpdateProfile} disabled={isLoading} className="h-12">
+                  {isLoading ? 'Updating...' : 'Update Profile'}
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Account Actions */}
+          {/* Account Status */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.1 }}
           >
-            <Card>
+            <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle>Account Actions</CardTitle>
+                <CardTitle className="flex items-center space-x-3 text-xl font-semibold">
+                  <CreditCard className="h-6 w-6" />
+                  <span>Account Status</span>
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={handleExportData}
-                    disabled={isLoading}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Data
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={handleDownloadTransactions}
-                    disabled={isLoading}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Download Transactions
-                  </Button>
-                  <Button variant="destructive" onClick={handleSignOut} className="flex-1">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </Button>
-                </div>
-                
-                <Separator />
-                
+              <CardContent className="space-y-6">
                 <div className="text-center">
-                  <Button variant="ghost" className="text-destructive">
-                    Delete Account
-                  </Button>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    This action cannot be undone
+                  <Badge variant="secondary" className="mb-3 text-sm">
+                    Free Plan
+                  </Badge>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    10 ALGO/day sending limit
                   </div>
                 </div>
+
+                <Separator />
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Daily Limit:</span>
+                    <span className="font-medium">10 ALGO</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Used Today:</span>
+                    <span className="font-medium">0 ALGO</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Phone Verified:</span>
+                    <span>{profileData.phone_verified ? '✅' : '❌'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Bank Linked:</span>
+                    <span>{profileData.bank_account_info ? '✅' : '❌'}</span>
+                  </div>
+                </div>
+
+                <Button onClick={upgradeToProPLAN} className="w-full h-12">
+                  Upgrade to Pro
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
-
-          {/* Dialogs */}
-          <PhoneVerificationDialog
-            open={showPhoneDialog}
-            onOpenChange={setShowPhoneDialog}
-            onVerified={handlePhoneVerified}
-          />
-
-          <BankLinkingDialog
-            open={showBankDialog}
-            onOpenChange={setShowBankDialog}
-            onLinked={handleBankLinked}
-          />
         </div>
+
+        {/* Notifications */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3 text-xl font-semibold">
+                <Bell className="h-6 w-6" />
+                <span>Notifications</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Email Notifications</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Receive transaction updates via email
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_notifications}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_notifications: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Push Notifications</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Get instant payment alerts
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.push_notifications}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, push_notifications: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Voice Feedback</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Hear spoken confirmations
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.voice_feedback}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, voice_feedback: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Transaction Alerts</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Notifications for all transactions
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.transaction_alerts}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, transaction_alerts: checked }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Security */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3 text-xl font-semibold">
+                <Shield className="h-6 w-6" />
+                <span>Security & Privacy</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Two-Factor Authentication</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Add an extra layer of security
+                    </div>
+                  </div>
+                  <Switch
+                    checked={securitySettings.two_factor_auth}
+                    onCheckedChange={(checked) => 
+                      setSecuritySettings(prev => ({ ...prev, two_factor_auth: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Biometric Authentication</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Use fingerprint or face unlock
+                    </div>
+                  </div>
+                  <Switch
+                    checked={securitySettings.biometric_auth}
+                    onCheckedChange={(checked) => 
+                      setSecuritySettings(prev => ({ ...prev, biometric_auth: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-200">Auto-Lock</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Lock app when inactive
+                    </div>
+                  </div>
+                  <Switch
+                    checked={securitySettings.auto_lock}
+                    onCheckedChange={(checked) => 
+                      setSecuritySettings(prev => ({ ...prev, auto_lock: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full h-12 border-slate-300 dark:border-slate-600">
+                    Change Password
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Account Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="shadow-xl border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Account Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12 border-slate-300 dark:border-slate-600"
+                  onClick={handleExportData}
+                  disabled={isLoading}
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Export Data
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12 border-slate-300 dark:border-slate-600"
+                  onClick={handleDownloadTransactions}
+                  disabled={isLoading}
+                >
+                  <FileText className="mr-2 h-5 w-5" />
+                  Download Transactions
+                </Button>
+                <Button variant="destructive" onClick={handleSignOut} className="flex-1 h-12">
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Sign Out
+                </Button>
+              </div>
+              
+              <Separator />
+              
+              <div className="text-center">
+                <Button variant="ghost" className="text-destructive hover:text-destructive">
+                  Delete Account
+                </Button>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  This action cannot be undone
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Dialogs */}
+        <PhoneVerificationDialog
+          open={showPhoneDialog}
+          onOpenChange={setShowPhoneDialog}
+          onVerified={handlePhoneVerified}
+        />
+
+        <BankLinkingDialog
+          open={showBankDialog}
+          onOpenChange={setShowBankDialog}
+          onLinked={handleBankLinked}
+        />
       </div>
     </div>
   )
