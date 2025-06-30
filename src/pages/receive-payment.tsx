@@ -17,7 +17,6 @@ export function ReceivePayment() {
   const [note, setNote] = useState('')
   const [qrGenerated, setQrGenerated] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const qrCodeRef = useRef<HTMLDivElement>(null)
   const qrCodeInstanceRef = useRef<QRCodeStyling | null>(null)
 
   // Detect mobile device
@@ -34,70 +33,74 @@ export function ReceivePayment() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initialize QR code only once when component mounts
-  useEffect(() => {
-    if (!wallet?.address || !qrCodeRef.current || qrCodeInstanceRef.current) return
-
-    const qrSize = isMobile ? 240 : 280
-
-    try {
-      const qrCode = new QRCodeStyling({
-        width: qrSize,
-        height: qrSize,
-        type: 'svg' as const,
-        data: 'https://example.com', // Initial placeholder
-        margin: 8,
-        qrOptions: {
-          mode: 'Byte' as const,
-          errorCorrectionLevel: 'M' as const
-        },
-        imageOptions: {
-          hideBackgroundDots: true,
-          imageSize: 0.4,
-          margin: 0,
-          crossOrigin: 'anonymous' as const
-        },
-        dotsOptions: {
-          color: '#7c3aed',
-          type: 'rounded' as const
-        },
-        backgroundOptions: {
-          color: '#ffffff',
-        },
-        cornersSquareOptions: {
-          color: '#7c3aed',
-          type: 'extra-rounded' as const
-        },
-        cornersDotOptions: {
-          color: '#7c3aed',
-          type: 'dot' as const
-        }
-      })
-
-      qrCodeInstanceRef.current = qrCode
-      qrCode.append(qrCodeRef.current)
-      setQrGenerated(true)
-      
-    } catch (error) {
-      console.error('Failed to initialize QR code:', error)
-      toast.error('Failed to generate QR code')
-    }
-
-    // Cleanup function - use QRCodeStyling's clear method instead of direct DOM manipulation
-    return () => {
-      if (qrCodeInstanceRef.current) {
-        try {
-          // Use the library's clear method to properly remove elements
+  // Callback ref for QR code container
+  const qrCodeRef = useCallback((node: HTMLDivElement | null) => {
+    // Clean up existing QR code instance
+    if (qrCodeInstanceRef.current) {
+      try {
+        // Clear the QR code content safely
+        if (qrCodeInstanceRef.current.clear) {
           qrCodeInstanceRef.current.clear()
-        } catch (error) {
-          // Silently handle cleanup errors
-          console.warn('QR code cleanup warning:', error)
         }
+      } catch (error) {
+        // Silently handle cleanup errors
+        console.warn('QR code cleanup warning:', error)
       }
       qrCodeInstanceRef.current = null
       setQrGenerated(false)
     }
-  }, [wallet?.address]) // Only depend on wallet address, not isMobile
+
+    // Initialize new QR code if node is available and wallet address exists
+    if (node && wallet?.address) {
+      const qrSize = isMobile ? 240 : 280
+
+      try {
+        const qrCode = new QRCodeStyling({
+          width: qrSize,
+          height: qrSize,
+          type: 'svg' as const,
+          data: 'https://example.com', // Initial placeholder
+          margin: 8,
+          qrOptions: {
+            mode: 'Byte' as const,
+            errorCorrectionLevel: 'M' as const
+          },
+          imageOptions: {
+            hideBackgroundDots: true,
+            imageSize: 0.4,
+            margin: 0,
+            crossOrigin: 'anonymous' as const
+          },
+          dotsOptions: {
+            color: '#7c3aed',
+            type: 'rounded' as const
+          },
+          backgroundOptions: {
+            color: '#ffffff',
+          },
+          cornersSquareOptions: {
+            color: '#7c3aed',
+            type: 'extra-rounded' as const
+          },
+          cornersDotOptions: {
+            color: '#7c3aed',
+            type: 'dot' as const
+          }
+        })
+
+        qrCodeInstanceRef.current = qrCode
+        qrCode.append(node)
+        setQrGenerated(true)
+        
+        // Update with current data
+        updateQRCodeData()
+        
+      } catch (error) {
+        console.error('Failed to initialize QR code:', error)
+        toast.error('Failed to generate QR code')
+      }
+    }
+  }, [wallet?.address, isMobile]) // Dependencies for callback ref
 
   // Update QR code size when mobile state changes
   useEffect(() => {
