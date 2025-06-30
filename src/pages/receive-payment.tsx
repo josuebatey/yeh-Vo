@@ -37,15 +37,7 @@ export function ReceivePayment() {
   const qrCodeRef = useCallback((node: HTMLDivElement | null) => {
     // Clean up existing QR code instance
     if (qrCodeInstanceRef.current) {
-      try {
-        // Clear the QR code content safely
-        if (qrCodeInstanceRef.current.clear) {
-          qrCodeInstanceRef.current.clear()
-        }
-      } catch (error) {
-        // Silently handle cleanup errors
-        console.warn('QR code cleanup warning:', error)
-      }
+      // Simply nullify the reference - let React handle DOM cleanup
       qrCodeInstanceRef.current = null
       setQrGenerated(false)
     }
