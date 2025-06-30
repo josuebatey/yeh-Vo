@@ -83,22 +83,19 @@ export function ReceivePayment() {
       toast.error('Failed to generate QR code')
     }
 
-    // Cleanup function - only runs when component unmounts
+    // Cleanup function - safely clear the container
     return () => {
-      if (qrCodeInstanceRef.current && qrCodeRef.current) {
+      if (qrCodeRef.current) {
         try {
-          // Safely remove the QR code element if it exists
-          const qrElement = qrCodeRef.current.firstChild
-          if (qrElement && qrCodeRef.current.contains(qrElement)) {
-            qrCodeRef.current.removeChild(qrElement)
-          }
+          // Clear the entire container instead of trying to remove specific children
+          qrCodeRef.current.innerHTML = ''
         } catch (error) {
-          // Silently handle removal errors
+          // Silently handle cleanup errors
           console.warn('QR code cleanup warning:', error)
         }
-        qrCodeInstanceRef.current = null
-        setQrGenerated(false)
       }
+      qrCodeInstanceRef.current = null
+      setQrGenerated(false)
     }
   }, [wallet?.address]) // Only depend on wallet address, not isMobile
 
