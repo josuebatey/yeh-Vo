@@ -60,7 +60,6 @@ function AppRoutes() {
     return (
       <>
         <AuthPage />
-        <BoltBadge variant="white" position="top-right" className="border" />
       </>
     )
   }
