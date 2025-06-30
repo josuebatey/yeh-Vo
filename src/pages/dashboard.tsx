@@ -197,7 +197,6 @@ export function Dashboard() {
       <div className="flex-shrink-0 p-4 md:p-6 border-b bg-background">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BackButton />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
               <p className="text-muted-foreground">Welcome back to yehVo</p>
