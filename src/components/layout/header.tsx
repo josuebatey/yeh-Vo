@@ -40,7 +40,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="border border-red-500 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 flex-shrink-0 sticky top-0 z-30">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 flex-shrink-0 sticky top-0 z-30">
       <div className="flex items-center space-x-2 md:space-x-4">
         <Button variant="ghost" size="sm" onClick={onMenuClick} className="md:hidden">
           <Menu className="h-5 w-5" />
