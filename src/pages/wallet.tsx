@@ -103,7 +103,6 @@ export function WalletPage() {
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <BackButton />
           <h1 className="text-2xl md:text-3xl font-bold">Wallet Management</h1>
           <p className="text-muted-foreground">Manage your Algorand wallet and view transaction details</p>
         </div>
