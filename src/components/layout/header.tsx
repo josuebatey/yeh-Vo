@@ -40,11 +40,23 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center space-x-2">
-        <LanguageSelector />
-        <ThemeToggle />
+        {/* Language Selector with circular background */}
+        <div className="p-1 rounded-full bg-muted/50 hover:bg-muted transition-colors">
+          <LanguageSelector />
+        </div>
         
-        <Button variant="ghost" size="sm">
-          <Bell className="h-5 w-5" />
+        {/* Theme Toggle with circular background */}
+        <div className="p-1 rounded-full bg-muted/50 hover:bg-muted transition-colors">
+          <ThemeToggle />
+        </div>
+        
+        {/* Notification Bell with circular background */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 w-8 rounded-full bg-muted/50 hover:bg-muted transition-colors p-0"
+        >
+          <Bell className="h-4 w-4" />
         </Button>
 
         <DropdownMenu>

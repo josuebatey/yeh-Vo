@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { VoiceCommandButton } from '@/components/ui/voice-command-button'
 import { voiceService } from '@/services/voiceService'
 import { paymentService } from '@/services/paymentService'
+import { algorandService } from '@/services/algorandService'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAutoRefresh } from '@/hooks/useAutoRefresh'
@@ -135,15 +136,11 @@ export function Dashboard() {
     } catch (error: any) {
       console.error('Fund wallet error:', error)
       
-      // Check if it's the simulation error
-      if (error.message.includes('TestNet funding simulation complete')) {
-        toast.info('Demo Mode: Please manually fund your TestNet wallet', {
-          description: 'Visit https://dispenser.testnet.aws.algodev.network/ to get free TestNet ALGO',
-          duration: 8000,
-        })
-      } else {
-        toast.error(error.message || 'Failed to fund wallet')
-      }
+      // Show error with manual funding option
+      toast.error('Automatic funding failed', {
+        description: 'Click "Manual Fund" to use the TestNet dispenser directly',
+        duration: 8000,
+      })
     }
   }
 
@@ -163,7 +160,7 @@ export function Dashboard() {
   }
 
   const openDispenser = () => {
-    window.open('https://dispenser.testnet.aws.algodev.network/', '_blank')
+    window.open(algorandService.getDispenserUrl(), '_blank')
   }
 
   const dashboardStats = [

@@ -75,15 +75,12 @@ export const algorandService = {
             return
           }
         } catch (edgeFunctionError) {
-          console.log('Edge function not available, trying alternative method...')
+          console.log('Edge function not available, trying direct dispenser...')
         }
       }
 
-      // Fallback: Use a CORS proxy service
-      const proxyUrl = 'https://api.allorigins.win/raw?url='
-      const dispenserUrl = encodeURIComponent('https://dispenser.testnet.aws.algodev.network/dispense')
-      
-      const response = await fetch(proxyUrl + dispenserUrl, {
+      // Direct call to TestNet dispenser
+      const response = await fetch('https://dispenser.testnet.aws.algodev.network/dispense', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -92,33 +89,19 @@ export const algorandService = {
       })
 
       if (!response.ok) {
-        // If proxy also fails, simulate funding for demo purposes
-        console.log('Proxy method failed, simulating funding for demo...')
-        await this.simulateFunding(address)
-        return
+        const errorText = await response.text()
+        console.error('Dispenser error:', errorText)
+        throw new Error(`TestNet dispenser failed: ${response.status} ${response.statusText}`)
       }
 
       const result = await response.text()
-      console.log('Funding successful via proxy:', result)
+      console.log('Funding successful:', result)
 
     } catch (error) {
-      console.error('All funding methods failed, simulating for demo:', error)
-      // Simulate funding for demo purposes
-      await this.simulateFunding(address)
+      console.error('Funding failed:', error)
+      // Provide helpful error message with manual funding option
+      throw new Error('Automatic funding failed. Please manually fund your TestNet wallet at https://dispenser.testnet.aws.algodev.network/')
     }
-  },
-
-  async simulateFunding(address: string): Promise<void> {
-    // For demo purposes, we'll simulate the funding by showing a success message
-    // In a real app, you'd need to actually fund the account
-    console.log(`Simulating funding for address: ${address}`)
-    
-    // Add a small delay to simulate network request
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Note: This doesn't actually add funds, but allows the demo to continue
-    // Users should manually fund their TestNet wallets using the official dispenser
-    throw new Error('TestNet funding simulation complete. Please manually fund your wallet at https://dispenser.testnet.aws.algodev.network/ for actual ALGO.')
   },
 
   getExplorerUrl(txId: string): string {
@@ -127,6 +110,10 @@ export const algorandService = {
 
   getAddressExplorerUrl(address: string): string {
     return `https://testnet.algoexplorer.io/address/${address}`
+  },
+
+  getDispenserUrl(): string {
+    return 'https://dispenser.testnet.aws.algodev.network/'
   },
 
   // Helper function to validate Algorand address

@@ -9,10 +9,13 @@ import {
   Settings,
   Wallet,
   Mic,
-  Bot
+  Bot,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
 
 const navigation = [
   { name: 'dashboard', href: '/', icon: Home },
@@ -26,23 +29,52 @@ const navigation = [
   { name: 'settings', href: '/settings', icon: Settings },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean
+  onToggleCollapse: () => void
+}
+
+export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const { t } = useTranslation()
 
   return (
-    <div className="flex h-full w-64 flex-col bg-card border-r">
-      <div className="flex h-16 items-center px-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center space-x-2"
+    <div className={cn(
+      "flex h-full flex-col bg-card border-r transition-all duration-200",
+      collapsed ? "w-16" : "w-64"
+    )}>
+      <div className={cn(
+        "flex h-16 items-center border-b",
+        collapsed ? "justify-center px-2" : "justify-between px-6"
+      )}>
+        {!collapsed && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center space-x-2"
+          >
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600" />
+            <span className="text-xl font-bold">VoicePay</span>
+          </motion.div>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleCollapse}
+          className={cn(
+            "h-8 w-8 p-0 hidden md:flex",
+            collapsed && "mx-auto"
+          )}
         >
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600" />
-          <span className="text-xl font-bold">VoicePay</span>
-        </motion.div>
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
       </div>
       
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {navigation.map((item, index) => (
           <motion.div
             key={item.name}
@@ -54,22 +86,32 @@ export function Sidebar() {
               to={item.href}
               className={({ isActive }) =>
                 cn(
-                  'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  'group flex items-center text-sm font-medium rounded-md transition-colors',
+                  collapsed ? 'justify-center p-2' : 'px-3 py-2',
                   isActive
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )
               }
+              title={collapsed ? t(`nav.${item.name}`) : undefined}
             >
-              <item.icon className="mr-3 h-5 w-5" />
-              {t(`nav.${item.name}`)}
+              <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
+              {!collapsed && (
+                <span className="truncate">{t(`nav.${item.name}`)}</span>
+              )}
             </NavLink>
           </motion.div>
         ))}
       </nav>
 
-      <div className="p-4 border-t">
-        <p className="text-xs text-muted-foreground text-center">
+      <div className={cn(
+        "p-4 border-t",
+        collapsed && "px-2"
+      )}>
+        <p className={cn(
+          "text-xs text-muted-foreground text-center",
+          collapsed && "hidden"
+        )}>
           Built on <span className="font-semibold">Bolt</span>
         </p>
       </div>

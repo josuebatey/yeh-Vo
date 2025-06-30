@@ -326,3 +326,74 @@ button:focus-visible {
 .dark .feature-card:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
+
+/* Mobile-friendly modal and toast positioning */
+@media (max-width: 768px) {
+  /* Toast positioning for mobile */
+  [data-sonner-toaster] {
+    left: 8px !important;
+    right: 8px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+  
+  [data-sonner-toast] {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Dialog positioning for mobile */
+  [data-radix-dialog-content] {
+    max-width: calc(100vw - 32px) !important;
+    max-height: calc(100vh - 32px) !important;
+    margin: 16px !important;
+    width: calc(100vw - 32px) !important;
+  }
+
+  /* Dropdown menu positioning */
+  [data-radix-dropdown-menu-content] {
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px !important;
+  }
+
+  /* Select content positioning */
+  [data-radix-select-content] {
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px !important;
+  }
+
+  /* Popover content positioning */
+  [data-radix-popover-content] {
+    max-width: calc(100vw - 32px) !important;
+    margin: 0 16px !important;
+  }
+}
+
+/* Ensure all pages maintain consistent sizing */
+.page-container {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Prevent horizontal overflow */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .text-responsive {
+    font-size: 1rem;
+  }
+}
